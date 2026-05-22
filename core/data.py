@@ -231,6 +231,7 @@ class EDGARClient:
     """
 
     BASE_URL = "https://data.sec.gov"
+    TICKERS_URL = "https://www.sec.gov/files/company_tickers.json"
     HEADERS = {
         "User-Agent": "OpenQuant educational-tool contact@openquant.dev",
         "Accept-Encoding": "gzip, deflate",
@@ -324,8 +325,7 @@ class EDGARClient:
             CIK as zero-padded 10-digit string, or None if not found.
         """
         try:
-            url = f"{self.BASE_URL}/files/company_tickers.json"
-            data = self._get(url)
+            data = self._get(self.TICKERS_URL)
             ticker_upper = ticker.upper()
             for _, company in data.items():
                 if company.get("ticker", "").upper() == ticker_upper:
