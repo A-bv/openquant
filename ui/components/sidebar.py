@@ -8,7 +8,7 @@ Returns nothing — writes directly to st.sidebar.
 
 from __future__ import annotations
 import streamlit as st
-from ui.state import StateKeys, get, set, clear_analysis
+from ui.state import StateKeys, get, set_state, clear_analysis
 from config import (
     DEFAULT_RISK_FREE_RATE,
     DEFAULT_MARKET_RISK_PREMIUM,
@@ -50,9 +50,9 @@ def _render_ticker_input() -> None:
 
     # Detect change
     if ticker_input != get(StateKeys.TICKER, ""):
-        set(StateKeys.TICKER, ticker_input)
-        set(StateKeys.TICKER_VALID, False)
-        set(StateKeys.TICKER_VALIDATION, None)
+        set_state(StateKeys.TICKER, ticker_input)
+        set_state(StateKeys.TICKER_VALID, False)
+        set_state(StateKeys.TICKER_VALIDATION, None)
         clear_analysis()
 
     validation = get(StateKeys.TICKER_VALIDATION)
@@ -65,9 +65,9 @@ def _render_ticker_input() -> None:
                     from core.data import DataFetcher
                     fetcher = DataFetcher()
                     result = fetcher.validate_ticker(ticker_input)
-                    set(StateKeys.TICKER_VALIDATION, result)
-                    set(StateKeys.TICKER_VALID, result.is_valid)
-                    set(StateKeys.DATA_SOURCE, "SEC EDGAR")
+                    set_state(StateKeys.TICKER_VALIDATION, result)
+                    set_state(StateKeys.TICKER_VALID, result.is_valid)
+                    set_state(StateKeys.DATA_SOURCE, "SEC EDGAR")
                 except Exception as e:
                     st.error(f"Validation failed: {e}")
 
@@ -97,7 +97,7 @@ def _render_assumptions() -> None:
         format="%.1f",
         help="10-year US Treasury yield. Default: 4.5%",
     ) / 100
-    set(StateKeys.RISK_FREE_RATE, rf)
+    set_state(StateKeys.RISK_FREE_RATE, rf)
 
     mrp = st.number_input(
         "Market risk premium (%)",
@@ -108,7 +108,7 @@ def _render_assumptions() -> None:
         format="%.1f",
         help="E(Rm) - Rf. Damodaran estimate: 5.5%",
     ) / 100
-    set(StateKeys.MARKET_RISK_PREMIUM, mrp)
+    set_state(StateKeys.MARKET_RISK_PREMIUM, mrp)
 
     tg = st.number_input(
         "Terminal growth (%)",
@@ -119,7 +119,7 @@ def _render_assumptions() -> None:
         format="%.1f",
         help=f"Long-run nominal GDP growth. Capped at {MAX_TERMINAL_GROWTH_RATE:.0%}.",
     ) / 100
-    set(StateKeys.TERMINAL_GROWTH, tg)
+    set_state(StateKeys.TERMINAL_GROWTH, tg)
 
 
 def _render_display_options() -> None:
@@ -131,14 +131,14 @@ def _render_display_options() -> None:
         value=get(StateKeys.SHOW_FORMULAS, False),
         help="Show mathematical formulas alongside every calculation.",
     )
-    set(StateKeys.SHOW_FORMULAS, show_formulas)
+    set_state(StateKeys.SHOW_FORMULAS, show_formulas)
 
     use_ex_sbc = st.toggle(
         "FCF excluding SBC",
         value=get(StateKeys.USE_EX_SBC, False),
         help="Use FCF excluding stock-based compensation as the base for projections.",
     )
-    set(StateKeys.USE_EX_SBC, use_ex_sbc)
+    set_state(StateKeys.USE_EX_SBC, use_ex_sbc)
 
 
 def _render_data_source_badge() -> None:

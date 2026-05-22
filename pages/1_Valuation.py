@@ -9,10 +9,8 @@ Flow:
 """
 
 import streamlit as st
-import sys
-sys.path.insert(0, '.')
 
-from ui.state import StateKeys, init_state, get, set, clear_analysis
+from ui.state import StateKeys, init_state, get, set_state, clear_analysis
 from ui.components.sidebar import render_sidebar
 from ui.components.metrics import (
     render_dcf_metrics,
@@ -76,7 +74,7 @@ with col_price:
         step=0.01,
         format="%.2f",
     )
-    set(StateKeys.CURRENT_PRICE, current_price)
+    set_state(StateKeys.CURRENT_PRICE, current_price)
 
 with col_run:
     run_analysis = st.button(
@@ -104,9 +102,9 @@ if run_analysis or get(StateKeys.DCF_RESULT) is not None:
             fetcher = DataFetcher()
             statements = fetcher.get_financial_statements(ticker)
             price_data = fetcher.get_prices(ticker)
-            set(StateKeys.FINANCIAL_STATEMENTS, statements)
-            set(StateKeys.PRICE_DATA, price_data)
-            set(StateKeys.DATA_SOURCE, f"SEC EDGAR · {statements.fetched_at.strftime('%Y-%m-%d')}")
+            set_state(StateKeys.FINANCIAL_STATEMENTS, statements)
+            set_state(StateKeys.PRICE_DATA, price_data)
+            set_state(StateKeys.DATA_SOURCE, f"SEC EDGAR · {statements.fetched_at.strftime('%Y-%m-%d')}")
             progress.progress(20, text="Running suitability check...")
 
             # Step 2 — Suitability
@@ -117,19 +115,19 @@ if run_analysis or get(StateKeys.DCF_RESULT) is not None:
                 trading_days=len(price_data.prices),
                 sector=get(StateKeys.TICKER_VALIDATION).sector,
             )
-            set(StateKeys.SUITABILITY_REPORT, suit)
+            set_state(StateKeys.SUITABILITY_REPORT, suit)
             progress.progress(35, text="Computing WACC...")
 
             # Step 3 — FCF analysis
             from core.fcf import FCFAnalyser
             fcf_a = FCFAnalyser().analyse(statements)
-            set(StateKeys.FCF_ANALYSIS, fcf_a)
+            set_state(StateKeys.FCF_ANALYSIS, fcf_a)
 
             # Step 4 — Beta + WACC
             from core.wacc import BetaEstimator, WACCBuilder
             estimator = BetaEstimator()
             beta_r = estimator.estimate(price_data, statements)
-            set(StateKeys.BETA_RESULT, beta_r)
+            set_state(StateKeys.BETA_RESULT, beta_r)
 
             builder = WACCBuilder()
             wacc_r = builder.compute_wacc(
@@ -137,7 +135,7 @@ if run_analysis or get(StateKeys.DCF_RESULT) is not None:
                 risk_free_rate=rf,
                 market_risk_premium=mrp,
             )
-            set(StateKeys.WACC_RESULT, wacc_r)
+            set_state(StateKeys.WACC_RESULT, wacc_r)
             progress.progress(55, text="Running DCF...")
 
             # Step 5 — Suitability recheck with WACC
@@ -148,7 +146,7 @@ if run_analysis or get(StateKeys.DCF_RESULT) is not None:
                 wacc_estimate=wacc_r.wacc,
                 terminal_growth=tg,
             )
-            set(StateKeys.SUITABILITY_REPORT, suit)
+            set_state(StateKeys.SUITABILITY_REPORT, suit)
 
             if not suit.is_suitable:
                 progress.empty()
@@ -168,7 +166,7 @@ if run_analysis or get(StateKeys.DCF_RESULT) is not None:
                 terminal_growth_rate=tg,
                 use_ex_sbc=use_ex_sbc,
             )
-            set(StateKeys.DCF_RESULT, dcf_r)
+            set_state(StateKeys.DCF_RESULT, dcf_r)
             progress.progress(70, text="Running reverse DCF...")
 
             # Step 7 — Reverse DCF
@@ -181,7 +179,7 @@ if run_analysis or get(StateKeys.DCF_RESULT) is not None:
                 net_debt=net_debt,
                 terminal_growth_rate=tg,
             )
-            set(StateKeys.REVERSE_DCF_RESULT, rev_r)
+            set_state(StateKeys.REVERSE_DCF_RESULT, rev_r)
             progress.progress(80, text="Building diagnostic...")
 
             # Step 8 — Sensitivity
@@ -189,27 +187,27 @@ if run_analysis or get(StateKeys.DCF_RESULT) is not None:
             sa = SensitivityAnalyser()
             gt = sa.build_growth_wacc_table(fcf_a, wacc_r, current_price, shares, net_debt, tg)
             tt = sa.build_terminal_growth_table(fcf_a, wacc_r, current_price, shares, net_debt, fcf_a.growth_base, n_steps=5)
-            set(StateKeys.SENSITIVITY_GROWTH_TABLE, gt)
-            set(StateKeys.SENSITIVITY_TV_TABLE, tt)
+            set_state(StateKeys.SENSITIVITY_GROWTH_TABLE, gt)
+            set_state(StateKeys.SENSITIVITY_TV_TABLE, tt)
 
             # Step 9 — Diagnostic + Red flags
             from core.assumption_diagnostic import DiagnosticBuilder
             diag = DiagnosticBuilder().build(statements, dcf_r, beta_r, rev_r)
-            set(StateKeys.ASSUMPTION_DIAGNOSTIC, diag)
+            set_state(StateKeys.ASSUMPTION_DIAGNOSTIC, diag)
 
             from core.red_flags import RedFlagBuilder
             rf_summary = RedFlagBuilder().build(ticker, diag, suit, dcf_r, rev_r)
-            set(StateKeys.RED_FLAGS, rf_summary)
+            set_state(StateKeys.RED_FLAGS, rf_summary)
 
             # Step 10 — Multiples + Audit
             from core.multiples import MultiplesAnalyser
             cash = statements.cash_and_equivalents.dropna().iloc[-1] if len(statements.cash_and_equivalents.dropna()) > 0 else 0
             mult = MultiplesAnalyser().compute(statements, current_price, float(statements.total_debt.dropna().iloc[-1]), cash, dcf_r)
-            set(StateKeys.MULTIPLES_RESULT, mult)
+            set_state(StateKeys.MULTIPLES_RESULT, mult)
 
             from core.audit_trail import AuditTrailBuilder
             trail = AuditTrailBuilder().build(statements, fcf_a, wacc_r, dcf_r, suit, diag, rev_r, tg)
-            set(StateKeys.AUDIT_TRAIL, trail)
+            set_state(StateKeys.AUDIT_TRAIL, trail)
 
             progress.progress(100, text="Done.")
             progress.empty()

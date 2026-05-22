@@ -121,6 +121,6 @@ def get(key: str, default=None):
     return st.session_state.get(key, default)
 
 
-def set(key: str, value) -> None:
+def set_state(key: str, value) -> None:
     """Set session state value."""
     st.session_state[key] = value

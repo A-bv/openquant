@@ -6,10 +6,8 @@ Thin wrapper: calls core/portfolio.py for math, renders results.
 import streamlit as st
 import plotly.graph_objects as go
 import numpy as np
-import sys
-sys.path.insert(0, '.')
 
-from ui.state import StateKeys, init_state, get, set
+from ui.state import StateKeys, init_state, get, set_state
 from ui.components.sidebar import render_sidebar
 from config import DEFAULT_RISK_FREE_RATE
 
@@ -84,8 +82,8 @@ if st.button("▶ Analyse Portfolio", type="primary", disabled=run_disabled):
                 risk_free_rate=get(StateKeys.RISK_FREE_RATE, DEFAULT_RISK_FREE_RATE),
                 market_returns=market_data.prices,
             )
-            set(StateKeys.PORTFOLIO_RESULT, result)
-            set(StateKeys.PORTFOLIO_TICKERS, tickers)
+            set_state(StateKeys.PORTFOLIO_RESULT, result)
+            set_state(StateKeys.PORTFOLIO_TICKERS, tickers)
 
         except Exception as e:
             st.error(f"Portfolio analysis failed: {e}")

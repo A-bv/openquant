@@ -21,6 +21,7 @@ import os
 import time
 import hashlib
 import logging
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -289,6 +290,9 @@ class EDGARClient:
         "current_liabilities": [
             "LiabilitiesCurrent",
         ],
+        "total_assets": [
+            "Assets",
+        ],
     }
 
     def __init__(self):
@@ -554,31 +558,37 @@ class DataFetcher:
             )
             return result
 
-        # Step 2: Company info
-        try:
-            info = self.edgar.get_company_info(cik)
-            company_name = info.get("name", ticker)
-            sector = info.get("sic_description", "Unknown")
-        except DataFetchError:
-            company_name = ticker
-            sector = "Unknown"
+        # Steps 2–4: company info, price history, and EDGAR facts in parallel
+        def _fetch_company_info():
+            try:
+                info = self.edgar.get_company_info(cik)
+                return info.get("name", ticker), info.get("sic_description", "Unknown")
+            except DataFetchError:
+                return ticker, "Unknown"
 
-        # Step 3: Price history check
-        trading_days = 0
-        try:
-            prices = self.price_fetcher.fetch(ticker, years=3)
-            trading_days = len(prices)
-        except DataFetchError:
-            pass
+        def _fetch_trading_days():
+            try:
+                prices = self.price_fetcher.fetch(ticker, years=3)
+                return len(prices)
+            except DataFetchError:
+                return 0
 
-        # Step 4: Financial statements availability
-        has_financials = False
-        try:
-            facts = self.edgar.get_facts(cik)
-            us_gaap = facts.get("facts", {}).get("us-gaap", {})
-            has_financials = len(us_gaap) > 10
-        except DataFetchError:
-            pass
+        def _fetch_has_financials():
+            try:
+                facts = self.edgar.get_facts(cik)
+                us_gaap = facts.get("facts", {}).get("us-gaap", {})
+                return len(us_gaap) > 10
+            except DataFetchError:
+                return False
+
+        with ThreadPoolExecutor(max_workers=3) as executor:
+            fut_info = executor.submit(_fetch_company_info)
+            fut_days = executor.submit(_fetch_trading_days)
+            fut_fin  = executor.submit(_fetch_has_financials)
+
+        company_name, sector = fut_info.result()
+        trading_days = fut_days.result()
+        has_financials = fut_fin.result()
 
         # Determine badge
         from config import MIN_TRADING_DAYS, MIN_PRICE_HISTORY_YEARS
@@ -689,6 +699,7 @@ class DataFetcher:
         ocf = _extract("operating_cash_flow")
         debt = _extract("total_debt")
         cash = _extract("cash_and_equivalents")
+        total_assets_raw = _extract("total_assets")
         shares_raw = self.edgar.extract_annual_series(
             facts, EDGARClient.TAG_MAPPINGS["shares_outstanding"], unit="shares"
         )
@@ -735,6 +746,7 @@ class DataFetcher:
         cash_a = _align(cash)
         shares_a = _align(shares)
         sbc_a = _align(sbc)
+        total_assets_a = _align(total_assets_raw)
         curr_assets_a = _align(current_assets)
         curr_liab_a = _align(current_liabilities)
 
@@ -768,7 +780,7 @@ class DataFetcher:
             tax_expense=tax_a,
             net_income=net_income_a,
             ebitda=ebitda_a,
-            total_assets=pd.Series(np.nan, index=common_idx),
+            total_assets=total_assets_a,
             total_debt=debt_a,
             beginning_debt=beginning_debt,
             cash_and_equivalents=cash_a,
