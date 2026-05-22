@@ -284,24 +284,28 @@ if run_analysis or get(StateKeys.DCF_RESULT) is not None:
             "Current Price", f"${current_price:.2f}",
             help="The stock price used as the starting point for all analysis on this page.",
         )
+        st.caption("← today's market price, the starting point for all calculations")
     with col2:
         if market_cap:
             st.metric(
                 "Market Cap", f"${market_cap/1e9:.0f}B",
                 help="The total market value of all outstanding shares — what the stock market says the entire company is worth right now. Computed as share price x shares outstanding.",
             )
+            st.caption("← price × shares outstanding — what the market says the whole company is worth")
     with col3:
         if latest_rev:
             st.metric(
                 "Revenue (latest yr)", f"${latest_rev/1e9:.1f}B",
                 help="Total revenue in the most recent fiscal year, pulled from SEC EDGAR filings.",
             )
+            st.caption("← total sales in the most recent fiscal year (SEC EDGAR)")
     with col4:
         if latest_fcf:
             st.metric(
                 "Free Cash Flow (latest yr)", f"${latest_fcf/1e9:.1f}B",
                 help="The actual cash generated after operating costs and capital expenditures. Unlike accounting profit, FCF cannot be manipulated by depreciation or accruals.",
             )
+            st.caption("← actual cash after all costs — cannot be manipulated by accounting")
 
     if fcf_a and latest_fcf is not None:
         g = fcf_a.median_growth_rate
@@ -353,32 +357,68 @@ if run_analysis or get(StateKeys.DCF_RESULT) is not None:
                 f"that **{company_name}** will grow free cash flow at:"
             )
 
-            col_hero, col_chart = st.columns([1, 2])
-            with col_hero:
-                delta_vs_hist = rev_r.implied_growth_rate - rev_r.historical_median_growth
+            # Giant metric — full width, no columns
+            implied = rev_r.implied_growth_rate
+            historical = rev_r.historical_median_growth
+            delta_vs_hist = implied - historical
+            st.metric(
+                "Implied FCF Growth Rate",
+                f"{implied:.1%}",
+                delta=f"{delta_vs_hist:+.1%} vs historical median",
+                delta_color="inverse",
+                help="The annual FCF growth rate that mathematically justifies today's price, found by reverse-solving the DCF equation. This is what the market is currently betting on.",
+            )
+
+            # Gap indicator — three columns
+            col_a, col_b, col_c = st.columns(3)
+            with col_a:
                 st.metric(
-                    "Implied FCF Growth Rate",
-                    f"{rev_r.implied_growth_rate:.1%}",
-                    delta=f"{delta_vs_hist:+.1%} vs historical median",
-                    delta_color="inverse",
-                    help="The annual FCF growth rate that mathematically justifies today's price, found by reverse-solving the DCF equation. This is what the market is currently betting on.",
+                    "Market implies",
+                    f"{implied:.1%}/yr",
+                    help="The growth rate baked into today's stock price.",
                 )
-                st.caption(f"Historical median: **{rev_r.historical_median_growth:.1%}**")
-                st.caption(f"Historical mean: **{rev_r.historical_mean_growth:.1%}**")
-                if rev_r.revenue_cagr:
-                    st.caption(f"Revenue CAGR: **{rev_r.revenue_cagr:.1%}**")
-
-            with col_chart:
-                fig = reverse_dcf_comparison_chart(
-                    rev_r.implied_growth_rate,
-                    rev_r.historical_median_growth,
-                    rev_r.historical_mean_growth,
-                    rev_r.revenue_cagr,
-                    ticker=ticker,
+            with col_b:
+                st.metric(
+                    "Historical median",
+                    f"{historical:.1%}/yr",
+                    help="The company's actual median FCF growth rate over the past 5-10 years.",
                 )
-                st.plotly_chart(fig, use_container_width=True)
+            with col_c:
+                gap_pp = (implied - historical) * 100
+                st.metric(
+                    "Gap",
+                    f"{gap_pp:+.1f}pp",
+                    delta="market expects more than history" if gap_pp > 0 else "market expects less than history",
+                    delta_color="inverse" if gap_pp > 0 else "normal",
+                    help="Percentage-point difference between market-implied growth and historical growth. Larger gaps require more conviction.",
+                )
 
-            st.markdown(f"**What this means:** {rev_r.verdict}")
+            # Chart — full width
+            fig = reverse_dcf_comparison_chart(
+                implied,
+                historical,
+                rev_r.historical_mean_growth,
+                rev_r.revenue_cagr,
+                ticker=ticker,
+            )
+            st.plotly_chart(fig, use_container_width=True)
+
+            # Auto-generated interpretation
+            if implied < historical:
+                action = "decline" if implied < 0 else "grow slowly"
+                interp = (
+                    f"The market is pricing {company_name} as if FCF will {action} at {implied:.1%}/yr. "
+                    f"Yet historically {company_name} grew FCF at {historical:.1%}/yr. "
+                    f"This {abs(implied - historical) * 100:.1f}pp gap suggests the market may be "
+                    f"underestimating the company — or there is a specific reason for pessimism you should investigate."
+                )
+            else:
+                interp = (
+                    f"The market expects {company_name} to grow FCF at {implied:.1%}/yr — "
+                    f"significantly above its historical rate of {historical:.1%}/yr. "
+                    f"You need to believe the company can sustain above-average performance."
+                )
+            st.info(interp)
 
     st.divider()
 
@@ -400,7 +440,53 @@ if run_analysis or get(StateKeys.DCF_RESULT) is not None:
                 f"Based on {company_name}'s FCF history, here are three scenarios for fair value:"
             )
 
-        render_dcf_metrics(dcf_r)
+        cons_iv = dcf_r.conservative.intrinsic_value_per_share
+        base_iv = dcf_r.base.intrinsic_value_per_share
+        opti_iv = dcf_r.optimistic.intrinsic_value_per_share
+
+        col_c, col_b, col_o = st.columns(3)
+        with col_c:
+            st.metric(
+                "Conservative IV", f"${cons_iv:.2f}",
+                delta=f"{dcf_r.conservative.upside_downside:+.1%}",
+                help="Intrinsic value assuming FCF grows at 70% of the historical median — the pessimistic scenario.",
+            )
+        with col_b:
+            st.metric(
+                "Base IV", f"${base_iv:.2f}",
+                delta=f"{dcf_r.base.upside_downside:+.1%}",
+                help="Intrinsic value assuming FCF continues at its historical median rate — the central scenario.",
+            )
+        with col_o:
+            st.metric(
+                "Optimistic IV", f"${opti_iv:.2f}",
+                delta=f"{dcf_r.optimistic.upside_downside:+.1%}",
+                help="Intrinsic value assuming FCF grows at 130% of the historical median — the optimistic scenario.",
+            )
+
+        all_above = all(iv > current_price for iv in [cons_iv, base_iv, opti_iv])
+        all_below = all(iv < current_price for iv in [cons_iv, base_iv, opti_iv])
+        if all_above:
+            st.info(
+                f"Under all three scenarios the model estimates {company_name} is undervalued at "
+                f"${current_price:.0f}. Even the conservative scenario implies ${cons_iv:.0f} — "
+                f"{abs(cons_iv / current_price - 1):.0%} above today's price. "
+                f"The base case using historical growth implies ${base_iv:.0f}."
+            )
+        elif all_below:
+            st.info(
+                f"Under all three scenarios the model estimates {company_name} is overvalued at "
+                f"${current_price:.0f}. Even the optimistic scenario implies only ${opti_iv:.0f} — "
+                f"{abs(opti_iv / current_price - 1):.0%} below today's price. "
+                f"The base case implies ${base_iv:.0f}."
+            )
+        else:
+            st.info(
+                f"The model gives a mixed picture at ${current_price:.0f}. "
+                f"The pessimistic scenario implies ${cons_iv:.0f}, the base case ${base_iv:.0f}, "
+                f"and the optimistic scenario ${opti_iv:.0f}. "
+                f"The current price sits within the range of plausible outcomes."
+            )
 
         tabs = st.tabs(["Conservative", "Base", "Optimistic"])
         for tab, scenario in zip(tabs, dcf_r.all_scenarios):
@@ -474,6 +560,19 @@ if run_analysis or get(StateKeys.DCF_RESULT) is not None:
     with st.expander("⚖️ WACC — Cost of Capital", expanded=False):
         if wacc_r:
             render_wacc_metrics(wacc_r)
+            st.caption(
+                f"WACC of {wacc_r.wacc:.1%} means we discount future cash flows by {wacc_r.wacc:.1%} per year. "
+                f"A higher WACC makes the company worth less today."
+            )
+            st.caption(
+                f"Beta of {wacc_r.beta:.2f} means {company_name} moves "
+                f"~{abs(wacc_r.beta - 1) * 100:.0f}% "
+                f"{'more' if wacc_r.beta > 1 else 'less'} than the market."
+            )
+            st.caption(
+                f"Cost of debt {wacc_r.cost_of_debt_pretax:.1%} vs cost of equity {wacc_r.cost_of_equity:.1%} "
+                f"— debt is cheaper because lenders get paid before shareholders."
+            )
             capm_formula_panel(
                 wacc_r.risk_free_rate, wacc_r.beta,
                 wacc_r.market_risk_premium, wacc_r.cost_of_equity,
