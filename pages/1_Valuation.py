@@ -154,8 +154,19 @@ if run_analysis or get(StateKeys.DCF_RESULT) is not None:
 
             # Step 6 — Forward DCF
             from core.dcf import DCFEngine
-            net_debt = statements.total_debt.dropna().iloc[-1] - statements.cash_and_equivalents.dropna().iloc[-1]
-            shares = statements.shares_outstanding.dropna().iloc[-1]
+            _debt_s  = statements.total_debt.dropna()
+            _cash_s  = statements.cash_and_equivalents.dropna()
+            _shares_s = statements.shares_outstanding.dropna()
+            if _shares_s.empty:
+                raise ValueError(
+                    f"No shares outstanding data found in EDGAR for {ticker}. "
+                    "Cannot compute per-share intrinsic value."
+                )
+            net_debt = (
+                (_debt_s.iloc[-1] if not _debt_s.empty else 0.0)
+                - (_cash_s.iloc[-1] if not _cash_s.empty else 0.0)
+            )
+            shares = _shares_s.iloc[-1]
 
             dcf_r = DCFEngine().value(
                 fcf_analysis=fcf_a,
@@ -201,8 +212,11 @@ if run_analysis or get(StateKeys.DCF_RESULT) is not None:
 
             # Step 10 — Multiples + Audit
             from core.multiples import MultiplesAnalyser
-            cash = statements.cash_and_equivalents.dropna().iloc[-1] if len(statements.cash_and_equivalents.dropna()) > 0 else 0
-            mult = MultiplesAnalyser().compute(statements, current_price, float(statements.total_debt.dropna().iloc[-1]), cash, dcf_r)
+            _cash_s2 = statements.cash_and_equivalents.dropna()
+            _debt_s2 = statements.total_debt.dropna()
+            cash = float(_cash_s2.iloc[-1]) if not _cash_s2.empty else 0.0
+            debt_for_mult = float(_debt_s2.iloc[-1]) if not _debt_s2.empty else 0.0
+            mult = MultiplesAnalyser().compute(statements, current_price, debt_for_mult, cash, dcf_r)
             set_state(StateKeys.MULTIPLES_RESULT, mult)
 
             from core.audit_trail import AuditTrailBuilder
