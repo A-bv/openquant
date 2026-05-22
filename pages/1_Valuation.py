@@ -51,6 +51,10 @@ st.caption(
     "OpenQuant does not tell you what a company is worth. "
     "It tells you what assumptions are required for the current price to make sense."
 )
+st.caption(
+    "OpenQuant uses Discounted Cash Flow (DCF) analysis — a method that estimates what a business "
+    "is worth based on the cash it will generate in the future, adjusted for the time value of money and risk."
+)
 
 ticker = get(StateKeys.TICKER, "")
 is_valid = get(StateKeys.TICKER_VALID, False)
@@ -529,3 +533,24 @@ if run_analysis or get(StateKeys.DCF_RESULT) is not None:
 
     if trail:
         render_audit_trail(trail)
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # LAYER 3 — Glossary (collapsed, on demand)
+    # ─────────────────────────────────────────────────────────────────────────
+    st.divider()
+    with st.expander("📖 Key concepts — what do these terms mean?", expanded=False):
+        st.caption("For anyone who hasn't taken a finance course — every term used on this page, explained in plain English.")
+        st.markdown("""
+| **Term** | **Plain English** |
+|---|---|
+| **Free Cash Flow (FCF)** | The actual cash a business generates after paying all its operating costs and investments. Unlike profit, it cannot be manipulated by accounting choices. |
+| **WACC** | Weighted Average Cost of Capital — the minimum annual return the business must generate to satisfy both its shareholders and lenders. |
+| **DCF Valuation** | Discounted Cash Flow — a method that estimates what future cash flows are worth in today's money, by applying a discount rate. |
+| **Reverse DCF** | Instead of asking "what is this worth?", we ask "what growth rate is already baked into the current price?" More honest than predicting the future. |
+| **Beta** | A measure of how much a stock moves relative to the overall market. Beta of 1.2 means the stock moves 20% more than the market index. |
+| **Terminal Value** | The estimated value of all cash flows beyond the 10-year forecast horizon. Often the largest and most uncertain part of a DCF valuation. |
+| **Margin of Safety** | The gap between the model's estimated fair value and today's market price. A large positive margin of safety means the stock appears undervalued. |
+| **Intrinsic Value** | The estimated fair value of the business based purely on its fundamentals — what it should be worth, independent of what the market currently thinks. |
+| **Sensitivity Analysis** | A table showing how the estimated fair value changes when you vary the key assumptions (growth rate and discount rate). |
+| **Assumption Diagnostic** | OpenQuant's built-in honesty check — it scores 8 dimensions of the analysis before showing results, so you know how much to trust the output. |
+""")
