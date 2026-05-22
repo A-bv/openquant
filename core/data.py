@@ -267,8 +267,12 @@ class EDGARClient:
             "NetCashProvidedByUsedInOperatingActivities",
         ],
         "total_debt": [
+            "LongTermDebt",                              # Total LT debt incl. current maturities
             "LongTermDebtAndCapitalLeaseObligations",
-            "LongTermDebt", "DebtAndCapitalLeaseObligations",
+            "DebtAndCapitalLeaseObligations",
+            "LongTermDebtNoncurrent",                    # Fallback: non-current portion only
+            "LongTermDebtCurrent",                       # Fallback: current maturities only
+            "ShortTermBorrowings",
         ],
         "cash_and_equivalents": [
             "CashAndCashEquivalentsAtCarryingValue",
@@ -405,12 +409,23 @@ class EDGARClient:
 
             records = tag_units[unit_to_use]
 
-            # Filter for annual 10-K filings only
+            # Filter for annual 10-K filings only.
+            # EDGAR sometimes tags sub-annual periods (quarters, half-years)
+            # with fp="FY" inside 10-K filings (e.g. ASC 606 transition
+            # comparatives). Guard with a duration check: require the period
+            # to span at least 340 days so that 90-day and 180-day sub-periods
+            # are always rejected regardless of the fp label.
             annual = [
                 r for r in records
                 if r.get("form") in ("10-K", "10-K/A")
                 and r.get("fp") == "FY"
                 and "end" in r
+                and (
+                    "start" not in r
+                    or (
+                        pd.Timestamp(r["end"]) - pd.Timestamp(r["start"])
+                    ).days >= 340
+                )
             ]
 
             if not annual:
@@ -742,7 +757,10 @@ class DataFetcher:
         def _align(s: Optional[pd.Series]) -> pd.Series:
             if s is None:
                 return pd.Series(np.nan, index=common_idx)
-            return s.reindex(common_idx, method="nearest", tolerance="180D").fillna(np.nan)
+            # 45D tolerance: enough for fiscal-year-end date drift between
+            # concepts (~2 weeks), but tight enough to reject cross-year
+            # nearest-neighbour matches when a series has a gap year.
+            return s.reindex(common_idx, method="nearest", tolerance="45D").fillna(np.nan)
 
         revenue_a = _align(revenue)
         ebit_a = _align(ebit)
