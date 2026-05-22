@@ -68,6 +68,10 @@ def _render_ticker_input() -> None:
                     set_state(StateKeys.TICKER_VALIDATION, result)
                     set_state(StateKeys.TICKER_VALID, result.is_valid)
                     set_state(StateKeys.DATA_SOURCE, "SEC EDGAR")
+                    if result.is_valid:
+                        price = fetcher.get_current_price(ticker_input)
+                        if price:
+                            set_state(StateKeys.CURRENT_PRICE, price)
                 except Exception as e:
                     st.error(f"Validation failed: {e}")
 

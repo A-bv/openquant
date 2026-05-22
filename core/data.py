@@ -390,20 +390,20 @@ class EDGARClient:
         """
         us_gaap = facts.get("facts", {}).get("us-gaap", {})
 
+        candidates = []
+
         for tag in concept_tags:
             if tag not in us_gaap:
                 continue
 
-            tag_data = us_gaap[tag]
-            units = tag_data.get("units", {})
+            tag_units = us_gaap[tag].get("units", {})
 
-            # Try specified unit first, then any available unit
-            unit_to_use = unit if unit in units else (next(iter(units), None))
-            if unit_to_use is None or unit_to_use not in units:
+            # Try specified unit first, then any available unit — do not mutate `unit`
+            unit_to_use = unit if unit in tag_units else next(iter(tag_units), None)
+            if not unit_to_use:
                 continue
-            unit = unit_to_use
 
-            records = units[unit]
+            records = tag_units[unit_to_use]
 
             # Filter for annual 10-K filings only
             annual = [
@@ -416,8 +416,8 @@ class EDGARClient:
             if not annual:
                 continue
 
-            # Deduplicate by end date — keep most recent filing
-            by_date = {}
+            # Deduplicate by end date — keep most recently filed version
+            by_date: dict = {}
             for r in annual:
                 end = r["end"]
                 if end not in by_date or r.get("filed", "") > by_date[end].get("filed", ""):
@@ -426,11 +426,21 @@ class EDGARClient:
             if not by_date:
                 continue
 
-            series = pd.Series(
-                {pd.Timestamp(end): r["val"] for end, r in by_date.items()}
-            ).sort_index()
+            candidates.append(
+                pd.Series(
+                    {pd.Timestamp(end): r["val"] for end, r in by_date.items()}
+                ).sort_index()
+            )
 
-            return series
+        if not candidates:
+            return None
+
+        # Return the candidate whose most recent data point is latest.
+        # Companies switch XBRL tags over time (e.g. AAPL moved from
+        # "Revenues" to "RevenueFromContractWithCustomerExcludingAssessedTax"
+        # in 2019). Always preferring the newest series avoids silently
+        # returning stale data from a retired tag.
+        return max(candidates, key=lambda s: s.index.max())
 
         return None
 
@@ -852,6 +862,20 @@ class DataFetcher:
             source="yfinance",
             fetched_at=datetime.now(),
         )
+
+    def get_current_price(self, ticker: str) -> Optional[float]:
+        """
+        Fetch the latest closing price for a ticker from yfinance.
+
+        Returns None on any failure so callers can fall back gracefully.
+        """
+        try:
+            prices = self.price_fetcher.fetch(ticker, years=0.05)  # ~18 days
+            if prices.empty:
+                return None
+            return float(prices.iloc[-1])
+        except Exception:
+            return None
 
     def _serialise_statements(self, s: FinancialStatements) -> dict:
         """Convert FinancialStatements to JSON-serialisable dict."""
