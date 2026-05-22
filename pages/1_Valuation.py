@@ -27,7 +27,7 @@ from ui.components.charts import (
     reverse_dcf_comparison_chart,
     revenue_fcf_sparklines,
 )
-from ui.components.diagnostic import render_diagnostic, render_diagnostic_compact
+from ui.components.diagnostic import render_diagnostic
 from ui.components.red_flags import render_red_flags
 from ui.components.audit_trail import render_audit_trail
 from ui.components.formulas import (
@@ -253,128 +253,135 @@ if run_analysis or get(StateKeys.DCF_RESULT) is not None:
         st.stop()
 
     company_name = statements.company_name
+    validation = get(StateKeys.TICKER_VALIDATION)
+    sector = validation.sector if validation and hasattr(validation, "sector") else ""
 
-    # ── Red flags — FIRST ────────────────────────────────────────────────────
-    if rf_summary:
-        render_red_flags(rf_summary)
+    from core.reverse_dcf import ReverseDCFFailure
+    rev_failed = isinstance(rev_r, ReverseDCFFailure)
 
-    st.divider()
+    # ─────────────────────────────────────────────────────────────────────────
+    # SECTION 1 — What is this company?
+    # ─────────────────────────────────────────────────────────────────────────
+    sector_label = f" · {sector}" if sector else ""
+    st.header(f"1. What is {company_name}?")
+    st.caption(f"**{company_name}** ({ticker}){sector_label}")
 
-    # ── Suitability ──────────────────────────────────────────────────────────
-    if suit and not suit.is_suitable:
-        st.error(f"⛔ {suit.recommendation}")
-        for alt in suit.alternative_methods:
-            st.caption(f"Consider: {alt}")
-        st.stop()
+    rev_series = statements.revenue.dropna()
+    fcf_series = statements.free_cash_flow.dropna()
+    latest_rev = rev_series.iloc[-1] if not rev_series.empty else None
+    latest_fcf = fcf_series.iloc[-1] if not fcf_series.empty else None
 
-    # ── Assumption Diagnostic ────────────────────────────────────────────────
-    if diag:
-        render_diagnostic_compact(diag)
+    _shares_s = statements.shares_outstanding.dropna()
+    market_cap = current_price * _shares_s.iloc[-1] if not _shares_s.empty else None
 
-    st.divider()
-
-    # ── Section 1: Company Overview ──────────────────────────────────────────
-    st.subheader(f"📊 {company_name} ({ticker})")
-
-    col1, col2 = st.columns([2, 1])
+    col1, col2, col3, col4 = st.columns(4)
     with col1:
-        if statements.revenue.dropna().shape[0] > 0:
-            fig = revenue_fcf_sparklines(
-                statements.revenue.dropna(),
-                statements.free_cash_flow.dropna(),
-                company_name,
-            )
-            st.plotly_chart(fig, use_container_width=True)
+        st.metric("Current Price", f"${current_price:.2f}")
     with col2:
-        if mult:
-            st.metric("Current Price", f"${current_price:.2f}")
-            if mult.ev_ebitda:
-                st.metric("EV/EBITDA", f"{mult.ev_ebitda:.1f}x")
-            if mult.fcf_yield:
-                st.metric("FCF Yield", f"{mult.fcf_yield:.1%}")
-            if mult.pe_ratio:
-                st.metric("P/E Ratio", f"{mult.pe_ratio:.1f}x")
+        if market_cap:
+            st.metric("Market Cap", f"${market_cap/1e9:.0f}B")
+    with col3:
+        if latest_rev:
+            st.metric("Revenue (latest yr)", f"${latest_rev/1e9:.1f}B")
+    with col4:
+        if latest_fcf:
+            st.metric("Free Cash Flow (latest yr)", f"${latest_fcf/1e9:.1f}B")
+
+    if fcf_a and latest_fcf is not None:
+        g = fcf_a.median_growth_rate
+        trend = "growing" if g > 0.05 else "roughly flat" if g > -0.05 else "declining"
+        st.caption(
+            f"{company_name} converts revenue into **${latest_fcf/1e9:.1f}B** of free cash flow per year, "
+            f"with {trend} FCF at a median rate of **{g:.1%}** per year over the past five years."
+        )
 
     st.divider()
 
-    # ── Section 2: FCF Analysis ──────────────────────────────────────────────
-    st.subheader("💵 Free Cash Flow")
+    # ─────────────────────────────────────────────────────────────────────────
+    # SECTION 2 — Can we value this with DCF?
+    # ─────────────────────────────────────────────────────────────────────────
+    st.header("2. Can we value this with DCF?")
 
-    if fcf_a:
-        st.caption(fcf_a.summary_text if hasattr(fcf_a, 'summary_text') else "")
+    if suit:
+        badge = {"green": "🟢", "amber": "🟡", "red": "🔴"}.get(suit.overall_rating.value, "⚪")
+        st.markdown(f"### {badge} {suit.recommendation}")
 
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.metric("Latest FCF", f"${fcf_a.latest_fcf/1e9:.2f}B")
-        with col2:
-            st.metric("Median Growth", f"{fcf_a.median_growth_rate:.1%}")
-        with col3:
-            st.metric("FCF Margin (median)", f"{float(fcf_a.fcf_margin.dropna().median()):.1%}")
+        if not suit.is_suitable:
+            if suit.alternative_methods:
+                st.markdown("**Consider instead:**")
+                for alt in suit.alternative_methods:
+                    st.caption(f"• {alt}")
+            st.stop()
 
-        tab1, tab2 = st.tabs(["History", "Projections"])
-        with tab1:
-            fig = fcf_history_chart(
-                statements.free_cash_flow.dropna(),
-                statements.free_cash_flow.dropna() - statements.stock_based_compensation.dropna().fillna(0),
-                company_name,
-            )
-            st.plotly_chart(fig, use_container_width=True)
-        with tab2:
-            from core.fcf import FCFAnalyser
-            scenarios = FCFAnalyser().project_all_scenarios(fcf_a)
-            fig = fcf_projection_chart(
-                statements.free_cash_flow.dropna(),
-                scenarios,
-                company_name,
-            )
-            st.plotly_chart(fig, use_container_width=True)
+        if suit.alternative_methods:
+            with st.expander("What to watch for (amber flags)", expanded=False):
+                for alt in suit.alternative_methods:
+                    st.caption(f"• {alt}")
 
     st.divider()
 
-    # ── Section 3: WACC ──────────────────────────────────────────────────────
-    st.subheader("⚖️ Cost of Capital (WACC)")
+    # ─────────────────────────────────────────────────────────────────────────
+    # SECTION 3 — What is the market betting on? (HERO)
+    # ─────────────────────────────────────────────────────────────────────────
+    st.header("3. What is the market betting on?")
 
-    if wacc_r:
-        render_wacc_metrics(wacc_r)
-        capm_formula_panel(wacc_r.risk_free_rate, wacc_r.beta, wacc_r.market_risk_premium, wacc_r.cost_of_equity)
-        wacc_formula_panel(wacc_r.equity_weight, wacc_r.cost_of_equity, wacc_r.debt_weight, wacc_r.cost_of_debt_pretax, wacc_r.tax_rate, wacc_r.wacc)
+    if rev_r:
+        if rev_failed:
+            st.warning(f"**{rev_r.reason}**")
+            st.caption(rev_r.diagnostic)
+            st.info(f"Tip: {rev_r.suggestion}")
+        else:
+            st.markdown(
+                f"To justify today's price of **${current_price:.2f}**, the market is implying "
+                f"that **{company_name}** will grow free cash flow at:"
+            )
 
-        col1, col2 = st.columns(2)
-        with col1:
-            if beta_r:
-                fig = rolling_beta_chart(
-                    beta_r.rolling_beta,
-                    beta_r.beta,
-                    beta_r.beta_ci_lower,
-                    beta_r.beta_ci_upper,
-                    ticker,
+            col_hero, col_chart = st.columns([1, 2])
+            with col_hero:
+                delta_vs_hist = rev_r.implied_growth_rate - rev_r.historical_median_growth
+                st.metric(
+                    "Implied FCF Growth Rate",
+                    f"{rev_r.implied_growth_rate:.1%}",
+                    delta=f"{delta_vs_hist:+.1%} vs historical median",
+                    delta_color="inverse",
+                )
+                st.caption(f"Historical median: **{rev_r.historical_median_growth:.1%}**")
+                st.caption(f"Historical mean: **{rev_r.historical_mean_growth:.1%}**")
+                if rev_r.revenue_cagr:
+                    st.caption(f"Revenue CAGR: **{rev_r.revenue_cagr:.1%}**")
+
+            with col_chart:
+                fig = reverse_dcf_comparison_chart(
+                    rev_r.implied_growth_rate,
+                    rev_r.historical_median_growth,
+                    rev_r.historical_mean_growth,
+                    rev_r.revenue_cagr,
+                    ticker=ticker,
                 )
                 st.plotly_chart(fig, use_container_width=True)
-                st.caption(beta_r.stability_note)
-        with col2:
-            fig = capital_structure_chart(wacc_r)
-            st.plotly_chart(fig, use_container_width=True)
-            st.caption(wacc_r.formula_trace)
+
+            st.markdown(f"**What this means:** {rev_r.verdict}")
 
     st.divider()
 
-    # ── Section 4: Forward DCF ───────────────────────────────────────────────
-    st.subheader("📐 Forward DCF Valuation")
-    st.caption(
-        "Three scenarios based on conservative / base / optimistic FCF growth assumptions. "
-        "Current price shown for reference."
-    )
+    # ─────────────────────────────────────────────────────────────────────────
+    # SECTION 4 — What does the math say?
+    # ─────────────────────────────────────────────────────────────────────────
+    st.header("4. What does the math say?")
 
-    if dcf_r:
-        st.metric("Current Price", f"${current_price:.2f}")
+    if dcf_r and fcf_a:
+        if rev_r and not rev_failed:
+            st.markdown(
+                f"The market requires **{rev_r.implied_growth_rate:.1%}** annual FCF growth from "
+                f"{company_name}. Historically it delivered **{rev_r.historical_median_growth:.1%}** "
+                f"(median). Here is what three scenarios imply for fair value:"
+            )
+        else:
+            st.markdown(
+                f"Based on {company_name}'s FCF history, here are three scenarios for fair value:"
+            )
+
         render_dcf_metrics(dcf_r)
-
-        terminal_value_formula_panel(
-            dcf_r.base.terminal_fcf,
-            dcf_r.terminal_growth_rate,
-            wacc_r.wacc if wacc_r else 0.09,
-            dcf_r.base.terminal_value,
-        )
 
         tabs = st.tabs(["Conservative", "Base", "Optimistic"])
         for tab, scenario in zip(tabs, dcf_r.all_scenarios):
@@ -385,97 +392,140 @@ if run_analysis or get(StateKeys.DCF_RESULT) is not None:
                     st.plotly_chart(fig, use_container_width=True)
                 with col2:
                     st.metric("Intrinsic Value", f"${scenario.intrinsic_value_per_share:.2f}")
-                    st.metric("Margin of Safety", f"{scenario.margin_of_safety:.1%}")
-                    st.metric("Terminal Value %", f"{scenario.terminal_value_pct:.0%}")
-                    st.metric("FCF Growth", f"{scenario.growth_rate:.1%}")
+                    st.metric("Current Price", f"${current_price:.2f}")
+                    mos = scenario.margin_of_safety
+                    mos_sign = "undervalued" if mos > 0 else "overvalued"
+                    st.metric(
+                        "Margin of Safety" if mos > 0 else "Premium to Fair Value",
+                        f"{abs(mos):.1%}",
+                        delta=mos_sign,
+                        delta_color="normal" if mos > 0 else "inverse",
+                    )
+                    st.metric("FCF Growth Assumed", f"{scenario.growth_rate:.1%}")
                     st.metric("WACC Used", f"{scenario.wacc:.1%}")
 
     st.divider()
 
-    # ── Section 5: Sensitivity ───────────────────────────────────────────────
-    st.subheader("🎛️ Sensitivity Analysis")
+    # ─────────────────────────────────────────────────────────────────────────
+    # SECTION 5 — How sensitive is this?
+    # ─────────────────────────────────────────────────────────────────────────
+    st.header("5. How sensitive is this?")
 
-    if gt and tt:
-        col1, col2 = st.columns(2)
-        with col1:
-            fig = sensitivity_heatmap(
-                gt.table, current_price,
-                "Implied Share Price",
-                "FCF Growth Rate", "WACC",
-            )
-            st.plotly_chart(fig, use_container_width=True)
-        with col2:
-            fig = sensitivity_heatmap(
-                tt.table, 70.0,
-                "Terminal Value % of EV",
-                "Terminal Growth", "WACC",
-            )
-            st.plotly_chart(fig, use_container_width=True)
-
-        if gt and fcf_a and wacc_r:
+    if gt:
+        if fcf_a and wacc_r:
             from core.sensitivity import SensitivityAnalyser
             plain = SensitivityAnalyser().generate_plain_language(
                 gt, current_price, fcf_a.growth_base, wacc_r.wacc, fcf_a.median_growth_rate
             )
             st.caption(plain)
 
+        st.caption(
+            "The highlighted cell shows the growth rate and WACC combination closest to today's price."
+        )
+
+        fig = sensitivity_heatmap(
+            gt.table, current_price,
+            "Implied Share Price",
+            "FCF Growth Rate", "WACC",
+        )
+        st.plotly_chart(fig, use_container_width=True)
+
     st.divider()
 
-    # ── Section 6: Reverse DCF ───────────────────────────────────────────────
-    st.subheader("🔄 Reverse DCF — What Is The Market Betting On?")
+    # ─────────────────────────────────────────────────────────────────────────
+    # SECTION 6 — How was this computed? (collapsed by default)
+    # ─────────────────────────────────────────────────────────────────────────
+    st.header("6. How was this computed?")
+    st.caption("All technical detail is here — expand any section to go deeper.")
 
-    if rev_r:
-        from core.reverse_dcf import ReverseDCFResult, ReverseDCFFailure
-
-        if isinstance(rev_r, ReverseDCFFailure):
-            st.warning(f"**{rev_r.reason}**")
-            st.caption(rev_r.diagnostic)
-            st.info(f"💡 {rev_r.suggestion}")
-        else:
-            st.info(f"📌 {rev_r.framing_note}")
-            render_reverse_dcf_metrics(rev_r)
-
-            fig = reverse_dcf_comparison_chart(
-                rev_r.implied_growth_rate,
-                rev_r.historical_median_growth,
-                rev_r.historical_mean_growth,
-                rev_r.revenue_cagr,
-                ticker=ticker,
+    with st.expander("⚖️ WACC — Cost of Capital", expanded=False):
+        if wacc_r:
+            render_wacc_metrics(wacc_r)
+            capm_formula_panel(
+                wacc_r.risk_free_rate, wacc_r.beta,
+                wacc_r.market_risk_premium, wacc_r.cost_of_equity,
             )
+            wacc_formula_panel(
+                wacc_r.equity_weight, wacc_r.cost_of_equity,
+                wacc_r.debt_weight, wacc_r.cost_of_debt_pretax,
+                wacc_r.tax_rate, wacc_r.wacc,
+            )
+
+    with st.expander("📈 Beta — Market Sensitivity", expanded=False):
+        if beta_r and wacc_r:
+            col1, col2 = st.columns(2)
+            with col1:
+                fig = rolling_beta_chart(
+                    beta_r.rolling_beta,
+                    beta_r.beta,
+                    beta_r.beta_ci_lower,
+                    beta_r.beta_ci_upper,
+                    ticker,
+                )
+                st.plotly_chart(fig, use_container_width=True)
+            with col2:
+                fig = capital_structure_chart(wacc_r)
+                st.plotly_chart(fig, use_container_width=True)
+            st.caption(beta_r.stability_note)
+            st.caption(wacc_r.formula_trace)
+
+    with st.expander("💵 FCF History & Projections", expanded=False):
+        if fcf_a and statements:
+            tab1, tab2 = st.tabs(["History", "Projections"])
+            with tab1:
+                fig = fcf_history_chart(
+                    statements.free_cash_flow.dropna(),
+                    statements.free_cash_flow.dropna()
+                    - statements.stock_based_compensation.dropna().fillna(0),
+                    company_name,
+                )
+                st.plotly_chart(fig, use_container_width=True)
+            with tab2:
+                from core.fcf import FCFAnalyser
+                scenarios = FCFAnalyser().project_all_scenarios(fcf_a)
+                fig = fcf_projection_chart(
+                    statements.free_cash_flow.dropna(),
+                    scenarios,
+                    company_name,
+                )
+                st.plotly_chart(fig, use_container_width=True)
+
+    with st.expander("📊 Revenue & FCF Overview", expanded=False):
+        if not rev_series.empty:
+            fig = revenue_fcf_sparklines(rev_series, fcf_series, company_name)
             st.plotly_chart(fig, use_container_width=True)
 
-            st.markdown(f"**Verdict:** {rev_r.verdict}")
+    with st.expander("📐 Terminal Value Formula", expanded=False):
+        if dcf_r and wacc_r:
+            terminal_value_formula_panel(
+                dcf_r.base.terminal_fcf,
+                dcf_r.terminal_growth_rate,
+                wacc_r.wacc,
+                dcf_r.base.terminal_value,
+            )
 
-    st.divider()
-
-    # ── Section 7: Multiples Context ─────────────────────────────────────────
-    if mult:
-        st.subheader("📊 Market Multiples Context")
-        st.caption("Not a primary valuation — context alongside DCF only.")
-        st.caption(mult.interpretation)
-
-    st.divider()
-
-    # ── Section 8: Buffett's Questions ───────────────────────────────────────
-    st.subheader("🤔 Qualitative Check — Buffett's Three Questions")
-    st.caption(
-        "The math is complete. These are the questions no model can answer for you."
-    )
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.info("**1. Moat**\n\nDoes this company have a durable competitive advantage?")
-    with col2:
-        st.info("**2. Management**\n\nDo you trust and respect management?")
-    with col3:
-        st.info("**3. Durability**\n\nWill this business model look similar in 10 years?")
-
-    st.divider()
-
-    # ── Full Diagnostic ──────────────────────────────────────────────────────
-    if diag:
-        with st.expander("📋 Full Assumption Diagnostic", expanded=False):
+    with st.expander("📋 Assumption Diagnostic", expanded=False):
+        if diag:
             render_diagnostic(diag)
 
-    # ── Audit Trail ──────────────────────────────────────────────────────────
+    if rf_summary:
+        with st.expander("🚩 Red Flags", expanded=False):
+            render_red_flags(rf_summary)
+
+    if mult:
+        with st.expander("📊 Market Multiples Context", expanded=False):
+            st.caption("Not a primary valuation — context alongside DCF only.")
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                if mult.ev_ebitda:
+                    st.metric("EV/EBITDA", f"{mult.ev_ebitda:.1f}x")
+            with col2:
+                if mult.fcf_yield:
+                    st.metric("FCF Yield", f"{mult.fcf_yield:.1%}")
+            with col3:
+                if mult.pe_ratio:
+                    st.metric("P/E Ratio", f"{mult.pe_ratio:.1f}x")
+            st.caption(mult.interpretation)
+
     if trail:
         render_audit_trail(trail)
