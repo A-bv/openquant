@@ -1,0 +1,27 @@
+# OpenQuant dependencies
+
+# Web UI
+streamlit>=1.32.0
+
+# Data
+yfinance>=0.2.36
+pandas>=2.0.0
+numpy>=1.26.0
+requests>=2.31.0
+
+# Math and optimisation
+scipy>=1.12.0
+scikit-learn>=1.4.0     # Ledoit-Wolf covariance
+
+# Charts
+plotly>=5.19.0
+
+# Config and security
+python-dotenv>=1.0.0
+
+# Testing
+pytest>=8.0.0
+pytest-cov>=4.1.0
+
+# Code quality
+black>=24.0.0
