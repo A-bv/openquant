@@ -280,16 +280,28 @@ if run_analysis or get(StateKeys.DCF_RESULT) is not None:
 
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.metric("Current Price", f"${current_price:.2f}")
+        st.metric(
+            "Current Price", f"${current_price:.2f}",
+            help="The stock price used as the starting point for all analysis on this page.",
+        )
     with col2:
         if market_cap:
-            st.metric("Market Cap", f"${market_cap/1e9:.0f}B")
+            st.metric(
+                "Market Cap", f"${market_cap/1e9:.0f}B",
+                help="The total market value of all outstanding shares — what the stock market says the entire company is worth right now. Computed as share price x shares outstanding.",
+            )
     with col3:
         if latest_rev:
-            st.metric("Revenue (latest yr)", f"${latest_rev/1e9:.1f}B")
+            st.metric(
+                "Revenue (latest yr)", f"${latest_rev/1e9:.1f}B",
+                help="Total revenue in the most recent fiscal year, pulled from SEC EDGAR filings.",
+            )
     with col4:
         if latest_fcf:
-            st.metric("Free Cash Flow (latest yr)", f"${latest_fcf/1e9:.1f}B")
+            st.metric(
+                "Free Cash Flow (latest yr)", f"${latest_fcf/1e9:.1f}B",
+                help="The actual cash generated after operating costs and capital expenditures. Unlike accounting profit, FCF cannot be manipulated by depreciation or accruals.",
+            )
 
     if fcf_a and latest_fcf is not None:
         g = fcf_a.median_growth_rate
@@ -328,6 +340,7 @@ if run_analysis or get(StateKeys.DCF_RESULT) is not None:
     # SECTION 3 — What is the market betting on? (HERO)
     # ─────────────────────────────────────────────────────────────────────────
     st.header("3. What is the market betting on?")
+    st.caption("We reverse-engineer the stock price to find the growth rate already baked into it — then compare it to history.")
 
     if rev_r:
         if rev_failed:
@@ -348,6 +361,7 @@ if run_analysis or get(StateKeys.DCF_RESULT) is not None:
                     f"{rev_r.implied_growth_rate:.1%}",
                     delta=f"{delta_vs_hist:+.1%} vs historical median",
                     delta_color="inverse",
+                    help="The annual FCF growth rate that mathematically justifies today's price, found by reverse-solving the DCF equation. This is what the market is currently betting on.",
                 )
                 st.caption(f"Historical median: **{rev_r.historical_median_growth:.1%}**")
                 st.caption(f"Historical mean: **{rev_r.historical_mean_growth:.1%}**")
@@ -372,6 +386,7 @@ if run_analysis or get(StateKeys.DCF_RESULT) is not None:
     # SECTION 4 — What does the math say?
     # ─────────────────────────────────────────────────────────────────────────
     st.header("4. What does the math say?")
+    st.caption("We run the DCF forward using three growth scenarios and compute what the business would be worth under each one.")
 
     if dcf_r and fcf_a:
         if rev_r and not rev_failed:
@@ -395,8 +410,14 @@ if run_analysis or get(StateKeys.DCF_RESULT) is not None:
                     fig = dcf_waterfall_chart(scenario, company_name)
                     st.plotly_chart(fig, use_container_width=True)
                 with col2:
-                    st.metric("Intrinsic Value", f"${scenario.intrinsic_value_per_share:.2f}")
-                    st.metric("Current Price", f"${current_price:.2f}")
+                    st.metric(
+                        "Intrinsic Value", f"${scenario.intrinsic_value_per_share:.2f}",
+                        help="The estimated fair value per share based on discounting future cash flows back to today's money, using the growth rate for this scenario.",
+                    )
+                    st.metric(
+                        "Current Price", f"${current_price:.2f}",
+                        help="The current market price, shown for comparison against the model's intrinsic value estimate.",
+                    )
                     mos = scenario.margin_of_safety
                     mos_sign = "undervalued" if mos > 0 else "overvalued"
                     st.metric(
@@ -404,9 +425,16 @@ if run_analysis or get(StateKeys.DCF_RESULT) is not None:
                         f"{abs(mos):.1%}",
                         delta=mos_sign,
                         delta_color="normal" if mos > 0 else "inverse",
+                        help="The gap between estimated fair value and current price, as a percentage. Positive means the model estimates the stock is undervalued. Negative means overvalued relative to the model's estimate.",
                     )
-                    st.metric("FCF Growth Assumed", f"{scenario.growth_rate:.1%}")
-                    st.metric("WACC Used", f"{scenario.wacc:.1%}")
+                    st.metric(
+                        "FCF Growth Assumed", f"{scenario.growth_rate:.1%}",
+                        help="The annual FCF growth rate used in this scenario for the 10-year projection period.",
+                    )
+                    st.metric(
+                        "WACC Used", f"{scenario.wacc:.1%}",
+                        help="The discount rate applied to future cash flows. Higher WACC = lower present value = lower intrinsic value.",
+                    )
 
     st.divider()
 
@@ -414,6 +442,7 @@ if run_analysis or get(StateKeys.DCF_RESULT) is not None:
     # SECTION 5 — How sensitive is this?
     # ─────────────────────────────────────────────────────────────────────────
     st.header("5. How sensitive is this?")
+    st.caption("We vary the two most important assumptions — growth rate and discount rate — to show how much the fair value estimate changes.")
 
     if gt:
         if fcf_a and wacc_r:
@@ -522,35 +551,23 @@ if run_analysis or get(StateKeys.DCF_RESULT) is not None:
             col1, col2, col3 = st.columns(3)
             with col1:
                 if mult.ev_ebitda:
-                    st.metric("EV/EBITDA", f"{mult.ev_ebitda:.1f}x")
+                    st.metric(
+                        "EV/EBITDA", f"{mult.ev_ebitda:.1f}x",
+                        help="Enterprise Value divided by Earnings Before Interest, Taxes, Depreciation and Amortisation. A common multiple for comparing companies within the same sector. Lower is generally cheaper.",
+                    )
             with col2:
                 if mult.fcf_yield:
-                    st.metric("FCF Yield", f"{mult.fcf_yield:.1%}")
+                    st.metric(
+                        "FCF Yield", f"{mult.fcf_yield:.1%}",
+                        help="Free cash flow per share divided by stock price — like a dividend yield but for cash generation. Higher means more cash per dollar invested.",
+                    )
             with col3:
                 if mult.pe_ratio:
-                    st.metric("P/E Ratio", f"{mult.pe_ratio:.1f}x")
+                    st.metric(
+                        "P/E Ratio", f"{mult.pe_ratio:.1f}x",
+                        help="Price-to-Earnings — stock price divided by earnings per share. A traditional valuation multiple. Context-dependent; compare within sector and against historical averages.",
+                    )
             st.caption(mult.interpretation)
 
     if trail:
         render_audit_trail(trail)
-
-    # ─────────────────────────────────────────────────────────────────────────
-    # LAYER 3 — Glossary (collapsed, on demand)
-    # ─────────────────────────────────────────────────────────────────────────
-    st.divider()
-    with st.expander("📖 Key concepts — what do these terms mean?", expanded=False):
-        st.caption("For anyone who hasn't taken a finance course — every term used on this page, explained in plain English.")
-        st.markdown("""
-| **Term** | **Plain English** |
-|---|---|
-| **Free Cash Flow (FCF)** | The actual cash a business generates after paying all its operating costs and investments. Unlike profit, it cannot be manipulated by accounting choices. |
-| **WACC** | Weighted Average Cost of Capital — the minimum annual return the business must generate to satisfy both its shareholders and lenders. |
-| **DCF Valuation** | Discounted Cash Flow — a method that estimates what future cash flows are worth in today's money, by applying a discount rate. |
-| **Reverse DCF** | Instead of asking "what is this worth?", we ask "what growth rate is already baked into the current price?" More honest than predicting the future. |
-| **Beta** | A measure of how much a stock moves relative to the overall market. Beta of 1.2 means the stock moves 20% more than the market index. |
-| **Terminal Value** | The estimated value of all cash flows beyond the 10-year forecast horizon. Often the largest and most uncertain part of a DCF valuation. |
-| **Margin of Safety** | The gap between the model's estimated fair value and today's market price. A large positive margin of safety means the stock appears undervalued. |
-| **Intrinsic Value** | The estimated fair value of the business based purely on its fundamentals — what it should be worth, independent of what the market currently thinks. |
-| **Sensitivity Analysis** | A table showing how the estimated fair value changes when you vary the key assumptions (growth rate and discount rate). |
-| **Assumption Diagnostic** | OpenQuant's built-in honesty check — it scores 8 dimensions of the analysis before showing results, so you know how much to trust the output. |
-""")

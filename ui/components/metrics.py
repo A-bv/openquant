@@ -50,6 +50,7 @@ def render_dcf_metrics(dcf_result) -> None:
             delta=f"{dcf_result.conservative.upside_downside:+.1%}",
             formula="IV = (EV − Net Debt) / Shares\nEV = Σ FCF_t/(1+WACC)^t + TV/(1+WACC)^n",
             source="EPFL Formula Sheet — NPV",
+            help_text="Intrinsic value per share assuming FCF grows at 70% of the historical median — the pessimistic scenario. Computed by discounting projected cash flows back to today's money.",
         )
 
     with col2:
@@ -57,6 +58,7 @@ def render_dcf_metrics(dcf_result) -> None:
             label="Base IV",
             value=f"${dcf_result.base.intrinsic_value_per_share:.2f}",
             delta=f"{dcf_result.base.upside_downside:+.1%}",
+            help_text="Intrinsic value per share assuming FCF continues growing at its historical median rate — the central scenario.",
         )
 
     with col3:
@@ -64,6 +66,7 @@ def render_dcf_metrics(dcf_result) -> None:
             label="Optimistic IV",
             value=f"${dcf_result.optimistic.intrinsic_value_per_share:.2f}",
             delta=f"{dcf_result.optimistic.upside_downside:+.1%}",
+            help_text="Intrinsic value per share assuming FCF grows at 130% of the historical median rate — the optimistic scenario.",
         )
 
 
@@ -77,7 +80,7 @@ def render_wacc_metrics(wacc_result) -> None:
             value=f"{wacc_result.beta:.3f}",
             formula="β = Cov(r_stock, r_market) / Var(r_market)",
             source="EPFL Formula Sheet",
-            help_text="Sensitivity of stock returns to market movements.",
+            help_text="Measures how much this stock moves relative to the market. Beta of 1.2 means the stock moves 20% more than the S&P 500. Used to estimate the return equity investors require.",
         )
 
     with col2:
@@ -86,13 +89,14 @@ def render_wacc_metrics(wacc_result) -> None:
             value=f"{wacc_result.cost_of_equity:.1%}",
             formula=f"r_E = r_f + β × MRP\n= {wacc_result.risk_free_rate:.1%} + {wacc_result.beta:.2f} × {wacc_result.market_risk_premium:.1%}",
             source="EPFL Formula Sheet — CAPM",
+            help_text="The return equity investors require from this company, computed using CAPM: Risk-free rate + Beta x Market Risk Premium. This is what shareholders demand for bearing the company's risk.",
         )
 
     with col3:
         metric_card(
             label="Cost of Debt",
             value=f"{wacc_result.cost_of_debt_pretax:.1%}",
-            help_text="Pre-tax. Historical effective rate (interest / avg debt).",
+            help_text="The effective interest rate on the company's debt, estimated as interest expense divided by average debt. Cheaper than equity because debt holders get paid first in bankruptcy.",
         )
 
     with col4:
@@ -101,6 +105,7 @@ def render_wacc_metrics(wacc_result) -> None:
             value=f"{wacc_result.wacc:.1%}",
             formula="WACC = (E/V)×rE + (D/V)×rD×(1−T)",
             source="EPFL Formula Sheet",
+            help_text="Weighted Average Cost of Capital — the minimum annual return the business must generate to satisfy both its shareholders and lenders. Used to discount future cash flows back to today's value.",
         )
 
 
@@ -120,14 +125,14 @@ def render_reverse_dcf_metrics(reverse_result) -> None:
             value=f"{reverse_result.implied_growth_rate:.1%}",
             formula="Solve: IV(g*) = Current Price\nIV(g) = [Σ FCF_t(g)/(1+WACC)^t + TV(g)] / Shares − Net Debt",
             source="Reverse DCF",
-            help_text="Annual FCF growth the current price implies over 10 years.",
+            help_text="The annual FCF growth rate that mathematically justifies today's stock price, found by reverse-solving the DCF equation. This is what the market is currently betting on.",
         )
 
     with col2:
         metric_card(
             label="Historical Median Growth",
             value=f"{reverse_result.historical_median_growth:.1%}",
-            help_text="Historical median year-over-year FCF growth (winsorized).",
+            help_text="The median year-over-year FCF growth rate over the past 5-10 years, adjusted to remove statistical outliers. This is the company's track record.",
         )
 
     with col3:
@@ -136,4 +141,5 @@ def render_reverse_dcf_metrics(reverse_result) -> None:
             label="Implied vs Historical",
             value=f"{diff:+.1%}",
             delta="above historical" if diff > 0 else "below historical",
+            help_text="How the market's implied growth expectation compares to what the company has historically delivered. A large positive gap means the market expects the company to significantly outperform its history.",
         )
