@@ -62,6 +62,12 @@ EXCLUDED_SECTORS = [                     # DCF not appropriate
     "Banks",
     "Insurance",
     "Capital Markets",
+    "Petroleum Refining",
+    "Oil and Gas Extraction",
+    "Crude Petroleum and Natural Gas",
+    "Mining",
+    "Coal Mining",
+    "Metal Mining",
 ]
 
 # ── Assumption Diagnostic ─────────────────────────────────────────────────────

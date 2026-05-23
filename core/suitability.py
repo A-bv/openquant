@@ -29,6 +29,8 @@ from config import (
     REVENUE_SWING_MILD,
     EXCLUDED_SECTORS,
     DEFAULT_RISK_FREE_RATE,
+    GROWTH_WINSOR_LOW,
+    GROWTH_WINSOR_HIGH,
 )
 from config import DEFAULT_TERMINAL_GROWTH_RATE
 from core.data import FinancialStatements
@@ -136,6 +138,7 @@ class SuitabilityChecker:
         checks.append(self._check_sector(sector))
         checks.append(self._check_fcf_history(statements))
         checks.append(self._check_fcf_positivity(statements))
+        checks.append(self._check_fcf_cyclicality(statements))
         checks.append(self._check_price_history(trading_days))
         checks.append(self._check_margin_stability(statements))
         checks.append(self._check_revenue_stability(statements))
@@ -305,6 +308,55 @@ class SuitabilityChecker:
             passed=True,
             rating=SuitabilityRating.GREEN,
             message=f"FCF was positive in all {n_total} years.",
+        )
+
+    def _check_fcf_cyclicality(
+        self, statements: FinancialStatements
+    ) -> SuitabilityCheck:
+        """
+        Check 3b: Is FCF trend too cyclical / declining for meaningful projection?
+
+        Catches commodity companies (oil, mining) that pass the positivity check
+        yet have a strongly negative median FCF growth trend.
+        """
+        fcf_clean = statements.free_cash_flow.dropna()
+        if len(fcf_clean) < 4:
+            return SuitabilityCheck(
+                name="FCF Cyclicality",
+                passed=True,
+                rating=SuitabilityRating.GREEN,
+                message="Insufficient history for cyclicality check.",
+            )
+
+        yoy = fcf_clean.pct_change().dropna()
+        from core.utils import winsorize_series
+        if len(yoy) >= 4:
+            yoy = winsorize_series(yoy, GROWTH_WINSOR_LOW, GROWTH_WINSOR_HIGH)
+        median_g = float(yoy.median())
+
+        if median_g < -0.10:
+            return SuitabilityCheck(
+                name="FCF Cyclicality",
+                passed=False,
+                rating=SuitabilityRating.RED,
+                message=(
+                    f"FCF has declined at {median_g:.1%}/yr median over the past "
+                    f"{len(fcf_clean)} years. This suggests highly cyclical or "
+                    f"commodity-driven cash flows. DCF projections from this base "
+                    f"will be misleading."
+                ),
+                detail=(
+                    "Highly cyclical companies require normalised through-cycle "
+                    "earnings, not recent FCF trends. Consider EV/EBITDA on "
+                    "normalised earnings instead."
+                ),
+            )
+
+        return SuitabilityCheck(
+            name="FCF Cyclicality",
+            passed=True,
+            rating=SuitabilityRating.GREEN,
+            message=f"FCF trend is acceptable for DCF (median growth: {median_g:.1%}/yr).",
         )
 
     def _check_price_history(self, trading_days: int) -> SuitabilityCheck:
@@ -614,6 +666,17 @@ class SuitabilityChecker:
                         "DCF is not suitable for this company in its current sector. "
                         "Consider relative valuation methods instead."
                     )
+            elif primary_block and primary_block.name == "FCF Cyclicality":
+                alternatives = [
+                    "EV/EBITDA on normalised earnings",
+                    "Price/Normalised Cash Flow",
+                    "Sum-of-parts valuation",
+                ]
+                rec = (
+                    "DCF is not suitable — FCF is too cyclical or declining to project reliably. "
+                    "Commodity and cyclical companies are better valued using normalised "
+                    "earnings multiples over a full business cycle."
+                )
             elif primary_block and "FCF" in primary_block.name:
                 alternatives = ["EV/Revenue", "EV/Sales", "Comparable transactions"]
                 rec = (

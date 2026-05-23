@@ -357,17 +357,19 @@ if run_analysis or get(StateKeys.DCF_RESULT) is not None:
                 f"that **{company_name}** will grow free cash flow at:"
             )
 
-            # Giant metric — full width, no columns
+            # Giant hero metric — full width, no columns
             implied = rev_r.implied_growth_rate
             historical = rev_r.historical_median_growth
             delta_vs_hist = implied - historical
-            st.metric(
-                "Implied FCF Growth Rate",
-                f"{implied:.1%}",
-                delta=f"{delta_vs_hist:+.1%} vs historical median",
-                delta_color="inverse",
-                help="The annual FCF growth rate that mathematically justifies today's price, found by reverse-solving the DCF equation. This is what the market is currently betting on.",
-            )
+            color = "#E24B4A" if implied < historical else "#22C55E"
+            direction = "▼" if implied < historical else "▲"
+            st.markdown(f"""
+<div style="padding: 1.5rem; border-left: 4px solid {color}; margin: 1rem 0 1.5rem 0;">
+    <div style="font-size: 0.8rem; color: #6B7280; margin-bottom: 0.4rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;">Market-Implied FCF Growth Rate</div>
+    <div style="font-size: 3.5rem; font-weight: 700; color: {color}; line-height: 1.1;">{implied:.1%}</div>
+    <div style="font-size: 0.95rem; color: #6B7280; margin-top: 0.5rem;">{direction} {abs(delta_vs_hist):.1%} vs historical median of {historical:.1%}/yr</div>
+</div>
+""", unsafe_allow_html=True)
 
             # Gap indicator — three columns
             col_a, col_b, col_c = st.columns(3)
@@ -469,22 +471,22 @@ if run_analysis or get(StateKeys.DCF_RESULT) is not None:
         if all_above:
             st.info(
                 f"Under all three scenarios the model estimates {company_name} is undervalued at "
-                f"${current_price:.0f}. Even the conservative scenario implies ${cons_iv:.0f} — "
+                f"${current_price:,.0f}. Even the conservative scenario implies ${cons_iv:,.0f} — "
                 f"{abs(cons_iv / current_price - 1):.0%} above today's price. "
-                f"The base case using historical growth implies ${base_iv:.0f}."
+                f"The base case using historical growth implies ${base_iv:,.0f}."
             )
         elif all_below:
             st.info(
                 f"Under all three scenarios the model estimates {company_name} is overvalued at "
-                f"${current_price:.0f}. Even the optimistic scenario implies only ${opti_iv:.0f} — "
+                f"${current_price:,.0f}. Even the optimistic scenario implies only ${abs(opti_iv):,.0f} — "
                 f"{abs(opti_iv / current_price - 1):.0%} below today's price. "
-                f"The base case implies ${base_iv:.0f}."
+                f"The base case implies ${base_iv:,.0f}."
             )
         else:
             st.info(
-                f"The model gives a mixed picture at ${current_price:.0f}. "
-                f"The pessimistic scenario implies ${cons_iv:.0f}, the base case ${base_iv:.0f}, "
-                f"and the optimistic scenario ${opti_iv:.0f}. "
+                f"The model gives a mixed picture at ${current_price:,.0f}. "
+                f"The pessimistic scenario implies ${cons_iv:,.0f}, the base case ${base_iv:,.0f}, "
+                f"and the optimistic scenario ${opti_iv:,.0f}. "
                 f"The current price sits within the range of plausible outcomes."
             )
 

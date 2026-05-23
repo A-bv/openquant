@@ -318,6 +318,7 @@ def sensitivity_heatmap(
         title_text=col_label,
         title_font=dict(size=13),
         tickfont=dict(size=13),
+        tickangle=0,
     )
     fig.update_yaxes(
         title_text=row_label,
@@ -478,15 +479,19 @@ def reverse_dcf_comparison_chart(
 
     pct_values = [v * 100 for v in raw_values]
 
-    fig = go.Figure(go.Bar(
-        x=raw_labels,
-        y=pct_values,
-        marker_color=bar_colors,
-        text=[f"{v:.1%}" for v in raw_values],
-        textposition="inside",
-        textfont=dict(size=14, color="white"),
-        width=0.6,
-    ))
+    fig = go.Figure()
+    for i, (label, value, color) in enumerate(zip(raw_labels, pct_values, bar_colors)):
+        fig.add_trace(go.Bar(
+            x=[label],
+            y=[value],
+            marker_color=color,
+            text=[f"{raw_values[i]:.1%}"],
+            textposition="inside" if abs(value) > 3 else "outside",
+            textfont=dict(size=13, color="white" if abs(value) > 3 else "#1F2937"),
+            width=0.5,
+            showlegend=False,
+            name=label,
+        ))
 
     # Historical median reference line
     fig.add_hline(
