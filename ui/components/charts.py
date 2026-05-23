@@ -214,7 +214,7 @@ def dcf_waterfall_chart(dcf_scenario, company_name: str) -> go.Figure:
     tv_pct = dcf_scenario.terminal_value_pct
     layout = _base_layout(
         f"{company_name} — {dcf_scenario.scenario_name} Scenario",
-        f"Terminal value = {tv_pct:.0%} of enterprise value",
+        f"Terminal value = {tv_pct:.0%} of enterprise value — the most uncertain assumption",
         height=350,
     )
     layout["margin"]["b"] = 150
@@ -225,20 +225,6 @@ def dcf_waterfall_chart(dcf_scenario, company_name: str) -> go.Figure:
         tickfont=dict(size=13),
     )
     fig.update_xaxes(tickfont=dict(size=13))
-
-    # Terminal value annotation
-    fig.add_annotation(
-        text=f"Terminal value = {tv_pct:.0%} of total EV",
-        xref="paper", yref="paper",
-        x=0.98, y=0.97,
-        xanchor="right",
-        showarrow=False,
-        font=dict(size=12, color=COLOURS["terminal_value"]),
-        bgcolor="rgba(139,92,246,0.1)",
-        bordercolor=COLOURS["terminal_value"],
-        borderwidth=1,
-        borderpad=4,
-    )
 
     return fig
 
@@ -282,30 +268,33 @@ def sensitivity_heatmap(
         colorbar=dict(title="IV ($)", tickfont=dict(size=12)),
     ))
 
-    # Highlight cell closest to current_price
+    # Highlight cell closest to current_price — mask NaN so argmin doesn't pick them
     diff = np.abs(values - current_price)
-    min_row, min_col = np.unravel_index(diff.argmin(), diff.shape)
+    diff_masked = np.where(np.isnan(values), np.inf, diff)
+    min_row, min_col = np.unravel_index(np.argmin(diff_masked), diff_masked.shape)
 
-    # Bug #13: clamp arrow offset so annotation stays inside chart at edge cells
+    # Clamp arrow offset so annotation stays inside chart at edge cells
     n_cols = len(x_labels)
     n_rows = len(y_labels)
-    ax = -55 if min_col >= n_cols // 2 else 55
+    ax = -60 if min_col >= n_cols // 2 else 60
     ay = 40 if min_row >= n_rows // 2 else -40
 
     fig.add_annotation(
-        text="Today's price<br>justified here",
+        text="← today's price",
         x=x_labels[min_col],
         y=y_labels[min_row],
         xref="x", yref="y",
         showarrow=True,
         arrowhead=2,
+        arrowsize=1.5,
+        arrowwidth=2,
         arrowcolor=COLOURS["current_price"],
         ax=ax, ay=ay,
         font=dict(size=12, color=COLOURS["current_price"]),
         bgcolor="rgba(245,158,11,0.15)",
         bordercolor=COLOURS["current_price"],
-        borderwidth=2,
-        borderpad=3,
+        borderwidth=1,
+        borderpad=4,
     )
 
     layout = _base_layout(
@@ -315,15 +304,15 @@ def sensitivity_heatmap(
     )
     fig.update_layout(**layout)
     fig.update_xaxes(
-        title_text=col_label,
+        title_text="WACC",
         title_font=dict(size=13),
-        tickfont=dict(size=13),
+        tickfont=dict(size=12),
         tickangle=0,
     )
     fig.update_yaxes(
-        title_text=row_label,
+        title_text="FCF Growth Rate",
         title_font=dict(size=13),
-        tickfont=dict(size=13),
+        tickfont=dict(size=12),
     )
 
     return fig

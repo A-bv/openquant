@@ -405,14 +405,15 @@ if run_analysis or get(StateKeys.DCF_RESULT) is not None:
             )
             st.plotly_chart(fig, use_container_width=True)
 
-            # Auto-generated interpretation
+            # Auto-generated interpretation — no bare $ to avoid markdown LaTeX parsing
             if implied < historical:
                 action = "decline" if implied < 0 else "grow slowly"
                 interp = (
-                    f"The market is pricing {company_name} as if FCF will {action} at {implied:.1%}/yr. "
-                    f"Yet historically {company_name} grew FCF at {historical:.1%}/yr. "
-                    f"This {abs(implied - historical) * 100:.1f}pp gap suggests the market may be "
-                    f"underestimating the company — or there is a specific reason for pessimism you should investigate."
+                    f"The market is pricing {company_name} as if FCF will {action} "
+                    f"at {implied:.1%}/yr. Yet historically {company_name} grew FCF at "
+                    f"{historical:.1%}/yr. This {abs(implied - historical) * 100:.1f}pp gap "
+                    f"suggests the market may be underestimating the company — or there is a "
+                    f"specific reason for pessimism you should investigate."
                 )
             else:
                 interp = (
@@ -421,6 +422,26 @@ if run_analysis or get(StateKeys.DCF_RESULT) is not None:
                     f"You need to believe the company can sustain above-average performance."
                 )
             st.info(interp)
+
+    # Inline technical detail: WACC and beta — right where the numbers are used
+    if wacc_r and beta_r:
+        with st.expander("⚙️ How was WACC computed? How was beta estimated?", expanded=False):
+            render_wacc_metrics(wacc_r)
+            st.caption(
+                f"WACC of {wacc_r.wacc:.1%} means we discount future cash flows by "
+                f"{wacc_r.wacc:.1%} per year. A higher WACC makes the company worth less today."
+            )
+            col1, col2 = st.columns(2)
+            with col1:
+                fig = rolling_beta_chart(
+                    beta_r.rolling_beta, beta_r.beta,
+                    beta_r.beta_ci_lower, beta_r.beta_ci_upper, ticker,
+                )
+                st.plotly_chart(fig, use_container_width=True)
+                st.caption(beta_r.beta_interpretation)
+            with col2:
+                fig = capital_structure_chart(wacc_r)
+                st.plotly_chart(fig, use_container_width=True)
 
     st.divider()
 
@@ -468,27 +489,35 @@ if run_analysis or get(StateKeys.DCF_RESULT) is not None:
 
         all_above = all(iv > current_price for iv in [cons_iv, base_iv, opti_iv])
         all_below = all(iv < current_price for iv in [cons_iv, base_iv, opti_iv])
+        D = "\\$"   # dollar sign safe for Streamlit markdown (prevents LaTeX parsing)
+        price_fmt = f"{current_price:,.0f}"
+        cons_fmt = f"{cons_iv:,.0f}"
+        base_fmt = f"{base_iv:,.0f}"
+        opti_fmt = f"{abs(opti_iv):,.0f}"
         if all_above:
-            st.info(
-                f"Under all three scenarios the model estimates {company_name} is undervalued at "
-                f"${current_price:,.0f}. Even the conservative scenario implies ${cons_iv:,.0f} — "
+            text = (
+                f"Under all three scenarios the model estimates {company_name} is undervalued "
+                f"at {D}{price_fmt}. Even the conservative scenario implies {D}{cons_fmt} — "
                 f"{abs(cons_iv / current_price - 1):.0%} above today's price. "
-                f"The base case using historical growth implies ${base_iv:,.0f}."
+                f"The base case using historical growth implies {D}{base_fmt}."
             )
+            st.info(text)
         elif all_below:
-            st.info(
-                f"Under all three scenarios the model estimates {company_name} is overvalued at "
-                f"${current_price:,.0f}. Even the optimistic scenario implies only ${abs(opti_iv):,.0f} — "
+            text = (
+                f"Under all three scenarios the model estimates {company_name} is overvalued "
+                f"at {D}{price_fmt}. Even the optimistic scenario implies only {D}{opti_fmt} — "
                 f"{abs(opti_iv / current_price - 1):.0%} below today's price. "
-                f"The base case implies ${base_iv:,.0f}."
+                f"The base case implies {D}{base_fmt}."
             )
+            st.info(text)
         else:
-            st.info(
-                f"The model gives a mixed picture at ${current_price:,.0f}. "
-                f"The pessimistic scenario implies ${cons_iv:,.0f}, the base case ${base_iv:,.0f}, "
-                f"and the optimistic scenario ${opti_iv:,.0f}. "
+            text = (
+                f"The model gives a mixed picture at {D}{price_fmt}. "
+                f"The pessimistic scenario implies {D}{cons_fmt}, the base case {D}{base_fmt}, "
+                f"and the optimistic scenario {D}{opti_fmt}. "
                 f"The current price sits within the range of plausible outcomes."
             )
+            st.info(text)
 
         tabs = st.tabs(["Conservative", "Base", "Optimistic"])
         for tab, scenario in zip(tabs, dcf_r.all_scenarios):
@@ -524,6 +553,28 @@ if run_analysis or get(StateKeys.DCF_RESULT) is not None:
                         help="The discount rate applied to future cash flows. Higher WACC = lower present value = lower intrinsic value.",
                     )
 
+    # Inline technical detail: FCF history and projections — right after the DCF output
+    if fcf_a and statements:
+        with st.expander("📊 Show FCF history and projections", expanded=False):
+            tab1, tab2 = st.tabs(["History", "Projections"])
+            with tab1:
+                fig = fcf_history_chart(
+                    statements.free_cash_flow.dropna(),
+                    statements.free_cash_flow.dropna()
+                    - statements.stock_based_compensation.dropna().fillna(0),
+                    company_name,
+                )
+                st.plotly_chart(fig, use_container_width=True)
+            with tab2:
+                from core.fcf import FCFAnalyser
+                _scenarios = FCFAnalyser().project_all_scenarios(fcf_a)
+                fig = fcf_projection_chart(
+                    statements.free_cash_flow.dropna(),
+                    _scenarios,
+                    company_name,
+                )
+                st.plotly_chart(fig, use_container_width=True)
+
     st.divider()
 
     # ─────────────────────────────────────────────────────────────────────────
@@ -554,80 +605,10 @@ if run_analysis or get(StateKeys.DCF_RESULT) is not None:
     st.divider()
 
     # ─────────────────────────────────────────────────────────────────────────
-    # SECTION 6 — How was this computed? (collapsed by default)
+    # SECTION 6 — Formulas, diagnostics and audit trail
     # ─────────────────────────────────────────────────────────────────────────
-    st.header("6. How was this computed?")
-    st.caption("All technical detail is here — expand any section to go deeper.")
-
-    with st.expander("⚖️ WACC — Cost of Capital", expanded=False):
-        if wacc_r:
-            render_wacc_metrics(wacc_r)
-            st.caption(
-                f"WACC of {wacc_r.wacc:.1%} means we discount future cash flows by {wacc_r.wacc:.1%} per year. "
-                f"A higher WACC makes the company worth less today."
-            )
-            st.caption(
-                f"Beta of {wacc_r.beta:.2f} means {company_name} moves "
-                f"~{abs(wacc_r.beta - 1) * 100:.0f}% "
-                f"{'more' if wacc_r.beta > 1 else 'less'} than the market."
-            )
-            st.caption(
-                f"Cost of debt {wacc_r.cost_of_debt_pretax:.1%} vs cost of equity {wacc_r.cost_of_equity:.1%} "
-                f"— debt is cheaper because lenders get paid before shareholders."
-            )
-            capm_formula_panel(
-                wacc_r.risk_free_rate, wacc_r.beta,
-                wacc_r.market_risk_premium, wacc_r.cost_of_equity,
-            )
-            wacc_formula_panel(
-                wacc_r.equity_weight, wacc_r.cost_of_equity,
-                wacc_r.debt_weight, wacc_r.cost_of_debt_pretax,
-                wacc_r.tax_rate, wacc_r.wacc,
-            )
-
-    with st.expander("📈 Beta — Market Sensitivity", expanded=False):
-        if beta_r and wacc_r:
-            col1, col2 = st.columns(2)
-            with col1:
-                fig = rolling_beta_chart(
-                    beta_r.rolling_beta,
-                    beta_r.beta,
-                    beta_r.beta_ci_lower,
-                    beta_r.beta_ci_upper,
-                    ticker,
-                )
-                st.plotly_chart(fig, use_container_width=True)
-            with col2:
-                fig = capital_structure_chart(wacc_r)
-                st.plotly_chart(fig, use_container_width=True)
-            st.caption(beta_r.stability_note)
-            st.caption(wacc_r.formula_trace)
-
-    with st.expander("💵 FCF History & Projections", expanded=False):
-        if fcf_a and statements:
-            tab1, tab2 = st.tabs(["History", "Projections"])
-            with tab1:
-                fig = fcf_history_chart(
-                    statements.free_cash_flow.dropna(),
-                    statements.free_cash_flow.dropna()
-                    - statements.stock_based_compensation.dropna().fillna(0),
-                    company_name,
-                )
-                st.plotly_chart(fig, use_container_width=True)
-            with tab2:
-                from core.fcf import FCFAnalyser
-                scenarios = FCFAnalyser().project_all_scenarios(fcf_a)
-                fig = fcf_projection_chart(
-                    statements.free_cash_flow.dropna(),
-                    scenarios,
-                    company_name,
-                )
-                st.plotly_chart(fig, use_container_width=True)
-
-    with st.expander("📊 Revenue & FCF Overview", expanded=False):
-        if not rev_series.empty:
-            fig = revenue_fcf_sparklines(rev_series, fcf_series, company_name)
-            st.plotly_chart(fig, use_container_width=True)
+    st.header("6. Formulas and audit trail")
+    st.caption("Expand any section for full mathematical detail and data provenance.")
 
     with st.expander("📐 Terminal Value Formula", expanded=False):
         if dcf_r and wacc_r:

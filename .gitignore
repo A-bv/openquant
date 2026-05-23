@@ -25,6 +25,10 @@ build/
 .DS_Store
 Thumbs.db
 
+# Screenshots and debug scripts (never commit these)
+/*.png
+screenshot_*.py
+
 # IDE
 .vscode/
 .idea/
