@@ -63,6 +63,8 @@ def fcf_history_chart(
     years = [str(d.year) for d in fcf_reported.index]
     values_b = fcf_reported.values / 1e9
 
+    # Bug #9: textposition per-bar so negative bars don't push labels below axis
+    text_positions = ["outside" if v >= 0 else "inside" for v in values_b]
     fig.add_trace(go.Bar(
         x=years,
         y=values_b,
@@ -70,7 +72,7 @@ def fcf_history_chart(
         marker_color=COLOURS["base"],
         opacity=1.0,
         text=[f"{v:.1f}B" for v in values_b],
-        textposition="outside",
+        textposition=text_positions,
         textfont=dict(size=13),
         width=0.6,
     ))
@@ -176,11 +178,23 @@ def dcf_waterfall_chart(dcf_scenario, company_name: str) -> go.Figure:
     """Waterfall showing PV of FCFs vs PV of terminal value."""
     pv_fcfs = dcf_scenario.pv_fcfs / 1e9
     pv_tv = dcf_scenario.pv_terminal_value / 1e9
-    net_debt = dcf_scenario.net_debt / 1e9
-    equity = dcf_scenario.equity_value / 1e9
+    net_debt_val = float(dcf_scenario.net_debt / 1e9)
+    equity_val = float(dcf_scenario.equity_value / 1e9)
 
-    bar_values = [float(pv_fcfs.sum()), float(pv_tv), -float(net_debt), 0]
-    bar_labels = ["PV of FCFs\n(Yrs 1–10)", "PV of Terminal\nValue", "Less: Net Debt", "Equity Value"]
+    # Bug #8: adapt label and direction for net-cash companies (net_debt < 0)
+    if net_debt_val < 0:
+        debt_label = "Plus: Net Cash"
+    else:
+        debt_label = "Less: Net Debt"
+
+    bar_values = [float(pv_fcfs.sum()), float(pv_tv), -net_debt_val, 0]
+    bar_labels = ["PV of FCFs\n(Yrs 1–10)", "PV of Terminal\nValue", debt_label, "Equity Value"]
+    bar_texts = [
+        f"${float(pv_fcfs.sum()):.1f}B",
+        f"${float(pv_tv):.1f}B",
+        f"${abs(net_debt_val):.1f}B",
+        f"${equity_val:.1f}B",
+    ]
 
     fig = go.Figure(go.Waterfall(
         name="",
@@ -192,7 +206,7 @@ def dcf_waterfall_chart(dcf_scenario, company_name: str) -> go.Figure:
         increasing=dict(marker=dict(color=COLOURS["optimistic"])),
         decreasing=dict(marker=dict(color=COLOURS["conservative"])),
         totals=dict(marker=dict(color=COLOURS["base"])),
-        text=[f"${abs(v):.1f}B" for v in bar_values],
+        text=bar_texts,
         textposition="outside",
         textfont=dict(size=13),
     ))
@@ -272,25 +286,21 @@ def sensitivity_heatmap(
     diff = np.abs(values - current_price)
     min_row, min_col = np.unravel_index(diff.argmin(), diff.shape)
 
-    fig.add_shape(dict(
-        type="rect",
-        xref="x", yref="y",
-        x0=x_labels[min_col],
-        x1=x_labels[min_col],
-        y0=y_labels[min_row],
-        y1=y_labels[min_row],
-    ))
-    # Overlay thick border using a second shape via paper coords workaround:
-    # Use annotation with bordercolor instead, pointing at the cell
+    # Bug #13: clamp arrow offset so annotation stays inside chart at edge cells
+    n_cols = len(x_labels)
+    n_rows = len(y_labels)
+    ax = -55 if min_col >= n_cols // 2 else 55
+    ay = 40 if min_row >= n_rows // 2 else -40
+
     fig.add_annotation(
-        text=f"Today's price<br>justified here",
+        text="Today's price<br>justified here",
         x=x_labels[min_col],
         y=y_labels[min_row],
         xref="x", yref="y",
         showarrow=True,
         arrowhead=2,
         arrowcolor=COLOURS["current_price"],
-        ax=40, ay=-40,
+        ax=ax, ay=ay,
         font=dict(size=12, color=COLOURS["current_price"]),
         bgcolor="rgba(245,158,11,0.15)",
         bordercolor=COLOURS["current_price"],
@@ -414,11 +424,14 @@ def capital_structure_chart(wacc_result) -> go.Figure:
         textfont=dict(size=13),
     ))
 
+    # Bug #12: white text invisible in light mode — use dark text with semi-transparent bg
     fig.add_annotation(
         text=f"WACC<br><b>{wacc_result.wacc:.1%}</b>",
         x=0.5, y=0.5,
-        font=dict(size=14, color="white"),
+        font=dict(size=14, color="#1F2937"),
         showarrow=False,
+        bgcolor="rgba(255,255,255,0.85)",
+        borderpad=6,
     )
 
     layout = _base_layout(
@@ -486,11 +499,11 @@ def reverse_dcf_comparison_chart(
         annotation_font=dict(size=13, color=COLOURS["historical_line"]),
     )
 
-    # Arrow annotation on the implied bar
+    # Bug #10: remove redundant "←" — the Plotly arrowhead already points at the bar
     fig.add_annotation(
         x=raw_labels[0],
         y=pct_values[0],
-        text="← Market is betting this",
+        text="Market is betting this",
         showarrow=True,
         arrowhead=2,
         arrowcolor=implied_color,
@@ -528,13 +541,13 @@ def revenue_fcf_sparklines(
     fcf_aligned = fcf.reindex(revenue.index)
     fcf_b = fcf_aligned.values / 1e9
 
+    # Bug #11: removed dead textfont — no text= on this Bar trace
     fig.add_trace(go.Bar(
         x=years,
         y=revenue.values / 1e9,
         name="Revenue",
         marker_color="#D1D5DB",
         opacity=1.0,
-        textfont=dict(size=13),
     ), secondary_y=False)
 
     fig.add_trace(go.Scatter(
