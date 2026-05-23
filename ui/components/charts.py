@@ -239,9 +239,16 @@ def sensitivity_heatmap(
     """Sensitivity heatmap with highlighted cell closest to current price."""
     values = table.values.astype(float)
 
-    # Format labels as strings for categorical axes (required for index-based shapes)
-    x_labels = [f"{float(c):.0%}" for c in table.columns]
-    y_labels = [f"{float(r):.0%}" for r in table.index]
+    # Format labels as strings for categorical axes (required for index-based shapes).
+    # Columns/index may already be strings (e.g. "6.0%") or numeric floats.
+    def _to_label(v) -> str:
+        try:
+            return f"{float(str(v).rstrip('%')) / 100:.0%}"
+        except (ValueError, TypeError):
+            return str(v)
+
+    x_labels = [_to_label(c) for c in table.columns]
+    y_labels = [_to_label(r) for r in table.index]
 
     fig = go.Figure(go.Heatmap(
         z=values,
