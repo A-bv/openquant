@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import axios from 'axios'
+import { useIsMobile } from './components/useIsMobile'
 import SearchBar from './components/SearchBar'
 import Step from './components/Step'
 import MetricCard from './components/MetricCard'
@@ -27,6 +28,7 @@ export default function App() {
   const [error, setError]         = useState(null)
   const [data, setData]           = useState(null)
   const [activeTicker, setActive] = useState('')
+  const isMobile = useIsMobile()
 
   const analyse = async (ticker) => {
     setLoading(true)
@@ -87,7 +89,7 @@ export default function App() {
       <header style={{
         background: '#FFFFFF',
         borderBottom: '0.5px solid #E5E7EB',
-        padding: '0 48px',
+        padding: isMobile ? '0 16px' : '0 48px',
         display: 'flex',
         alignItems: 'center',
         height: 56,
@@ -97,7 +99,7 @@ export default function App() {
           <span style={{ fontSize: 16, fontWeight: 800, color: '#111827', letterSpacing: '-0.02em' }}>OpenQuant</span>
           <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#185FA5' }} />
         </div>
-        <div style={{ flex: 1, fontSize: 12, color: '#9CA3AF' }}>
+        <div style={{ flex: 1, fontSize: 12, color: '#9CA3AF', display: isMobile ? 'none' : undefined }}>
           Every stock price hides a prediction. We show you what that prediction is.
         </div>
         <a href="https://github.com/A-bv/openquant" target="_blank" rel="noreferrer"
@@ -107,14 +109,14 @@ export default function App() {
       </header>
 
       {/* Content */}
-      <main style={{ maxWidth: 900, margin: '0 auto', padding: '32px 24px', display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <main style={{ maxWidth: 900, margin: '0 auto', padding: isMobile ? '16px 12px' : '32px 24px', display: 'flex', flexDirection: 'column', gap: 20 }}>
 
         {/* Hero card */}
         <div style={{
           background: '#FFFFFF',
           border: '0.5px solid #E5E7EB',
           borderRadius: 12,
-          padding: '28px 32px',
+          padding: isMobile ? '20px 16px' : '28px 32px',
         }}>
           <h1 style={{ fontSize: 22, fontWeight: 800, color: '#111827', marginBottom: 10, lineHeight: 1.2 }}>
             Company Valuation

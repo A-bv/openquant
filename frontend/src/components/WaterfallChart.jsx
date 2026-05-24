@@ -77,7 +77,8 @@ export default function WaterfallChart({ dcfBase, netDebt, companyName }) {
       <div style={{ fontSize: 13, fontWeight: 600, color: '#111827', marginBottom: 12 }}>
         {companyName} — Base Case Value Build-Up
       </div>
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+      <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, minWidth: 480 }}>
         <Bar
           label="PV of FCFs (Yrs 1–10)"
           value={pvFCFs}
@@ -106,6 +107,7 @@ export default function WaterfallChart({ dcfBase, netDebt, companyName }) {
           colour="equity"
           sublabel={`$${(dcfBase.iv ?? 0).toFixed(2)} per share`}
         />
+      </div>
       </div>
       <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 10 }}>
         Enterprise Value = PV of FCFs + PV of Terminal Value = {fmtB(ev)}.

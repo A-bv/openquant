@@ -1,22 +1,30 @@
 import {
-  BarChart, Bar, XAxis, YAxis, Tooltip,
+  BarChart, Bar, Cell, XAxis, YAxis, Tooltip,
   ResponsiveContainer, ReferenceLine, LabelList,
 } from 'recharts'
 
-function BarLabel({ x, y, width, value }) {
+function BarLabel({ x, y, width, height, value }) {
   if (value == null || isNaN(value)) return null
   const positive = value >= 0
-  const b = (value / 1e9)
+  const b = value / 1e9
+  const rounded = Math.abs(b).toFixed(1)
+  const sign = b < 0 && parseFloat(rounded) > 0 ? '-' : ''
+  // For negative bars Recharts passes y = bar tip (SVG bottom).
+  // Anchoring near y - height + 14 (zero-line end of bar) keeps the
+  // label well clear of the SVG clip boundary at the chart bottom.
+  const textY = positive
+    ? y - 5
+    : (height != null && height > 16 ? y - height + 14 : y - 5)
   return (
     <text
       x={x + width / 2}
-      y={positive ? y - 5 : y + 14}
+      y={textY}
       textAnchor="middle"
-      fill="#185FA5"
+      fill={positive ? '#185FA5' : 'white'}
       fontSize={10}
       fontWeight={600}
     >
-      {b >= 0 ? '' : '-'}${Math.abs(b).toFixed(1)}B
+      {sign}${rounded}B
     </text>
   )
 }
@@ -73,7 +81,14 @@ export default function FCFHistoryChart({ history, companyName }) {
             {refY !== undefined && (
               <ReferenceLine y={0} stroke="#E5E7EB" strokeWidth={1} />
             )}
-            <Bar dataKey="fcf" fill="#185FA5" fillOpacity={0.85} radius={[3, 3, 0, 0]}>
+            <Bar dataKey="fcf" radius={[3, 3, 0, 0]}>
+              {dataWithTrend.map((entry, i) => (
+                <Cell
+                  key={i}
+                  fill={entry.fcf >= 0 ? '#185FA5' : '#A32D2D'}
+                  fillOpacity={0.85}
+                />
+              ))}
               <LabelList dataKey="fcf" content={BarLabel} />
             </Bar>
           </BarChart>

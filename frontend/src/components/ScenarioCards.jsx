@@ -1,3 +1,5 @@
+import { useIsMobile } from './useIsMobile'
+
 const pct = (v, sign = true) => {
   if (v == null) return '—'
   const s = sign && v > 0 ? '+' : ''
@@ -39,42 +41,43 @@ function ScenarioCard({ name, scenario, currentPrice }) {
       background: '#FFFFFF',
       border: `0.5px solid ${cfg.borderColor}`,
       borderRadius: 12,
-      padding: '20px 22px',
+      padding: '16px 14px',
       display: 'flex',
       flexDirection: 'column',
-      gap: 12,
+      gap: 10,
     }}>
       <div style={{ fontSize: 10, fontWeight: 700, color: cfg.accent, textTransform: 'uppercase', letterSpacing: '0.07em' }}>
         {cfg.label}
       </div>
       <div>
-        <div style={{ fontSize: 28, fontWeight: 700, color: cfg.accent, lineHeight: 1 }}>
+        <div style={{ fontSize: 22, fontWeight: 700, color: cfg.accent, lineHeight: 1 }}>
           {usd(scenario.iv)}
         </div>
         <div style={{
           marginTop: 6,
           display: 'inline-block',
-          fontSize: 12,
+          fontSize: 11,
           fontWeight: 600,
           color: above ? '#3B6D11' : '#A32D2D',
           background: above ? '#EAF3DE' : '#FCEBEB',
           borderRadius: 4,
-          padding: '2px 8px',
+          padding: '2px 6px',
+          whiteSpace: 'nowrap',
         }}>
-          {pct(scenario.upside)} vs current price
+          {pct(scenario.upside)} vs price
         </div>
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
-          <span style={{ color: '#6B7280' }}>FCF growth assumed</span>
-          <span style={{ color: '#111827', fontWeight: 600 }}>{pct(scenario.growth, false)}</span>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 6, fontSize: 11 }}>
+          <span style={{ color: '#6B7280', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>FCF growth</span>
+          <span style={{ color: '#111827', fontWeight: 600, flexShrink: 0, whiteSpace: 'nowrap' }}>{pct(scenario.growth, false)}</span>
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
-          <span style={{ color: '#6B7280' }}>Terminal value share</span>
-          <span style={{ color: '#111827', fontWeight: 600 }}>{pct(scenario.tv_pct, false)}</span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 6, fontSize: 11 }}>
+          <span style={{ color: '#6B7280', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>TV share</span>
+          <span style={{ color: '#111827', fontWeight: 600, flexShrink: 0, whiteSpace: 'nowrap' }}>{pct(scenario.tv_pct, false)}</span>
         </div>
       </div>
-      <div style={{ fontSize: 11, color: '#9CA3AF', lineHeight: 1.4 }}>
+      <div style={{ fontSize: 10, color: '#9CA3AF', lineHeight: 1.4 }}>
         {cfg.description}
       </div>
     </div>
@@ -82,8 +85,9 @@ function ScenarioCard({ name, scenario, currentPrice }) {
 }
 
 export default function ScenarioCards({ dcf, currentPrice }) {
+  const isMobile = useIsMobile()
   return (
-    <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+    <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 10 }}>
       {['conservative', 'base', 'optimistic'].map(name => (
         <ScenarioCard key={name} name={name} scenario={dcf[name]} currentPrice={currentPrice} />
       ))}

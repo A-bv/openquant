@@ -186,7 +186,37 @@ class FCFAnalyser:
         # ── Growth rates ──────────────────────────────────────────────────────
 
         fcf_clean = fcf_reported.dropna()
-        yoy_growth = fcf_clean.pct_change().dropna()
+        yoy_growth_raw = fcf_clean.pct_change().dropna()
+
+        # Percentage growth is only economically meaningful when BOTH the
+        # current and prior year FCF are positive.  Transitions that cross
+        # zero (e.g. -$3B → +$1B) or that start from a near-zero negative
+        # base produce extreme/infinite values (e.g. -21,700%) that blow up
+        # the mean and mislead scenario construction.
+        prior_fcf = fcf_clean.shift(1)
+        both_positive = (fcf_clean > 0) & (prior_fcf > 0)
+        yoy_growth_filtered = yoy_growth_raw[both_positive.reindex(yoy_growth_raw.index, fill_value=False)]
+
+        has_negative_fcf = (fcf_clean <= 0).any()
+
+        if len(yoy_growth_filtered) >= 3:
+            yoy_growth = yoy_growth_filtered
+            if has_negative_fcf:
+                warnings.append(
+                    f"{statements.company_name} had negative FCF in some historical years. "
+                    "Growth rates are computed only from years where FCF was positive in both "
+                    "the current and prior year — sign-crossing transitions produce "
+                    "mathematically extreme and economically meaningless percentages."
+                )
+        else:
+            # Not enough positive-to-positive transitions; use full series but warn
+            yoy_growth = yoy_growth_raw
+            if has_negative_fcf:
+                warnings.append(
+                    f"{statements.company_name} had negative FCF in some historical years. "
+                    "Growth rate estimates may be unreliable. Revenue CAGR may be a "
+                    "more reliable growth anchor for this company."
+                )
 
         if len(yoy_growth) >= 2:
             # Winsorized median — robust to outliers
