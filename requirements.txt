@@ -1,8 +1,5 @@
 # OpenQuant dependencies
 
-# Web UI
-streamlit>=1.32.0
-
 # API
 fastapi>=0.110.0
 uvicorn>=0.29.0
