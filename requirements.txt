@@ -3,6 +3,11 @@
 # Web UI
 streamlit>=1.32.0
 
+# API
+fastapi>=0.110.0
+uvicorn>=0.29.0
+python-multipart>=0.0.9
+
 # Data
 yfinance>=0.2.36
 pandas>=2.0.0

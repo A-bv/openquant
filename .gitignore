@@ -29,6 +29,11 @@ Thumbs.db
 /*.png
 screenshot_*.py
 
+# Frontend build output and local env
+frontend/dist/
+frontend/node_modules/
+frontend/.env.local
+
 # IDE
 .vscode/
 .idea/
