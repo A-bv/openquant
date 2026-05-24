@@ -5,6 +5,8 @@ import Step from './components/Step'
 import MetricCard from './components/MetricCard'
 import InsightBox from './components/InsightBox'
 import ReverseChart from './components/ReverseChart'
+import FCFHistoryChart from './components/FCFHistoryChart'
+import WaterfallChart from './components/WaterfallChart'
 import ScenarioCards from './components/ScenarioCards'
 import SensitivityTable from './components/SensitivityTable'
 import WACCBreakdown from './components/WACCBreakdown'
@@ -196,6 +198,7 @@ export default function App() {
                   colour={d.fcf.fcf_margin >= 0.10 ? 'positive' : d.fcf.fcf_margin < 0 ? 'negative' : 'neutral'}
                 />
               </div>
+              <FCFHistoryChart history={d.fcf.history} companyName={d.company_name} />
               <InsightBox colour="blue">{step1Insight}</InsightBox>
             </Step>
 
@@ -246,6 +249,7 @@ export default function App() {
               why={`We run the valuation forward under three scenarios. Each assumes a different FCF growth rate, then discounts all future cash flows back to today using a discount rate (WACC) of ${pct(d.wacc.wacc)} — the minimum return investors require.`}
             >
               <ScenarioCards dcf={d.dcf} currentPrice={d.current_price} />
+              <WaterfallChart dcfBase={d.dcf.base} netDebt={d.dcf.net_debt} companyName={d.company_name} />
               {step3Insight && (
                 <InsightBox colour={step3Colour}>{step3Insight}</InsightBox>
               )}

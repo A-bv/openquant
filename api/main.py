@@ -257,19 +257,26 @@ def analyse(req: AnalyseRequest):
                     "growth": dcf_r.conservative.growth_rate,
                     "upside": dcf_r.conservative.upside_downside,
                     "tv_pct": dcf_r.conservative.terminal_value_pct,
+                    "pv_fcfs": dcf_r.conservative.pv_fcfs_total,
+                    "pv_tv": dcf_r.conservative.pv_terminal_value,
                 },
                 "base": {
                     "iv": dcf_r.base.intrinsic_value_per_share,
                     "growth": dcf_r.base.growth_rate,
                     "upside": dcf_r.base.upside_downside,
                     "tv_pct": dcf_r.base.terminal_value_pct,
+                    "pv_fcfs": dcf_r.base.pv_fcfs_total,
+                    "pv_tv": dcf_r.base.pv_terminal_value,
                 },
                 "optimistic": {
                     "iv": dcf_r.optimistic.intrinsic_value_per_share,
                     "growth": dcf_r.optimistic.growth_rate,
                     "upside": dcf_r.optimistic.upside_downside,
                     "tv_pct": dcf_r.optimistic.terminal_value_pct,
+                    "pv_fcfs": dcf_r.optimistic.pv_fcfs_total,
+                    "pv_tv": dcf_r.optimistic.pv_terminal_value,
                 },
+                "net_debt": net_debt,
             },
 
             "sensitivity": {
