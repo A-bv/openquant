@@ -62,7 +62,7 @@ export default function FCFHistoryChart({ history, companyName }) {
               tick={{ fontSize: 11, fill: '#9CA3AF' }}
               axisLine={false}
               tickLine={false}
-              tickFormatter={v => `$${v}B`}
+              tickFormatter={v => `$${(v / 1e9).toFixed(0)}B`}
               width={48}
               domain={['auto', 'auto']}
             />
