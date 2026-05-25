@@ -305,6 +305,15 @@ def analyse(req: AnalyseRequest):
                 "failed": rev_failed,
             },
 
+            # Inputs needed for client-side slider recomputation.
+            "dcf_inputs": {
+                "base_fcf": float(dcf_r.base_fcf) if dcf_r.base_fcf is not None else None,
+                "shares_outstanding": shares,
+                "net_debt": net_debt,
+                "horizon": dcf_r.forecast_horizon,
+                "terminal_growth": tg,
+            },
+
             "dcf": {
                 "conservative": {
                     "iv": dcf_r.conservative.intrinsic_value_per_share,
