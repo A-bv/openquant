@@ -80,10 +80,14 @@ class TestAnnualise:
         assert abs(annualise_vol(daily_vol) - expected) < 1e-10
 
     def test_annualise_returns_series(self):
-        """Annualised return from series matches manual computation."""
+        """
+        annualise_returns_series treats its input as LOG returns, so the
+        correct annualisation is exp(mean * trading_days) - 1, not the
+        (1 + r)^trading_days - 1 used by annualise_return for simple returns.
+        """
         returns = pd.Series([0.001] * 252)
         result = annualise_returns_series(returns)
-        expected = annualise_return(0.001)
+        expected = np.expm1(0.001 * 252)
         assert abs(result - expected) < 1e-10
 
 

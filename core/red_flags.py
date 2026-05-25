@@ -85,17 +85,21 @@ class RedFlagBuilder:
             RedFlagSummary with ordered flags.
         """
         flags = []
-        has_blocking = False
+        # Used for confidence computation downstream; independent from the
+        # decision to suppress RED diagnostic dimensions (we no longer do).
+        has_blocking = bool(suitability.blocking_issues)
 
         # ── Priority 1: Blocking suitability issues
         for issue in suitability.blocking_issues:
             if len(flags) < self.MAX_FLAGS:
                 flags.append(f"⛔ {issue.message}")
-                has_blocking = True
 
-        # ── Priority 2: Severe diagnostic dimensions (RED)
+        # ── Priority 2: Severe diagnostic dimensions (RED). Surface these
+        # alongside blocking issues — a user who acknowledges the block still
+        # needs to see the other RED dimensions to understand all the reasons
+        # the model is unreliable.
         for dim in diagnostic.red_dimensions:
-            if len(flags) < self.MAX_FLAGS and not has_blocking:
+            if len(flags) < self.MAX_FLAGS:
                 flags.append(f"🔴 {dim.name}: {dim.message}")
 
         # ── Priority 3: Terminal value dominance

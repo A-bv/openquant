@@ -137,6 +137,10 @@ def annualise_returns_series(
     """
     Compute annualised return from a series of daily log returns.
 
+    Log returns are time-additive, so the correct annualisation is
+    exp(mean_daily * trading_days) - 1, NOT (1 + mean_daily)^trading_days - 1
+    (that formula assumes simple returns).
+
     Args:
         returns: Series of daily log returns.
         trading_days: Trading days per year.
@@ -144,8 +148,8 @@ def annualise_returns_series(
     Returns:
         Annualised return as a decimal.
     """
-    mean_daily = returns.mean()
-    return annualise_return(mean_daily, trading_days)
+    mean_daily = float(returns.mean())
+    return float(np.expm1(mean_daily * trading_days))
 
 
 def annualise_vol_series(

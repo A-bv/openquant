@@ -228,7 +228,13 @@ class PortfolioAnalyser:
         C: np.ndarray,
     ) -> PortfolioResult:
         """Compute metrics for one portfolio."""
-        w = weights / weights.sum()
+        wsum = float(weights.sum())
+        if not np.isfinite(wsum) or wsum <= 0:
+            raise ValueError(
+                f"Cannot construct portfolio '{name}': weights sum to {wsum}. "
+                f"Provide positive weights that sum to a positive value."
+            )
+        w = weights / wsum
 
         # Portfolio return and variance
         port_return = float(w @ mu.values)

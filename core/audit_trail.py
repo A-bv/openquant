@@ -210,6 +210,20 @@ class AuditTrail:
         ]
 
 
+_SOURCE_LABELS = {
+    "edgar": "SEC EDGAR",
+    "fmp": "Financial Modeling Prep",
+}
+
+
+def _format_source(source: str) -> str:
+    """Map a raw source identifier to its display label, falling back to the
+    raw value so an unknown or future source is not silently misattributed."""
+    if not source:
+        return "Unknown"
+    return _SOURCE_LABELS.get(source.lower(), source)
+
+
 class AuditTrailBuilder:
     """Assembles the audit trail from all analysis components."""
 
@@ -264,8 +278,7 @@ class AuditTrailBuilder:
             ticker=statements.ticker,
             company_name=statements.company_name,
             generated_at=datetime.now(),
-            financial_data_source=statements.source.upper()
-            if statements.source == "edgar" else "Financial Modeling Prep",
+            financial_data_source=_format_source(statements.source),
             price_data_source="yfinance",
             financial_data_fetched_at=statements.fetched_at,
             cik=statements.cik,

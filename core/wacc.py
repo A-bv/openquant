@@ -223,7 +223,15 @@ class BetaEstimator:
         # β = Cov(r_s, r_m) / Var(r_m)  — EPFL formula sheet
         cov = float(np.cov(r_s, r_m, ddof=1)[0, 1])
         var_m = float(r_m.var(ddof=1))
-        beta = cov / var_m if var_m > 0 else 1.0
+        if var_m > 0:
+            beta = cov / var_m
+        else:
+            beta = 1.0
+            warnings.append(
+                "Market return variance is zero (flat market over the "
+                "lookback window). Beta could not be estimated from data "
+                "and has been defaulted to 1.0 (market average)."
+            )
 
         # ── OLS with Newey-West SE ────────────────────────────────────────────
         X = np.column_stack([np.ones(n), r_m.values])
@@ -333,7 +341,9 @@ class BetaEstimator:
         """
         rolling_cov = stock_returns.rolling(window).cov(market_returns)
         rolling_var = market_returns.rolling(window).var()
-        rolling_beta = rolling_cov / rolling_var
+        # Zero variance (flat-market window) would produce Inf; treat as undefined.
+        safe_var = rolling_var.where(rolling_var > 0, np.nan)
+        rolling_beta = rolling_cov / safe_var
         rolling_beta.name = f"beta_{window}d"
         return rolling_beta
 
@@ -560,8 +570,10 @@ class WACCBuilder:
             )
         else:
             ending_debt = 0.0
-            avg_debt = 1.0  # Avoid division by zero
-            warnings.append("Debt data not available. Cost of debt set to 0.")
+            avg_debt = 0.0
+            warnings.append(
+                "Debt data not available. Using 4% default cost of debt."
+            )
 
         # Pre-tax cost of debt
         if avg_debt > 0 and interest_latest > 0:
@@ -575,8 +587,13 @@ class WACCBuilder:
                 "Using 4% as conservative estimate."
             )
 
-        # After-tax cost
-        tax_rate = float(tax.iloc[-1]) if len(tax) > 0 else 0.21
+        # After-tax cost. `tax` has already been dropna()'d, but defend
+        # against an all-NaN series falling through and a non-finite latest
+        # value (e.g. NaN from a zero-pretax-income year).
+        if len(tax) > 0 and np.isfinite(tax.iloc[-1]):
+            tax_rate = float(tax.iloc[-1])
+        else:
+            tax_rate = 0.21
         cost_aftertax = cost_pretax * (1 - tax_rate)
 
         approximation_note = (
@@ -690,11 +707,18 @@ class WACCBuilder:
             + debt_weight * cost_of_debt_aftertax
         )
 
-        # Sanity check
-        if wacc <= 0 or wacc > 0.50:
+        # Sanity check. A non-positive WACC means an undiscounted DCF — no
+        # safe downstream behaviour exists, so refuse rather than return a
+        # result that would silently inflate the intrinsic value.
+        if not np.isfinite(wacc) or wacc <= 0:
+            raise ValueError(
+                f"Computed WACC of {wacc} for {statements.ticker} is not "
+                f"usable (non-positive or non-finite). "
+                f"Likely cause: negative beta or unrealistic risk-free rate."
+            )
+        if wacc > 0.50:
             warnings.append(
-                f"WACC of {wacc:.1%} seems unusual. "
-                f"Review inputs carefully."
+                f"WACC of {wacc:.1%} seems unusual. Review inputs carefully."
             )
 
         # ── Sensitivity ───────────────────────────────────────────────────────

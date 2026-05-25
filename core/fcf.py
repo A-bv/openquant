@@ -274,6 +274,16 @@ class FCFAnalyser:
             )
         )
 
+        # If the cap collapses base/optimistic together, the user loses the
+        # promised scenario spread. Surface that explicitly.
+        if np.isclose(growth_base, growth_optimistic):
+            warnings.append(
+                f"Base and optimistic growth scenarios both clip to "
+                f"{growth_base:.1%}. The optimistic case provides no "
+                f"differentiation from base — historical growth is already "
+                f"above the {max_growth_cap:.0%} sustainable cap."
+            )
+
         # Warn if base growth is negative
         if growth_base < 0:
             warnings.append(
@@ -362,12 +372,19 @@ class FCFAnalyser:
             base_fcf = analysis.latest_fcf
 
         if base_fcf <= 0:
-            # Use median of last 3 years as alternative base
+            # Try median of last 3 positive years before falling back to all
+            # history; refuse to project from a non-positive base because
+            # negative * (1+g)^t stays negative and produces meaningless DCFs.
             fcf_clean = analysis.fcf_reported.dropna()
-            if len(fcf_clean) >= 3:
-                base_fcf = float(fcf_clean.iloc[-3:].median())
+            positive = fcf_clean[fcf_clean > 0]
+            if len(positive) >= 1:
+                base_fcf = float(positive.iloc[-min(3, len(positive)):].median())
             else:
-                base_fcf = float(fcf_clean.median()) if len(fcf_clean) > 0 else 0.0
+                raise ValueError(
+                    f"Cannot project FCF for {analysis.ticker}: no positive "
+                    f"FCF in history. DCF is not appropriate for companies "
+                    f"without a positive free-cash-flow track record."
+                )
 
         # Project FCF for each year
         projected_values = []

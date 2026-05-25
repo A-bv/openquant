@@ -210,10 +210,12 @@ class TestWACCConstraint:
 
 class TestNegativeEquity:
 
-    def test_iv_is_zero_when_net_debt_exceeds_ev(self):
+    def test_iv_is_negative_when_net_debt_exceeds_ev(self):
         """
         When net debt exceeds enterprise value, equity value < 0.
-        IV per share must be 0.0, not negative or a crash.
+        IV per share must reflect that as a negative number so the UI can
+        distinguish structural insolvency from mere overpricing — silently
+        clamping to 0 hides real economic information.
         """
         fcf = [0.1e9, 0.1e9, 0.1e9, 0.1e9, 0.1e9]
         analysis = ANALYSER.analyse(make_statements(fcf))
@@ -226,9 +228,9 @@ class TestNegativeEquity:
             net_debt=100e9,   # absurdly large net debt
             terminal_growth_rate=0.025,
         )
-        assert result.base.intrinsic_value_per_share == 0.0
-        assert result.conservative.intrinsic_value_per_share == 0.0
-        assert result.optimistic.intrinsic_value_per_share == 0.0
+        assert result.base.intrinsic_value_per_share < 0
+        assert result.conservative.intrinsic_value_per_share < 0
+        assert result.optimistic.intrinsic_value_per_share < 0
 
     def test_negative_equity_warning_present(self):
         """A warning should be emitted when equity value is negative."""

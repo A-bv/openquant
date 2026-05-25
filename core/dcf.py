@@ -236,10 +236,17 @@ class DCFEngine:
         # ── Three scenario WACCs ──────────────────────────────────────────────
         wacc_conservative = wacc + SCENARIO_CONSERVATIVE_WACC_ADD
         wacc_base = wacc
-        wacc_optimistic = max(
-            wacc - SCENARIO_OPTIMISTIC_WACC_SUB,
-            terminal_growth_rate + 0.005,  # Keep WACC > g
-        )
+        wacc_optimistic_raw = wacc - SCENARIO_OPTIMISTIC_WACC_SUB
+        wacc_optimistic_floor = terminal_growth_rate + 0.005
+        wacc_optimistic = max(wacc_optimistic_raw, wacc_optimistic_floor)
+        wacc_warnings: list[str] = []
+        if wacc_optimistic > wacc_optimistic_raw:
+            wacc_warnings.append(
+                f"Optimistic WACC clamped to {wacc_optimistic:.2%} "
+                f"(floor = terminal growth + 0.5%); the documented "
+                f"{SCENARIO_OPTIMISTIC_WACC_SUB:.1%} delta from base "
+                f"could not be applied without violating WACC > g."
+            )
 
         # ── Three scenarios ───────────────────────────────────────────────────
         conservative = self._compute_scenario(
@@ -282,6 +289,7 @@ class DCFEngine:
         )
 
         # Aggregate warnings
+        warnings.extend(wacc_warnings)
         for scenario in [conservative, base, optimistic]:
             warnings.extend(scenario.warnings)
 
@@ -415,7 +423,10 @@ class DCFEngine:
             )
 
         # ── Intrinsic value per share ─────────────────────────────────────────
-        if shares_outstanding > 0 and equity_value > 0:
+        # Negative equity (EV < net debt) is real economic information —
+        # preserve the negative per-share value so the UI can distinguish a
+        # structurally insolvent company from one that is merely overpriced.
+        if shares_outstanding > 0:
             intrinsic_value_per_share = equity_value / shares_outstanding
         else:
             intrinsic_value_per_share = 0.0

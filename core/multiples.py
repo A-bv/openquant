@@ -101,7 +101,7 @@ class MultiplesAnalyser:
         ebitda = statements.ebitda.dropna()
         ebitda_latest = float(ebitda.iloc[-1]) if len(ebitda) > 0 else None
         ev_ebitda = None
-        if ebitda_latest and ebitda_latest > 0 and ev > 0:
+        if ebitda_latest is not None and ebitda_latest > 0 and ev > 0:
             ev_ebitda = ev / ebitda_latest
             if ev_ebitda > 100:
                 warnings.append(f"EV/EBITDA of {ev_ebitda:.0f}x is very high.")
@@ -111,7 +111,7 @@ class MultiplesAnalyser:
         net_income_latest = float(net_income.iloc[-1]) if len(net_income) > 0 else None
         pe_ratio = None
         eps = None
-        if net_income_latest and net_income_latest > 0 and shares_latest > 0:
+        if net_income_latest is not None and net_income_latest > 0 and shares_latest > 0:
             eps = net_income_latest / shares_latest
             pe_ratio = current_price / eps if eps > 0 else None
 
@@ -120,7 +120,7 @@ class MultiplesAnalyser:
         fcf_latest = float(fcf.iloc[-1]) if len(fcf) > 0 else None
         fcf_yield = None
         fcf_per_share = None
-        if fcf_latest and shares_latest > 0 and current_price > 0:
+        if fcf_latest is not None and shares_latest > 0 and current_price > 0:
             fcf_per_share = fcf_latest / shares_latest
             fcf_yield = fcf_per_share / current_price
 
@@ -128,7 +128,7 @@ class MultiplesAnalyser:
         revenue = statements.revenue.dropna()
         revenue_latest = float(revenue.iloc[-1]) if len(revenue) > 0 else None
         ev_sales = None
-        if revenue_latest and revenue_latest > 0 and ev > 0:
+        if revenue_latest is not None and revenue_latest > 0 and ev > 0:
             ev_sales = ev / revenue_latest
 
         # ── DCF comparison

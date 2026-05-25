@@ -375,7 +375,11 @@ class ReverseDCFSolver:
             solver_converged = True
             residual = abs(iv_minus_price(g_star))
 
-        except ValueError as e:
+        except (ValueError, RuntimeError) as e:
+            # brentq raises ValueError when the bracket has the same sign at
+            # both ends, and RuntimeError when it cannot converge within
+            # maxiter; both should degrade to a structured failure rather
+            # than crashing the endpoint.
             return ReverseDCFFailure(
                 ticker=fcf_analysis.ticker,
                 current_price=current_price,

@@ -521,12 +521,18 @@ class DiagnosticBuilder:
                         details.append("Reinvestment declining while revenue growing.")
 
         # ── Check 3: Growth support
-        if len(rev) >= 3:
+        # Require a positive starting revenue to avoid division-by-zero or
+        # complex-number powers; require positive peak margin so the
+        # "stretched" comparison is meaningful (a near-zero or negative peak
+        # margin makes the 0.90× threshold flag any positive latest margin).
+        if len(rev) >= 3 and float(rev.iloc[0]) > 0:
             rev_cagr = (rev.iloc[-1] / rev.iloc[0]) ** (1 / (len(rev) - 1)) - 1
             fcf_margin = statements.fcf_margin.dropna()
-            margin_at_peak = fcf_margin.max() if len(fcf_margin) > 0 else 0
-            margin_latest = fcf_margin.iloc[-1] if len(fcf_margin) > 0 else 0
-            margin_stretched = margin_latest > margin_at_peak * 0.90
+            margin_at_peak = float(fcf_margin.max()) if len(fcf_margin) > 0 else 0.0
+            margin_latest = float(fcf_margin.iloc[-1]) if len(fcf_margin) > 0 else 0.0
+            margin_stretched = (
+                margin_at_peak > 0 and margin_latest > margin_at_peak * 0.90
+            )
 
             if (implied_growth > rev_cagr * 1.5
                     and check2_score > SEVERITY_NONE

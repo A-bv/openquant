@@ -328,7 +328,24 @@ class SuitabilityChecker:
                 message="Insufficient history for cyclicality check.",
             )
 
-        yoy = fcf_clean.pct_change().dropna()
+        # Percentage growth is only meaningful when both endpoints are
+        # positive — sign-crossing years (e.g. -3B → +1B) produce -133%
+        # outputs that flip the cyclicality verdict. Restrict to positive
+        # transitions; if none survive, treat as too noisy to judge.
+        yoy_raw = fcf_clean.pct_change().dropna()
+        prior_fcf = fcf_clean.shift(1)
+        both_positive = (fcf_clean > 0) & (prior_fcf > 0)
+        yoy = yoy_raw[both_positive.reindex(yoy_raw.index, fill_value=False)]
+        if len(yoy) < 3:
+            return SuitabilityCheck(
+                name="FCF Cyclicality",
+                passed=True,
+                rating=SuitabilityRating.GREEN,
+                message=(
+                    "Insufficient positive-to-positive FCF transitions "
+                    "for cyclicality check."
+                ),
+            )
         from core.utils import winsorize_series
         if len(yoy) >= 4:
             yoy = winsorize_series(yoy, GROWTH_WINSOR_LOW, GROWTH_WINSOR_HIGH)
@@ -407,6 +424,21 @@ class SuitabilityChecker:
             )
 
         margin_sd = float(margin_clean.std(ddof=1))
+
+        # NaN comparisons always return False, which would silently fall
+        # through to GREEN even though the underlying data is corrupt
+        # (e.g. Inf margins from zero-revenue years poisoning std).
+        if not np.isfinite(margin_sd):
+            return SuitabilityCheck(
+                name=SuitabilityCheckName.MARGIN_STABILITY,
+                passed=False,
+                rating=SuitabilityRating.RED,
+                message=(
+                    "FCF margin standard deviation could not be computed "
+                    "(likely Inf/NaN margins from zero-revenue years). "
+                    "Margin stability cannot be assessed."
+                ),
+            )
 
         if margin_sd > FCF_MARGIN_SD_SEVERE:
             return SuitabilityCheck(
@@ -545,7 +577,10 @@ class SuitabilityChecker:
         outliers = fcf_clean[z_scores > 2.5]
 
         if len(outliers) > 0:
-            outlier_years = [str(idx.year) for idx in outliers.index]
+            outlier_years = [
+                str(idx.year) if hasattr(idx, "year") else str(idx)
+                for idx in outliers.index
+            ]
             return SuitabilityCheck(
                 name=SuitabilityCheckName.ONE_TIME_EVENTS,
                 passed=True,
