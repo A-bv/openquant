@@ -90,8 +90,13 @@ class SensitivityAnalyser:
         growth_values = np.linspace(growth_range[0], growth_range[1], n_steps)
         wacc_values = np.linspace(wacc_range[0], wacc_range[1], n_steps)
 
-        # Ensure terminal growth is always < all WACC values
-        wacc_values = wacc_values[wacc_values > terminal_growth_rate + 0.005]
+        # Ensure terminal growth is always < all WACC values. If the requested
+        # terminal_growth crowds out the default WACC range, expand the range
+        # upward so we still return an n_steps × n_steps table rather than an
+        # empty column set (which would break argmin in the caller).
+        min_wacc = terminal_growth_rate + 0.01
+        if wacc_values.min() <= min_wacc:
+            wacc_values = np.linspace(min_wacc, max(wacc_range[1], min_wacc + 0.08), n_steps)
 
         results = {}
         for g in growth_values:

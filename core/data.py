@@ -21,6 +21,7 @@ import os
 import time
 import hashlib
 import logging
+import uuid
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
@@ -185,13 +186,21 @@ class CacheManager:
             return None
 
     def set(self, key: str, data: dict) -> None:
-        """Store data in cache."""
+        """Store data in cache atomically — write to a temp file in the same
+        directory and os.replace into place so concurrent writers cannot
+        observe a truncated file."""
         path = self._key_to_path(key)
+        tmp_path = path.with_suffix(path.suffix + f".tmp.{os.getpid()}.{uuid.uuid4().hex[:8]}")
         try:
-            with open(path, "w") as f:
+            with open(tmp_path, "w") as f:
                 json.dump(data, f, default=str)
+            os.replace(tmp_path, path)
         except IOError as e:
             logger.warning(f"Cache write failed for key {key}: {e}")
+            try:
+                tmp_path.unlink(missing_ok=True)
+            except OSError:
+                pass
 
     def get_prices(self, key: str, ttl_seconds: Optional[int] = CACHE_TTL_RECENT_SECONDS) -> Optional[pd.Series]:
         """Retrieve cached price series."""
@@ -212,11 +221,17 @@ class CacheManager:
             return None
 
     def set_prices(self, key: str, prices: pd.Series) -> None:
-        """Store price series in cache."""
+        """Store price series in cache atomically."""
         path = self._key_to_path(key, ext="csv")
+        tmp_path = path.with_suffix(path.suffix + f".tmp.{os.getpid()}.{uuid.uuid4().hex[:8]}")
         try:
-            prices.to_csv(path)
+            prices.to_csv(tmp_path)
+            os.replace(tmp_path, path)
         except IOError as e:
+            try:
+                tmp_path.unlink(missing_ok=True)
+            except OSError:
+                pass
             logger.warning(f"Price cache write failed: {e}")
 
 
@@ -785,9 +800,11 @@ class DataFetcher:
         # Beginning debt (prior year) for average debt cost calculation
         beginning_debt = debt_a.shift(1)
 
-        # Effective tax rate
+        # Effective tax rate. Replace Inf (from zero-pretax-income years)
+        # with NaN before clipping so we don't silently report a 60% rate
+        # for what is actually undefined.
         pretax_income = net_income_a + tax_a
-        eff_tax = (tax_a / pretax_income).clip(0, 0.60)
+        eff_tax = (tax_a / pretax_income).replace([np.inf, -np.inf], np.nan).clip(0, 0.60)
 
         # FCF margin
         fcf_margin = (fcf / revenue_a).replace([np.inf, -np.inf], np.nan)

@@ -22,6 +22,9 @@ const fmtB = (v) => {
   const sign = v < 0 ? '-' : ''
   return `${sign}$${b >= 100 ? b.toFixed(0) : b.toFixed(1)}B`
 }
+// Null-safe numeric format. Backend sanitises NaN/Inf to null, so every
+// .toFixed call on response numbers must go through this helper.
+const num = (v, d = 0) => (v == null || !Number.isFinite(v)) ? '—' : v.toFixed(d)
 
 export default function App() {
   const [loading, setLoading]     = useState(false)
@@ -62,25 +65,32 @@ export default function App() {
     ? `${d.company_name} converts ${fmtB(d.fcf?.revenue_latest)} in revenue into ${fmtB(d.fcf?.latest)} of free cash — and has grown that at ${pct(d.fcf?.median_growth)}/yr over the past five years.`
     : null
 
-  const step2Insight = d && revDcf && !revFail
+  const gap = Number.isFinite(revDcf?.gap_vs_historical) ? revDcf.gap_vs_historical : null
+  const step2Insight = d && revDcf && !revFail && Number.isFinite(revDcf.implied_growth) && Number.isFinite(revDcf.historical_median)
     ? (revDcf.implied_growth < revDcf.historical_median
-        ? `The market is pricing ${d.company_name} as if its cash profits will ${revDcf.implied_growth < 0 ? 'decline' : 'grow slowly'} at ${pct(revDcf.implied_growth)}/yr. Yet historically it grew at ${pct(revDcf.historical_median)}/yr. That ${(Math.abs(revDcf.gap_vs_historical) * 100).toFixed(1)}pp gap is the judgment you need to make.`
+        ? `The market is pricing ${d.company_name} as if its cash profits will ${revDcf.implied_growth < 0 ? 'decline' : 'grow slowly'} at ${pct(revDcf.implied_growth)}/yr. Yet historically it grew at ${pct(revDcf.historical_median)}/yr. That ${gap == null ? '—' : (Math.abs(gap) * 100).toFixed(1)}pp gap is the judgment you need to make.`
         : `The market expects ${d.company_name} to grow at ${pct(revDcf.implied_growth)}/yr — above its historical rate of ${pct(revDcf.historical_median)}/yr. You need to believe the company can sustain above-average performance.`)
     : null
 
   const step3Insight = d?.dcf ? (() => {
     const { conservative, base, optimistic } = d.dcf
     const p = d.current_price
-    const allAbove = [conservative, base, optimistic].every(s => s.iv > p)
-    const allBelow = [conservative, base, optimistic].every(s => s.iv < p)
-    if (allAbove) return `Under all three scenarios the model estimates ${d.company_name} is undervalued at $${p.toFixed(0)}. Even the conservative scenario implies $${conservative.iv.toFixed(0)}.`
-    if (allBelow) return `Under all three scenarios the model estimates ${d.company_name} is overvalued at $${p.toFixed(0)}. Even the optimistic scenario implies only $${optimistic.iv.toFixed(0)}.`
-    return `The model gives a mixed picture at $${p.toFixed(0)}. Conservative: $${conservative.iv.toFixed(0)}, base: $${base.iv.toFixed(0)}, optimistic: $${optimistic.iv.toFixed(0)}.`
+    // Only reason about scenarios with finite IVs — backend nulls indicate
+    // the scenario could not be computed (NaN/Inf), and `null > number` is
+    // false in JS which would silently flip the verdict.
+    const scenarios = [conservative, base, optimistic]
+    const haveIv = scenarios.every(s => Number.isFinite(s?.iv)) && Number.isFinite(p)
+    if (!haveIv) return `Some scenarios could not be computed for ${d.company_name}; review the inputs and warnings below.`
+    const allAbove = scenarios.every(s => s.iv > p)
+    const allBelow = scenarios.every(s => s.iv < p)
+    if (allAbove) return `Under all three scenarios the model estimates ${d.company_name} is undervalued at $${num(p)}. Even the conservative scenario implies $${num(conservative.iv)}.`
+    if (allBelow) return `Under all three scenarios the model estimates ${d.company_name} is overvalued at $${num(p)}. Even the optimistic scenario implies only $${num(optimistic.iv)}.`
+    return `The model gives a mixed picture at $${num(p)}. Conservative: $${num(conservative.iv)}, base: $${num(base.iv)}, optimistic: $${num(optimistic.iv)}.`
   })() : null
 
-  const step3Colour = d?.dcf ? (
-    [d.dcf.conservative, d.dcf.base, d.dcf.optimistic].every(s => s.iv > d.current_price) ? 'green' :
-    [d.dcf.conservative, d.dcf.base, d.dcf.optimistic].every(s => s.iv < d.current_price) ? 'red' : 'blue'
+  const step3Colour = d?.dcf && Number.isFinite(d.current_price) ? (
+    [d.dcf.conservative, d.dcf.base, d.dcf.optimistic].every(s => Number.isFinite(s?.iv) && s.iv > d.current_price) ? 'green' :
+    [d.dcf.conservative, d.dcf.base, d.dcf.optimistic].every(s => Number.isFinite(s?.iv) && s.iv < d.current_price) ? 'red' : 'blue'
   ) : 'blue'
 
   return (
@@ -215,7 +225,7 @@ export default function App() {
                   <MetricCard
                     label="Market-Implied Growth"
                     value={pct(revDcf.implied_growth)}
-                    explanation={`For $${d.current_price.toFixed(2)} to be fair value, ${d.company_name}'s cash profits must grow at ${pct(revDcf.implied_growth)}/yr for 10 years`}
+                    explanation={`For $${num(d.current_price, 2)} to be fair value, ${d.company_name}'s cash profits must grow at ${pct(revDcf.implied_growth)}/yr for 10 years`}
                     colour={revDcf.implied_growth < 0 ? 'negative' : revDcf.implied_growth >= revDcf.historical_median ? 'positive' : 'neutral'}
                   />
                   <MetricCard

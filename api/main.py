@@ -11,28 +11,67 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+import logging
+import math
+import os
+import uuid
+from typing import Any
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 import numpy as np
+
+logger = logging.getLogger("openquant.api")
+logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO"))
+
+
+def _sanitize(obj: Any) -> Any:
+    """Recursively replace NaN/Inf floats with None so the response is valid JSON."""
+    if isinstance(obj, float):
+        if math.isnan(obj) or math.isinf(obj):
+            return None
+        return obj
+    if isinstance(obj, dict):
+        return {k: _sanitize(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [_sanitize(v) for v in obj]
+    return obj
 
 app = FastAPI(title="OpenQuant API", version="1.0.0")
 
+# CORS — explicit local dev origins plus an anchored regex for this project's
+# Vercel deployments. The previous regex `https://.*\.vercel\.app` was both
+# unanchored AND combined with allow_credentials=True, letting any attacker
+# register e.g. `attacker.vercel.app` and read authenticated responses.
+# Override via ALLOWED_ORIGIN_REGEX env var for non-Vercel deploys.
+_ALLOWED_ORIGIN_REGEX = os.getenv(
+    "ALLOWED_ORIGIN_REGEX",
+    r"^https://openquant(-[a-z0-9]+)?(-[a-z0-9-]+)?\.vercel\.app$",
+)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:5173", "https://*.vercel.app"],
-    allow_origin_regex=r"https://.*\.vercel\.app",
+    allow_origins=["http://localhost:3000", "http://localhost:5173"],
+    allow_origin_regex=_ALLOWED_ORIGIN_REGEX,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization"],
 )
 
 
 class AnalyseRequest(BaseModel):
-    ticker: str
-    risk_free_rate: float = Field(default=0.045)
-    market_risk_premium: float = Field(default=0.055)
-    terminal_growth: float = Field(default=0.025)
+    ticker: str = Field(min_length=1, max_length=10, pattern=r"^[A-Za-z][A-Za-z0-9.\-]{0,9}$")
+    risk_free_rate: float = Field(default=0.045, ge=0.0, le=0.20)
+    market_risk_premium: float = Field(default=0.055, ge=0.0, le=0.20)
+    terminal_growth: float = Field(default=0.025, ge=-0.05, le=0.05)
+
+    @field_validator("risk_free_rate", "market_risk_premium", "terminal_growth")
+    @classmethod
+    def _finite(cls, v: float) -> float:
+        if not math.isfinite(v):
+            raise ValueError("must be a finite number")
+        return v
 
 
 # ── Health ────────────────────────────────────────────────────────────────────
@@ -65,7 +104,13 @@ def analyse(req: AnalyseRequest):
         # 2 — Fetch data
         statements = fetcher.get_financial_statements(ticker)
         price_data = fetcher.get_prices(ticker)
-        current_price = fetcher.get_current_price(ticker) or 0.0
+        current_price = fetcher.get_current_price(ticker)
+        if current_price is None or not math.isfinite(current_price) or current_price <= 0:
+            raise HTTPException(status_code=502, detail={
+                "error": f"Could not fetch a valid current price for {ticker}.",
+                "ticker": ticker,
+            })
+        current_price = float(current_price)
 
         # 3 — FCF analysis
         from core.fcf import FCFAnalyser
@@ -106,6 +151,11 @@ def analyse(req: AnalyseRequest):
             - (_cash_s.iloc[-1] if not _cash_s.empty else 0.0)
         )
         shares = float(_shares_s.iloc[-1])
+        if not math.isfinite(shares) or shares <= 0:
+            raise HTTPException(status_code=400, detail={
+                "error": f"Latest shares outstanding for {ticker} is {shares}; cannot value.",
+                "ticker": ticker,
+            })
         cash = float(_cash_s.iloc[-1]) if not _cash_s.empty else 0.0
         total_debt = float(_debt_s.iloc[-1]) if not _debt_s.empty else 0.0
 
@@ -129,7 +179,7 @@ def analyse(req: AnalyseRequest):
 
         # Early return if not suitable
         if not suit.is_suitable:
-            return {
+            return _sanitize({
                 "ticker": ticker,
                 "company_name": statements.company_name,
                 "sector": validation.sector,
@@ -149,7 +199,7 @@ def analyse(req: AnalyseRequest):
                     "history": fcf_history,
                 },
                 "warnings": [],
-            }
+            })
 
         # 7 — Forward DCF
         from core.dcf import DCFEngine
@@ -187,9 +237,13 @@ def analyse(req: AnalyseRequest):
             [None if np.isnan(v) else round(float(v), 2) for v in row]
             for row in sens_values
         ]
-        # Find closest cell
-        masked = np.where(np.isnan(sens_values), np.inf, np.abs(sens_values - current_price))
-        min_row, min_col = np.unravel_index(np.argmin(masked), masked.shape)
+        # Find closest cell. If the grid is empty or every cell is NaN,
+        # fall back to (0, 0) rather than crashing on argmin.
+        if sens_values.size == 0 or np.all(np.isnan(sens_values)):
+            min_row, min_col = 0, 0
+        else:
+            masked = np.where(np.isnan(sens_values), np.inf, np.abs(sens_values - current_price))
+            min_row, min_col = np.unravel_index(np.argmin(masked), masked.shape)
 
         def _fmt_pct(v) -> str:
             try:
@@ -296,9 +350,24 @@ def analyse(req: AnalyseRequest):
             "warnings": suit.red_flags and [c.message for c in suit.red_flags] or [],
         }
 
-        return response
+        return _sanitize(response)
 
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail={"error": str(e), "ticker": ticker})
+        # Log the full exception server-side; do not leak internal details
+        # (file paths, library tracebacks, env-influenced messages) to the
+        # client. Return a request id the user can quote for support.
+        request_id = uuid.uuid4().hex[:12]
+        logger.exception(
+            "analyse failed (request_id=%s ticker=%s): %s",
+            request_id, ticker, e,
+        )
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": "Internal error while analysing this ticker.",
+                "ticker": ticker,
+                "request_id": request_id,
+            },
+        )
