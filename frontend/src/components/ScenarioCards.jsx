@@ -33,7 +33,10 @@ const configs = {
 
 function ScenarioCard({ name, scenario, currentPrice }) {
   const cfg = configs[name]
-  const above = scenario.iv > currentPrice
+  // null/non-finite IV or price → tri-state "unknown" instead of silently
+  // falling into the below-price (red) branch.
+  const haveCompare = Number.isFinite(scenario?.iv) && Number.isFinite(currentPrice)
+  const above = haveCompare ? scenario.iv > currentPrice : null
   return (
     <div style={{
       flex: 1,
@@ -58,8 +61,8 @@ function ScenarioCard({ name, scenario, currentPrice }) {
           display: 'inline-block',
           fontSize: 11,
           fontWeight: 600,
-          color: above ? '#3B6D11' : '#A32D2D',
-          background: above ? '#EAF3DE' : '#FCEBEB',
+          color: above == null ? '#6B7280' : (above ? '#3B6D11' : '#A32D2D'),
+          background: above == null ? '#F3F4F6' : (above ? '#EAF3DE' : '#FCEBEB'),
           borderRadius: 4,
           padding: '2px 6px',
           whiteSpace: 'nowrap',

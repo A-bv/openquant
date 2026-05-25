@@ -34,19 +34,28 @@ export default function FCFHistoryChart({ history, companyName }) {
 
   const data = history.map(d => ({ year: String(d.year), fcf: d.fcf }))
 
-  // Compute a simple linear trend
-  const n = data.length
-  const xs = data.map((_, i) => i)
-  const ys = data.map(d => d.fcf / 1e9)
-  const xMean = xs.reduce((a, b) => a + b, 0) / n
-  const yMean = ys.reduce((a, b) => a + b, 0) / n
-  const slope = xs.reduce((s, x, i) => s + (x - xMean) * (ys[i] - yMean), 0)
-    / xs.reduce((s, x) => s + (x - xMean) ** 2, 0)
-  const intercept = yMean - slope * xMean
+  // Compute a simple linear trend from the points with finite FCF only.
+  // If <2 finite points survive, skip the trend overlay rather than
+  // letting NaN poison the dataset (Recharts silently drops NaN points
+  // but the user expects a visible regression line).
+  const finitePts = data
+    .map((d, i) => ({ x: i, y: Number.isFinite(d.fcf) ? d.fcf / 1e9 : null }))
+    .filter(p => p.y != null)
+  let slope = 0, intercept = 0, haveTrend = false
+  if (finitePts.length >= 2) {
+    const xMean = finitePts.reduce((a, p) => a + p.x, 0) / finitePts.length
+    const yMean = finitePts.reduce((a, p) => a + p.y, 0) / finitePts.length
+    const denom = finitePts.reduce((s, p) => s + (p.x - xMean) ** 2, 0)
+    if (denom > 0) {
+      slope = finitePts.reduce((s, p) => s + (p.x - xMean) * (p.y - yMean), 0) / denom
+      intercept = yMean - slope * xMean
+      haveTrend = true
+    }
+  }
 
   const dataWithTrend = data.map((d, i) => ({
     ...d,
-    trend: slope * i + intercept,
+    trend: haveTrend ? slope * i + intercept : null,
   }))
 
   const allPositive = data.every(d => d.fcf >= 0)

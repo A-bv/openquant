@@ -2,6 +2,7 @@
 // limited, so we render a proportional bar layout ourselves.
 
 const fmtB = v => {
+  if (v == null || !Number.isFinite(v)) return '—'
   const b = Math.abs(v) / 1e9
   const sign = v < 0 ? '-' : ''
   return `${sign}$${b >= 100 ? b.toFixed(0) : b.toFixed(1)}B`
@@ -65,12 +66,16 @@ function Arrow() {
 export default function WaterfallChart({ dcfBase, netDebt, companyName }) {
   if (!dcfBase) return null
 
-  // Reconstruct components from the base scenario
-  const pvFCFs = dcfBase.pv_fcfs ?? 0
-  const pvTV   = dcfBase.pv_tv   ?? 0
+  // Reconstruct components from the base scenario. Treat null/non-finite
+  // as missing so arithmetic doesn't poison the chart with NaN bars.
+  const pvFCFs = Number.isFinite(dcfBase.pv_fcfs) ? dcfBase.pv_fcfs : 0
+  const pvTV   = Number.isFinite(dcfBase.pv_tv)   ? dcfBase.pv_tv   : 0
+  const netDebtSafe = Number.isFinite(netDebt) ? netDebt : 0
   const ev     = pvFCFs + pvTV
-  const equity = ev - netDebt
-  const tvPct  = ev > 0 ? pvTV / ev : 0
+  const equity = ev - netDebtSafe
+  const tvPct  = ev > 0 ? pvTV / ev : null
+  const netCash = netDebtSafe < 0
+  const ivPerShare = Number.isFinite(dcfBase.iv) ? dcfBase.iv.toFixed(2) : '—'
 
   return (
     <div>
@@ -95,23 +100,25 @@ export default function WaterfallChart({ dcfBase, netDebt, companyName }) {
         />
         <Arrow />
         <Bar
-          label={netDebt < 0 ? 'Plus: Net Cash' : 'Less: Net Debt'}
-          value={netDebt}
+          label={netCash ? 'Plus: Net Cash' : 'Less: Net Debt'}
+          value={netDebtSafe}
           colour="debt"
-          sublabel={netDebt < 0 ? 'Cash exceeds total debt' : 'Total debt minus cash'}
+          sublabel={netCash ? 'Cash exceeds total debt' : 'Total debt minus cash'}
         />
         <Arrow />
         <Bar
           label="Equity Value (Base IV)"
           value={equity}
           colour="equity"
-          sublabel={`$${(dcfBase.iv ?? 0).toFixed(2)} per share`}
+          sublabel={`$${ivPerShare} per share`}
         />
       </div>
       </div>
       <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 10 }}>
         Enterprise Value = PV of FCFs + PV of Terminal Value = {fmtB(ev)}.
-        Terminal value accounts for {(tvPct * 100).toFixed(0)}% of EV — the most uncertain assumption.
+        {tvPct != null
+          ? ` Terminal value accounts for ${(tvPct * 100).toFixed(0)}% of EV — the most uncertain assumption.`
+          : ' Enterprise value is non-positive — terminal value share is undefined.'}
       </div>
     </div>
   )

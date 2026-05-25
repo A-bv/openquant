@@ -1,8 +1,9 @@
 export default function SensitivityTable({ sensitivity, currentPrice }) {
   const { rows, cols, values, closest_row, closest_col } = sensitivity
+  const priceOk = Number.isFinite(currentPrice) && currentPrice > 0
 
   const cellColor = (v) => {
-    if (v == null) return { bg: '#F9FAFB', text: '#9CA3AF' }
+    if (v == null || !priceOk) return { bg: '#F9FAFB', text: '#9CA3AF' }
     const diff = (v - currentPrice) / currentPrice
     if (diff > 0.08)  return { bg: '#EAF3DE', text: '#3B6D11' }
     if (diff > 0.02)  return { bg: '#F0F9E8', text: '#4A7E1C' }
@@ -75,7 +76,7 @@ export default function SensitivityTable({ sensitivity, currentPrice }) {
         </div>
       </div>
       <div style={{ marginTop: 8, fontSize: 12, color: '#6B7280' }}>
-        The amber-bordered cell ({rows[closest_row]} growth, {cols[closest_col]} WACC) is the combination closest to today's price of ${currentPrice.toFixed(2)}.
+        The amber-bordered cell ({rows[closest_row] ?? '—'} growth, {cols[closest_col] ?? '—'} WACC) is the combination closest to today's price of ${priceOk ? currentPrice.toFixed(2) : '—'}.
       </div>
     </div>
   )

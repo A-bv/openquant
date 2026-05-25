@@ -1,4 +1,5 @@
-const pct = v => v == null ? '—' : `${(v * 100).toFixed(1)}%`
+const pct = v => (v == null || !Number.isFinite(v)) ? '—' : `${(v * 100).toFixed(1)}%`
+const num = (v, d = 2) => (v == null || !Number.isFinite(v)) ? '—' : v.toFixed(d)
 
 function Row({ label, value, explanation, highlight }) {
   return (
@@ -29,8 +30,9 @@ function Row({ label, value, explanation, highlight }) {
 }
 
 export default function WACCBreakdown({ wacc }) {
-  const betaMove = ((wacc.beta - 1) * 100).toFixed(0)
-  const direction = wacc.beta >= 1 ? 'more' : 'less'
+  const betaFinite = Number.isFinite(wacc?.beta)
+  const betaMove = betaFinite ? ((wacc.beta - 1) * 100).toFixed(0) : '—'
+  const direction = betaFinite && wacc.beta >= 1 ? 'more' : 'less'
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -40,9 +42,11 @@ export default function WACCBreakdown({ wacc }) {
         value={pct(wacc.risk_free_rate)}
       />
       <Row
-        label={`Beta · ${wacc.beta.toFixed(2)}`}
-        explanation={`How much this company moves relative to the market. ${wacc.beta.toFixed(2)} means it moves ~${Math.abs(betaMove)}% ${direction} than the S&P 500`}
-        value={wacc.beta.toFixed(2)}
+        label={`Beta · ${num(wacc.beta)}`}
+        explanation={betaFinite
+          ? `How much this company moves relative to the market. ${num(wacc.beta)} means it moves ~${Math.abs(betaMove)}% ${direction} than the S&P 500`
+          : `Beta could not be computed for this company (insufficient price history or flat market over the lookback window).`}
+        value={num(wacc.beta)}
       />
       <Row
         label="Market risk premium"
@@ -51,7 +55,7 @@ export default function WACCBreakdown({ wacc }) {
       />
       <Row
         label="Cost of equity"
-        explanation={`CAPM: ${pct(wacc.risk_free_rate)} + ${wacc.beta.toFixed(2)} × ${pct(wacc.market_risk_premium)} = ${pct(wacc.cost_of_equity)}`}
+        explanation={`CAPM: ${pct(wacc.risk_free_rate)} + ${num(wacc.beta)} × ${pct(wacc.market_risk_premium)} = ${pct(wacc.cost_of_equity)}`}
         value={pct(wacc.cost_of_equity)}
       />
       <Row
