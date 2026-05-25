@@ -38,6 +38,55 @@ from core.data import FinancialStatements, PriceData
 from core.utils import log_returns, annualise_return, annualise_vol, bootstrap_ci
 
 
+# ── EPFL formula sheet primitives ─────────────────────────────────────────────
+
+
+def unlever_beta_hamada(
+    beta_levered: float,
+    debt_to_equity: float,
+    tax_rate: float,
+) -> float:
+    """
+    Hamada unlevering — strip the financial-leverage component from equity beta.
+
+    EPFL formula sheet:
+        βU = βE / (1 + (1 − T) × D/E)
+
+    Assumes debt beta = 0 (standard educational assumption).
+
+    EPFL Sample Exam 1 Problem 2:
+        Firm A: βE = 1.99, D/V = 0.33 (→ D/E ≈ 0.4925), T = 0.35  →  βU = 1.500
+        Firm B: βE = 2.48, D/V = 0.50 (→ D/E = 1.00),   T = 0.35  →  βU = 1.503
+
+    Args:
+        beta_levered: Equity beta of the levered firm.
+        debt_to_equity: D/E ratio (NOT D/V). Convert if needed:
+            D/E = (D/V) / (1 − D/V)
+        tax_rate: Corporate tax rate.
+
+    Returns:
+        Unlevered (asset) beta.
+    """
+    return beta_levered / (1.0 + (1.0 - tax_rate) * debt_to_equity)
+
+
+def capm_cost_of_equity(
+    risk_free_rate: float,
+    beta: float,
+    market_risk_premium: float,
+) -> float:
+    """
+    CAPM cost of equity.
+
+    EPFL formula sheet:
+        rE = rf + β × (rM − rf)
+
+    EPFL Sample Exam 1 Problem 2:
+        rf = 0.08, β = 1.50, MRP = 0.08  →  rE = 0.20
+    """
+    return risk_free_rate + beta * market_risk_premium
+
+
 # ── Data structures ───────────────────────────────────────────────────────────
 
 @dataclass

@@ -493,6 +493,80 @@ class DCFEngine:
             for t, cf in enumerate(cash_flows)
         )
 
+    def irr(
+        self,
+        cash_flows: list[float],
+        low: float = -0.99,
+        high: float = 10.0,
+    ) -> float:
+        """
+        Internal rate of return — the discount rate r such that NPV(r) = 0.
+
+        EPFL Sample Exam 1 Problem 3:
+            irr([-5000, 3600, 3600])      ≈ 0.282  (28.2%)
+            irr([-100000, 66000, 66000])  ≈ 0.207  (20.7%)
+
+        Args:
+            cash_flows: Cash flow series, index 0 = t=0 (typically negative outlay).
+            low: Lower bracket bound for brentq. Default -99%.
+            high: Upper bracket bound. Default 1000%.
+
+        Returns:
+            The IRR as a decimal.
+
+        Raises:
+            ValueError: If the bracket does not contain a sign change (no real
+                IRR within [low, high], or multiple IRRs from cashflow-sign changes).
+        """
+        from scipy.optimize import brentq
+        f = lambda r: self.npv(cash_flows, r)
+        try:
+            return float(brentq(f, low, high, xtol=1e-9, maxiter=200))
+        except ValueError as e:
+            raise ValueError(
+                f"IRR not found in [{low:.0%}, {high:.0%}]; cash flow series "
+                f"may have no real root or multiple sign changes."
+            ) from e
+
+    def pv_tax_shield(
+        self,
+        debt_schedule: list[float],
+        interest_rate: float,
+        tax_rate: float,
+        discount_rate: float,
+    ) -> float:
+        """
+        Present value of the interest tax shield from a known debt schedule.
+
+        EPFL formula sheet (Tax shield on interest):
+            PVTS = Σ_{t=1..T} (Debt_{t-1} × r_D × T_c) / (1 + r_disc)^t
+
+        EPFL Sample Exam 1 Problem 3:
+            debt_schedule = [12_000_000, 9_000_000, 6_000_000, 3_000_000, 0]
+            interest_rate = 0.10, tax_rate = 0.35, discount_rate = 0.10
+            → PVTS ≈ 871,640  (answer key states 876,641 — small typo in key)
+
+        Args:
+            debt_schedule: Debt outstanding at the end of each year, starting
+                with year 0 (i.e. debt_schedule[t-1] is the principal on which
+                interest is paid in year t). Length T+1.
+            interest_rate: Pre-tax cost of debt (r_D).
+            tax_rate: Corporate tax rate (T_c).
+            discount_rate: Discount rate for the tax shields. Standard practice
+                uses r_D (since the shield's risk matches the debt's).
+
+        Returns:
+            PV of the tax shield in the same currency as the debt schedule.
+        """
+        if tax_rate < 0 or tax_rate > 1:
+            raise ValueError(f"tax_rate must be in [0, 1], got {tax_rate}")
+        pv = 0.0
+        for t in range(1, len(debt_schedule)):
+            interest = debt_schedule[t - 1] * interest_rate
+            tax_saving = interest * tax_rate
+            pv += tax_saving / (1 + discount_rate) ** t
+        return pv
+
     def growing_perpetuity_pv(
         self,
         cash_flow: float,

@@ -37,6 +37,48 @@ from core.data import FinancialStatements
 from core.utils import median_growth_rate, winsorize_series, format_currency
 
 
+# ── EPFL formula sheet primitive ──────────────────────────────────────────────
+
+
+def fcf_from_ebit_components(
+    ebitda: float,
+    depreciation: float,
+    tax_rate: float,
+    change_in_wc: float,
+    capex: float = 0.0,
+) -> float:
+    """
+    Free Cash Flow from EBIT components (EPFL formula sheet).
+
+        FCF = (EBITDA − D&A) × (1 − T)  +  D&A  −  ΔWC  −  Capex
+
+    The (EBITDA − D&A) × (1 − T) term is NOPAT; D&A is added back because it
+    isn't a real cash outflow; ΔWC and capex are real outflows that EBITDA
+    doesn't capture.
+
+    EPFL Sample Exam 1 Problem 2 (in $000s):
+        Year 1: EBITDA=12000, D=6000, T=0.35, ΔWC=1500  →  FCF=8400
+        Year 2: EBITDA=12000, D=6000, T=0.35, ΔWC=750   →  FCF=9150
+        Year 3: EBITDA=15000, D=6000, T=0.35, ΔWC=750   →  FCF=11100
+        Year 4: EBITDA=15000, D=6000, T=0.35, ΔWC=-3000 →  FCF=14850
+                                                  (WC recovered)
+
+    Args:
+        ebitda: Earnings before interest, tax, depreciation and amortisation.
+        depreciation: D&A for the period.
+        tax_rate: Effective corporate tax rate.
+        change_in_wc: Increase in net working capital (positive = cash use).
+            Pass a negative value for a working-capital release.
+        capex: Capital expenditure for the period (positive = cash use).
+
+    Returns:
+        Free cash flow.
+    """
+    ebit = ebitda - depreciation
+    nopat = ebit * (1.0 - tax_rate)
+    return nopat + depreciation - change_in_wc - capex
+
+
 # ── Data structures ───────────────────────────────────────────────────────────
 
 @dataclass
