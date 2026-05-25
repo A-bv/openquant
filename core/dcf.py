@@ -567,6 +567,46 @@ class DCFEngine:
             pv += tax_saving / (1 + discount_rate) ** t
         return pv
 
+    def growing_annuity_pv(
+        self,
+        cash_flow: float,
+        discount_rate: float,
+        growth_rate: float,
+        n_periods: int,
+    ) -> float:
+        """
+        Present value of a growing annuity (finite-horizon growing cashflow).
+
+        EPFL formula sheet:
+            PV = C / (r − g) × (1 − ((1 + g)/(1 + r))^N)
+
+        Reduces to the growing perpetuity as N → ∞ (when g < r) and to the
+        ordinary annuity formula when g = 0.
+
+        EPFL Sample Exam 2 Problem 1-Q2:
+            growing_annuity_pv(400, 0.075, 0.04, 18)  ≈  5,130.03
+
+        Args:
+            cash_flow: First period cash flow C (paid at t=1).
+            discount_rate: Discount rate r per period.
+            growth_rate: Per-period growth rate g.
+            n_periods: Number of payments N.
+
+        Returns:
+            Present value of the growing annuity.
+
+        Raises:
+            ValueError: When r == g exactly (formula undefined; closed-form
+                degenerates — use PV = N·C/(1+r) in that limit).
+        """
+        if discount_rate == growth_rate:
+            raise ValueError(
+                "growing_annuity_pv is undefined for r == g; use "
+                "PV = N · C / (1 + r) for that degenerate case."
+            )
+        ratio = (1.0 + growth_rate) / (1.0 + discount_rate)
+        return cash_flow / (discount_rate - growth_rate) * (1.0 - ratio ** n_periods)
+
     def growing_perpetuity_pv(
         self,
         cash_flow: float,

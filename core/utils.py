@@ -217,6 +217,45 @@ def bootstrap_ci(
     return float(lower), float(upper)
 
 
+def sharpe_from_stats(
+    expected_return: float,
+    risk_free_rate: float,
+    std_dev: float,
+) -> float:
+    """
+    Sharpe ratio from summary statistics (no return series needed).
+
+    EPFL formula sheet:
+        Sh = (E(Rp) − Rf) / SD(Rp)
+
+    Use this when only mean/SD are available (e.g. fund fact sheets,
+    textbook problems). For a daily return series, use sharpe_ratio() which
+    annualises internally.
+
+    EPFL Sample Exam 2 Problem 5-Q5b:
+        Fund A: E=0.25, Rf=0.05, SD=√0.37 ≈ 0.6083  →  Sh ≈ 0.3287
+        Fund B: E=0.16, Rf=0.05, SD=√0.26 ≈ 0.5099  →  Sh ≈ 0.2157
+    """
+    if std_dev <= 0:
+        return 0.0
+    return (expected_return - risk_free_rate) / std_dev
+
+
+def capital_gain_rate(price_new: float, price_old: float) -> float:
+    """
+    Single-period capital gain rate: (P_t − P_{t-1}) / P_{t-1}.
+
+    EPFL formula sheet:
+        capital gain rate = (P_t − P_{t-1}) / P_{t-1}
+
+    EPFL Sample Exam 2 Problem 2-Q2b:
+        P_3 = 22.23, P_4 = 22.67  →  gain rate ≈ 0.0198
+    """
+    if price_old == 0:
+        raise ValueError("Cannot compute capital gain rate from zero base price")
+    return (price_new - price_old) / price_old
+
+
 def sharpe_ratio(
     returns: pd.Series,
     risk_free_rate: float = DEFAULT_RISK_FREE_RATE,

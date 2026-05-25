@@ -87,6 +87,46 @@ def capm_cost_of_equity(
     return risk_free_rate + beta * market_risk_premium
 
 
+def beta_from_correlation(
+    correlation_with_market: float,
+    asset_volatility: float,
+    market_volatility: float,
+) -> float:
+    """
+    Compute β from the correlation form: β = ρ_iM × σ_i / σ_M.
+
+    Equivalent to Cov/Var but useful when only summary stats are available
+    (e.g. asset has stated correlation and volatility but no return series).
+
+    EPFL Sample Exam 2 Problem 3-Q3b:
+        Monsters: ρ=0.60, σ_i=0.24, σ_M=0.18  →  β = 0.80
+        California Gold: ρ=-0.7, σ_i=0.32, σ_M=0.18  →  β ≈ -1.244
+    """
+    if market_volatility <= 0:
+        raise ValueError("market_volatility must be positive")
+    return correlation_with_market * asset_volatility / market_volatility
+
+
+def idiosyncratic_variance(
+    total_variance: float,
+    beta: float,
+    market_variance: float,
+) -> float:
+    """
+    Decompose total variance into systematic and idiosyncratic components.
+
+        σ_i² = β² × σ_M² + σ_ε²     →     σ_ε² = σ_i² − β² × σ_M²
+
+    EPFL Sample Exam 2 Problem 5-Q5a:
+        Fund A: σ_i² = 0.37, β = 1.3, σ_M² = 0.0961  →  σ_ε² ≈ 0.2076
+        Fund B: σ_i² = 0.26, β = 0.9, σ_M² = 0.0961  →  σ_ε² ≈ 0.1821
+
+    Returns the residual variance (clamped at 0 since negative would
+    indicate inconsistent inputs — β too large to reconcile with σ_i²).
+    """
+    return max(total_variance - (beta ** 2) * market_variance, 0.0)
+
+
 # ── Data structures ───────────────────────────────────────────────────────────
 
 @dataclass
