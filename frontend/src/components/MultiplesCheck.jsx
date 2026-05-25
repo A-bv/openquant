@@ -2,6 +2,7 @@
  * Sanity check — how does the DCF verdict compare to relative valuation
  * (P/E, EV/EBITDA, FCF yield)?
  */
+import Term, { DEFS } from './Term'
 
 const fmt = (v, d = 1) => v == null || !Number.isFinite(v) ? '—' : v.toFixed(d)
 const pct = (v, d = 2) => v == null || !Number.isFinite(v) ? '—' : `${(v * 100).toFixed(d)}%`
@@ -69,21 +70,21 @@ export default function MultiplesCheck({ d }) {
       </p>
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
         <MultipleCard
-          label="P / E"
+          label={<Term def={DEFS.PE}>P / E</Term>}
           value={m.pe_ratio}
           benchmark={BENCHMARKS.pe_ratio}
           formatter={v => `${fmt(v, 1)}×`}
           premium={pex}
         />
         <MultipleCard
-          label="EV / EBITDA"
+          label={<Term def={DEFS.EVEBITDA}>EV / EBITDA</Term>}
           value={m.ev_ebitda}
           benchmark={BENCHMARKS.ev_ebitda}
           formatter={v => `${fmt(v, 1)}×`}
           premium={evx}
         />
         <MultipleCard
-          label="FCF yield"
+          label={<Term def={DEFS.FCFyield}>FCF yield</Term>}
           value={m.fcf_yield}
           benchmark={BENCHMARKS.fcf_yield}
           formatter={v => pct(v)}

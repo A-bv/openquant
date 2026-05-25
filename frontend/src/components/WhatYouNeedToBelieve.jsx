@@ -4,7 +4,7 @@
  */
 
 export default function WhatYouNeedToBelieve({ d }) {
-  if (!d?.dcf || !d?.reverse_dcf) return null
+  if (!d?.dcf || !d?.reverse_dcf || !d?.wacc) return null
 
   const ivBase = d.dcf.base?.iv
   const p = d.current_price
@@ -14,19 +14,33 @@ export default function WhatYouNeedToBelieve({ d }) {
     : gap < -0.20 ? 'overvalued'
     : 'fairly priced'
 
-  if (modelSays === 'fairly priced') {
-    return null  // less interesting to disagree with a centrist call
+  if (modelSays === 'fairly priced' || gap == null) {
+    return null
   }
 
-  const direction = modelSays === 'overvalued' ? 'right' : 'wrong'
+  // Null-safe formatters
+  const implied = Number.isFinite(d.reverse_dcf?.implied_growth) ? d.reverse_dcf.implied_growth : null
+  const waccVal = Number.isFinite(d.wacc?.wacc) ? d.wacc.wacc : null
+  const margin = Number.isFinite(d.fcf?.fcf_margin) ? d.fcf.fcf_margin : null
+  const impliedPct = implied != null ? (implied * 100).toFixed(0) : '—'
+  const waccPct = waccVal != null ? (waccVal * 100).toFixed(1) : '—'
+  const marginPct = margin != null ? (margin * 100).toFixed(1) : '—'
+
+  // Title clarity: if model says overvalued, we list what you'd need to
+  // believe to think the *stock is still worth buying* (i.e. the model is
+  // missing something). If the model says undervalued, we list what you'd
+  // need to believe to *avoid the stock* anyway.
+  const headlinePhrase = modelSays === 'overvalued'
+    ? `Why might ${d.company_name} be worth buying anyway?`
+    : `Why might ${d.company_name} not be the bargain it looks?`
   const cards = modelSays === 'overvalued' ? [
     {
-      claim: `Growth will exceed ${(d.reverse_dcf.implied_growth * 100).toFixed(0)}%/yr`,
+      claim: `Growth will exceed ${impliedPct}%/yr`,
       detail: `The implied growth rate is what today's price already assumes. To justify the price you'd need growth above that — historically rare for any large-cap over a decade.`,
     },
     {
       claim: 'Discount rate should be much lower',
-      detail: `Our WACC is ${(d.wacc.wacc * 100).toFixed(1)}%. If you slide it down toward 6-8%, intrinsic value rises sharply. Buffett uses ~5% for businesses he understands.`,
+      detail: `Our WACC is ${waccPct}%. If you slide it down toward 6-8%, intrinsic value rises sharply. Buffett uses ~5% for businesses he understands.`,
     },
     {
       claim: 'Terminal value should be larger',
@@ -38,16 +52,16 @@ export default function WhatYouNeedToBelieve({ d }) {
     },
   ] : [
     {
-      claim: `Growth will be slower than ${(d.reverse_dcf.implied_growth * 100).toFixed(0)}%/yr`,
+      claim: `Growth will be slower than ${impliedPct}%/yr`,
       detail: 'The price implies pessimism. To justify the lower price you need to believe the historical track record won\'t continue.',
     },
     {
       claim: 'Discount rate should be higher',
-      detail: `Our WACC is ${(d.wacc.wacc * 100).toFixed(1)}%. If you slide it up (because you think the company is riskier than its beta suggests), intrinsic value drops.`,
+      detail: `Our WACC is ${waccPct}%. If you slide it up (because you think the company is riskier than its beta suggests), intrinsic value drops.`,
     },
     {
       claim: 'Margins will compress',
-      detail: `We project current FCF margin (${d.fcf?.fcf_margin ? (d.fcf.fcf_margin * 100).toFixed(1) : '—'}%) forward. If you expect competition / commoditisation to compress it, the model overstates value.`,
+      detail: `We project current FCF margin (${marginPct}%) forward. If you expect competition / commoditisation to compress it, the model overstates value.`,
     },
     {
       claim: 'A structural disruption is coming',
@@ -63,12 +77,12 @@ export default function WhatYouNeedToBelieve({ d }) {
       padding: '24px 28px',
     }}>
       <h3 style={{ fontSize: 16, fontWeight: 700, color: '#111827', margin: 0, marginBottom: 6 }}>
-        What you'd need to believe to think the model is {direction}
+        {headlinePhrase}
       </h3>
       <p style={{ fontSize: 13, color: '#6B7280', lineHeight: 1.5, marginBottom: 16, maxWidth: 720 }}>
-        The model says <strong>{modelSays}</strong>. For the market to be right and the model wrong,
-        you need to hold at least one of these beliefs. Each is defensible — the model can't
-        tell you which is true.
+        Our model says <strong>{modelSays}</strong>. For that verdict to be wrong, you'd need to hold at
+        least one of these beliefs. Each is defensible — the model can't tell you which is true.
+        Decide for yourself.
       </p>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 12 }}>
         {cards.map((card, i) => (

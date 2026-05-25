@@ -2,14 +2,22 @@ export default function SensitivityTable({ sensitivity, currentPrice }) {
   const { rows, cols, values, closest_row, closest_col } = sensitivity
   const priceOk = Number.isFinite(currentPrice) && currentPrice > 0
 
+  // Wider, more informative gradient. Map the % gap to:
+  //   green     for cell >> price
+  //   pale grn  for cell > price
+  //   amber     near price
+  //   pale red  for cell < price
+  //   deep red  for cell << price
   const cellColor = (v) => {
     if (v == null || !priceOk) return { bg: '#F9FAFB', text: '#9CA3AF' }
     const diff = (v - currentPrice) / currentPrice
-    if (diff > 0.08)  return { bg: '#EAF3DE', text: '#3B6D11' }
-    if (diff > 0.02)  return { bg: '#F0F9E8', text: '#4A7E1C' }
-    if (diff < -0.08) return { bg: '#FCEBEB', text: '#A32D2D' }
-    if (diff < -0.02) return { bg: '#FEF2F2', text: '#C23B3B' }
-    return { bg: '#FEFCE8', text: '#854D0E' }
+    if (diff > 0.50)  return { bg: '#86EFAC', text: '#14532D' }   // > +50%
+    if (diff > 0.20)  return { bg: '#BBF7D0', text: '#166534' }   // +20 to +50
+    if (diff > 0.05)  return { bg: '#DCFCE7', text: '#3B6D11' }   // +5 to +20
+    if (diff > -0.05) return { bg: '#FEF3C7', text: '#92400E' }   // near price ±5%
+    if (diff > -0.30) return { bg: '#FECACA', text: '#991B1B' }   // -5 to -30
+    if (diff > -0.60) return { bg: '#FCA5A5', text: '#7F1D1D' }   // -30 to -60
+    return { bg: '#F87171', text: '#7F1D1D' }                     // < -60
   }
 
   return (

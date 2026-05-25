@@ -8,6 +8,7 @@
 
 import { useState, useMemo } from 'react'
 import EPFLCitation from './EPFLCitation'
+import Term, { DEFS } from './Term'
 
 const fmt$ = (v) => v == null || !Number.isFinite(v) ? '—' : `$${v.toFixed(2)}`
 const pct = (v, d = 1) => v == null || !Number.isFinite(v) ? '—' : `${(v * 100).toFixed(d)}%`
@@ -136,8 +137,10 @@ export default function ScenariosWithSliders({ d }) {
         <EPFLCitation source="EPFL FS p.4 · WACC · Berk-DeMarzo Ch.15.5" test="test_epfl_exam1.py::TestExam1Problem2_HamadaCAPM" />
       </h3>
       <p style={{ fontSize: 13, color: '#6B7280', lineHeight: 1.5, marginBottom: 16, maxWidth: 720 }}>
-        Each scenario picks different assumptions for FCF growth and discount rate (WACC),
-        then discounts the projected cash flows back to today.
+        Each scenario picks different assumptions for{' '}
+        <Term def={DEFS.FCF}>FCF</Term> growth and{' '}
+        <Term def={DEFS.WACC}>WACC</Term> (the discount rate),
+        then projects 10 years of cash flows and discounts them back to today.
       </p>
 
       <div style={{ display: 'flex', gap: 10, marginBottom: 24, flexWrap: 'wrap' }}>
@@ -157,7 +160,8 @@ export default function ScenariosWithSliders({ d }) {
           <div>
             <div style={{ fontSize: 13, fontWeight: 700, color: '#111827' }}>Try your own assumptions</div>
             <div style={{ fontSize: 11, color: '#6B7280', marginTop: 2 }}>
-              Slide to recompute live. Don't believe our β=0.99 or WACC 10%? Override it.
+              Don't believe our <Term def={DEFS.beta}>β</Term> or <Term def={DEFS.WACC}>WACC</Term>?
+              Slide to override and watch the intrinsic value recompute live.
             </div>
           </div>
           <button onClick={reset} style={{
@@ -170,34 +174,34 @@ export default function ScenariosWithSliders({ d }) {
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 }}>
           <Slider
-            label="FCF growth rate (10-yr horizon)"
+            label={<><Term def={DEFS.FCF}>FCF</Term> growth rate (10-yr horizon)</>}
             value={growth}
             min={-0.10}
             max={1.0}
             step={0.005}
             onChange={setGrowth}
             displayValue={pct(growth)}
-            hint={`Historical median: ${pct(d.fcf?.median_growth)} · Default: ${pct(baseGrowth)}`}
+            hint={`How much you think the company's cash flow will grow per year. Historical median: ${pct(d.fcf?.median_growth)}`}
           />
           <Slider
-            label="Discount rate (WACC, or your personal hurdle)"
+            label={<>Discount rate (<Term def={DEFS.WACC}>WACC</Term> or your <Term def={DEFS.hurdle}>hurdle rate</Term>)</>}
             value={wacc}
             min={0.04}
             max={0.25}
             step={0.001}
             onChange={setWacc}
             displayValue={pct(wacc, 2)}
-            hint={`Model's WACC: ${pct(baseWacc, 2)} · Buffett's: ~5% · Drag left if you require less return`}
+            hint={`Return you require for taking the risk. Model's WACC: ${pct(baseWacc, 2)} · Buffett's hurdle: ~5%`}
           />
           <Slider
-            label="Terminal growth (after year 10)"
+            label={<><Term def={DEFS.TV}>Terminal</Term> growth (after year 10)</>}
             value={terminal}
             min={-0.02}
             max={Math.max(0.05, wacc - 0.005)}
             step={0.0025}
             onChange={setTerminal}
             displayValue={pct(terminal, 2)}
-            hint={`GDP long-run ≈ 2.5% · Bounded < WACC − 0.5%`}
+            hint={`Long-run growth rate forever after year 10. GDP-long-run ≈ 2.5%. Can't exceed the discount rate.`}
           />
         </div>
 
@@ -209,7 +213,7 @@ export default function ScenariosWithSliders({ d }) {
           }}>
             <div>
               <div style={{ fontSize: 10, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                Your intrinsic value
+                Your <Term def={DEFS.IV}>intrinsic value</Term>
               </div>
               <div style={{ fontSize: 26, fontWeight: 800, color: '#185FA5', lineHeight: 1, marginTop: 4 }}>
                 {fmt$(live.iv)}

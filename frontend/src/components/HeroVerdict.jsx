@@ -167,44 +167,103 @@ export default function HeroVerdict({ d }) {
 function PriceGauge({ conservative, base, optimistic, marketPrice }) {
   const values = [conservative, base, optimistic, marketPrice].filter(Number.isFinite)
   if (values.length === 0) return null
-  const minV = Math.min(...values, 0)
-  const maxV = Math.max(...values)
+  // Use a slightly padded range so markers don't sit on the edges
+  const rawMin = Math.min(...values, 0)
+  const rawMax = Math.max(...values)
+  const pad = (rawMax - rawMin) * 0.08
+  const minV = Math.max(0, rawMin - pad)
+  const maxV = rawMax + pad
   const span = (maxV - minV) || 1
   const pos = v => `${((v - minV) / span) * 100}%`
 
+  // Decide whether the model thinks the stock is over/under-valued by comparing
+  // the BASE IV to the market price — used to drive the gauge color.
+  const valuationDirection = Number.isFinite(base) && Number.isFinite(marketPrice)
+    ? base > marketPrice ? 'undervalued' : base < marketPrice ? 'overvalued' : 'fair'
+    : 'unknown'
+
+  // Markers, sorted by value so labels stagger cleanly without overlap.
+  const markers = [
+    { label: 'Conservative', short: 'Cons', v: conservative, colour: '#A32D2D' },
+    { label: 'Base',         short: 'Base', v: base,         colour: '#185FA5' },
+    { label: 'Optimistic',   short: 'Opt',  v: optimistic,   colour: '#3B6D11' },
+  ].filter(m => Number.isFinite(m.v)).sort((a, b) => a.v - b.v)
+
   return (
-    <div style={{ position: 'relative', height: 60, marginTop: 4 }}>
-      {/* track */}
-      <div style={{
-        position: 'absolute', top: 28, left: 0, right: 0, height: 4,
-        background: 'linear-gradient(90deg, #FCA5A5 0%, #FDE68A 50%, #BBF7D0 100%)',
-        borderRadius: 2,
-      }} />
-      {/* IV markers */}
-      {[
-        { label: 'Conservative', v: conservative, colour: '#A32D2D' },
-        { label: 'Base', v: base, colour: '#185FA5' },
-        { label: 'Optimistic', v: optimistic, colour: '#3B6D11' },
-      ].filter(m => Number.isFinite(m.v)).map(m => (
-        <div key={m.label} style={{
-          position: 'absolute', top: 22, left: pos(m.v), transform: 'translateX(-50%)',
-          textAlign: 'center', minWidth: 0,
-        }}>
-          <div style={{ width: 2, height: 16, background: m.colour, margin: '0 auto' }} />
-          <div style={{ fontSize: 10, fontWeight: 700, color: m.colour, marginTop: 2 }}>
-            {m.label}
+    <div>
+      {/* legend / instructions */}
+      <div style={{ fontSize: 10, color: '#9CA3AF', marginBottom: 6, letterSpacing: '0.02em' }}>
+        WHERE THE STOCK IS PRICED VS WHERE OUR MODEL VALUES IT
+      </div>
+
+      <div style={{ position: 'relative', height: 92, paddingTop: 16 }}>
+        {/* track */}
+        <div style={{
+          position: 'absolute', top: 44, left: 0, right: 0, height: 6,
+          background: '#F3F4F6',
+          borderRadius: 3,
+        }} />
+        {/* IV-range shaded band */}
+        {markers.length >= 2 && (
+          <div style={{
+            position: 'absolute', top: 44, height: 6, borderRadius: 3,
+            left: pos(markers[0].v),
+            width: `calc(${pos(markers[markers.length - 1].v)} - ${pos(markers[0].v)})`,
+            background: 'linear-gradient(90deg, #FCA5A5 0%, #FDE68A 50%, #BBF7D0 100%)',
+          }} />
+        )}
+        {/* IV markers — labels alternate above/below to avoid overlap */}
+        {markers.map((m, i) => (
+          <div key={m.label} style={{
+            position: 'absolute',
+            top: i % 2 === 0 ? 56 : 18,
+            left: pos(m.v),
+            transform: 'translateX(-50%)',
+            textAlign: 'center', whiteSpace: 'nowrap',
+          }}>
+            {i % 2 === 0 ? (
+              <>
+                <div style={{ width: 1, height: 12, background: m.colour, margin: '0 auto', marginBottom: 2 }} />
+                <div style={{ fontSize: 10, fontWeight: 700, color: m.colour }}>{m.label}</div>
+                <div style={{ fontSize: 10, color: '#6B7280' }}>${m.v.toFixed(0)}</div>
+              </>
+            ) : (
+              <>
+                <div style={{ fontSize: 10, color: '#6B7280' }}>${m.v.toFixed(0)}</div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: m.colour }}>{m.label}</div>
+                <div style={{ width: 1, height: 12, background: m.colour, margin: '4px auto 0' }} />
+              </>
+            )}
           </div>
-          <div style={{ fontSize: 10, color: '#6B7280' }}>${m.v.toFixed(0)}</div>
+        ))}
+        {/* market price marker — always prominent */}
+        <div style={{
+          position: 'absolute', top: 0, left: pos(marketPrice), transform: 'translateX(-50%)',
+          textAlign: 'center',
+        }}>
+          <div style={{
+            display: 'inline-block',
+            padding: '2px 8px',
+            background: '#111827',
+            color: '#FFFFFF',
+            fontSize: 10,
+            fontWeight: 700,
+            borderRadius: 4,
+            whiteSpace: 'nowrap',
+          }}>
+            Market: ${marketPrice.toFixed(2)}
+          </div>
+          <div style={{ width: 2, height: 56, background: '#111827', margin: '0 auto' }} />
         </div>
-      ))}
-      {/* market price marker — bigger */}
-      <div style={{
-        position: 'absolute', top: 8, left: pos(marketPrice), transform: 'translateX(-50%)',
-        textAlign: 'center',
-      }}>
-        <div style={{ fontSize: 10, fontWeight: 700, color: '#111827' }}>You are here</div>
-        <div style={{ width: 3, height: 20, background: '#111827', margin: '2px auto' }} />
-        <div style={{ fontSize: 11, fontWeight: 800, color: '#111827' }}>${marketPrice.toFixed(2)}</div>
+      </div>
+
+      {/* one-line interpretation */}
+      <div style={{ fontSize: 11, color: '#6B7280', marginTop: 6, lineHeight: 1.4 }}>
+        {valuationDirection === 'overvalued'
+          ? `All three scenarios value the stock below the current market price — the model says you're paying more than it's worth.`
+          : valuationDirection === 'undervalued'
+            ? `All three scenarios value the stock above the current market price — the model says it's selling for less than it should be.`
+            : `The market price sits inside the model's range of fair values.`}
       </div>
     </div>
   )

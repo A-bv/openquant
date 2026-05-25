@@ -93,14 +93,13 @@ export default function App() {
           borderRadius: 12,
           padding: isMobile ? '20px 16px' : '24px 28px',
         }}>
-          <h1 style={{ fontSize: 22, fontWeight: 800, color: '#111827', marginBottom: 8, lineHeight: 1.2 }}>
-            What growth does today's price assume?
+          <h1 style={{ fontSize: 24, fontWeight: 800, color: '#111827', marginBottom: 10, lineHeight: 1.15 }}>
+            Reverse-engineer any stock price.
           </h1>
-          <p style={{ fontSize: 13, color: '#6B7280', marginBottom: 18, lineHeight: 1.6, maxWidth: 660 }}>
-            Type a US ticker. OpenQuant reverse-engineers the assumptions baked into the current price using the
-            DCF / WACC / CAPM framework from the EPFL Principles of Finance curriculum.
-            Every formula is shown. The model has been backtested against 10 years of S&P 500 history —
-            and we openly disclose how well it has performed.
+          <p style={{ fontSize: 14, color: '#6B7280', marginBottom: 18, lineHeight: 1.6, maxWidth: 660 }}>
+            Type a US ticker. We'll show you the growth assumptions baked into today's price,
+            estimate what the company is actually worth, and tell you exactly where our model
+            could be wrong. Every formula traceable to academic source; backtested on 10 years of history.
           </p>
           <SearchBar onAnalyse={analyse} loading={loading} data={d} />
         </section>
@@ -152,6 +151,10 @@ export default function App() {
         {d && d.is_suitable && (
           <>
             <HeroVerdict d={d} />
+
+            {/* Trust signal — visible BEFORE the user dives deep */}
+            <CalibrationPanel placement="hero" />
+
             <MarketBetPanel d={d} />
             <ScenariosWithSliders d={d} />
             <WhatYouNeedToBelieve d={d} />
@@ -178,11 +181,12 @@ export default function App() {
               borderRadius: 12, padding: '20px 24px',
             }}>
               <h3 style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: 0, marginBottom: 4 }}>
-                Sensitivity — what does the model say at other assumptions?
+                Sensitivity heatmap
               </h3>
-              <p style={{ fontSize: 12, color: '#6B7280', marginBottom: 12 }}>
-                Each cell is intrinsic value per share at that combination of growth rate × WACC.
-                Amber border marks the cell closest to today's price.
+              <p style={{ fontSize: 12, color: '#6B7280', marginBottom: 12, lineHeight: 1.5 }}>
+                Each cell shows what the model says the stock is worth, at that combination of growth rate (rows) and discount rate (columns).
+                <br />
+                <strong>Read this:</strong> <span style={{ color: '#3B6D11' }}>green = above today's price</span> · <span style={{ color: '#A32D2D' }}>red = below today's price</span> · amber border = closest match to today's price.
               </p>
               <SensitivityTable sensitivity={d.sensitivity} currentPrice={d.current_price} />
             </section>
@@ -201,9 +205,6 @@ export default function App() {
               </p>
               <WACCBreakdown wacc={d.wacc} />
             </section>
-
-            {/* Calibration disclosure — the trust story */}
-            <CalibrationPanel />
 
             {/* Buffett footer */}
             <section style={{
