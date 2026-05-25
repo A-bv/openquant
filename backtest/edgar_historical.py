@@ -82,6 +82,55 @@ def _expanded_tags(concept: str) -> list[str]:
     return out
 
 
+def _extract_balance_as_of(
+    facts: dict,
+    concept_tags: list[str],
+    as_of: date,
+    unit: str = "USD",
+) -> Optional[pd.Series]:
+    """
+    Point-in-time extraction for BALANCE-SHEET concepts (shares, debt, cash).
+
+    Pre-2014 XBRL adoption in 10-K filings was patchy; many companies only
+    tagged balance-sheet items quarterly. For point-in-time concepts a
+    10-Q reading is interchangeable with a 10-K reading — the value is
+    the balance on the period-end date, not a duration.
+
+    Accepts ANY form (10-K, 10-Q, 10-K/A, 10-Q/A) and any `fp` value.
+    Returns a series indexed by period-end date.
+    """
+    us_gaap = facts.get("facts", {}).get("us-gaap", {})
+    as_of_str = as_of.isoformat()
+    candidates = []
+    for tag in concept_tags:
+        if tag not in us_gaap:
+            continue
+        tag_units = us_gaap[tag].get("units", {})
+        unit_to_use = unit if unit in tag_units else next(iter(tag_units), None)
+        if not unit_to_use:
+            continue
+        records = tag_units[unit_to_use]
+        eligible = [
+            r for r in records
+            if "end" in r and "filed" in r
+            and r["filed"] <= as_of_str
+            and r["end"] <= as_of_str
+        ]
+        if not eligible:
+            continue
+        by_date: dict = {}
+        for r in eligible:
+            end = r["end"]
+            if end not in by_date or r["filed"] < by_date[end]["filed"]:
+                by_date[end] = r
+        candidates.append(
+            pd.Series({pd.Timestamp(end): r["val"] for end, r in by_date.items()}).sort_index()
+        )
+    if not candidates:
+        return None
+    return max(candidates, key=lambda s: s.index.max())
+
+
 def _extract_series_as_of(
     facts: dict,
     concept_tags: list[str],
@@ -196,6 +245,11 @@ def fetch_statements_as_of(
         tags = _expanded_tags(concept)
         return _extract_series_as_of(facts, tags, as_of, unit=unit)
 
+    def _ex_balance(concept: str, unit: str = "USD") -> Optional[pd.Series]:
+        """For point-in-time concepts: accept 10-Q in addition to 10-K."""
+        tags = _expanded_tags(concept)
+        return _extract_balance_as_of(facts, tags, as_of, unit=unit)
+
     revenue = _ex("revenue")
     if revenue is None or len(revenue.dropna()) < 2:
         raise InsufficientDataError(
@@ -209,17 +263,21 @@ def fetch_statements_as_of(
     net_income = _ex("net_income")
     capex_raw = _ex("capital_expenditure")
     ocf = _ex("operating_cash_flow")
-    debt = _ex("total_debt")
-    cash = _ex("cash_and_equivalents")
-    total_assets_raw = _ex("total_assets")
-    shares_raw = _extract_series_as_of(
+    # Balance-sheet items: accept 10-Q in addition to 10-K (pre-2014 XBRL
+    # adoption in 10-K filings was patchy for many companies, especially
+    # energy and financials).
+    debt = _ex_balance("total_debt")
+    cash = _ex_balance("cash_and_equivalents")
+    total_assets_raw = _ex_balance("total_assets")
+    shares_raw = _extract_balance_as_of(
         facts, _expanded_tags("shares_outstanding"), as_of, unit="shares"
     )
     if shares_raw is None:
-        shares_raw = _ex("shares_outstanding")
+        shares_raw = _ex_balance("shares_outstanding")
+    current_assets = _ex_balance("current_assets")
+    current_liabilities = _ex_balance("current_liabilities")
+    # Flows stay strict 10-K only:
     sbc = _ex("stock_based_compensation")
-    current_assets = _ex("current_assets")
-    current_liabilities = _ex("current_liabilities")
 
     required = {
         "revenue": revenue,
@@ -238,9 +296,27 @@ def fetch_statements_as_of(
     common_idx = revenue.index[-10:] if len(revenue) >= 10 else revenue.index
 
     def _align(s: Optional[pd.Series]) -> pd.Series:
+        """Flow concepts (annual 10-K): require ≤45-day match to fiscal-year-end."""
         if s is None:
             return pd.Series(np.nan, index=common_idx)
         return s.reindex(common_idx, method="nearest", tolerance="45D").fillna(np.nan)
+
+    def _align_balance(s: Optional[pd.Series]) -> pd.Series:
+        """
+        Point-in-time concepts (shares, debt, cash, etc.). For each
+        fiscal-year-end date in common_idx, pick the most recent
+        observation in `s` at or before that date — this is the
+        "what was the balance reported by year-end" semantics, even
+        when the data came from quarterly filings (Mar/Jun/Sep).
+        """
+        if s is None:
+            return pd.Series(np.nan, index=common_idx)
+        s_sorted = s.sort_index()
+        out = []
+        for fye in common_idx:
+            candidates = s_sorted[s_sorted.index <= fye]
+            out.append(float(candidates.iloc[-1]) if len(candidates) > 0 else np.nan)
+        return pd.Series(out, index=common_idx, dtype=float)
 
     revenue_a = _align(revenue)
     ebit_a = _align(ebit)
@@ -250,17 +326,29 @@ def fetch_statements_as_of(
     net_income_a = _align(net_income)
     capex_a = _align(capex_raw).abs()
     ocf_a = _align(ocf)
-    debt_a = _align(debt)
-    cash_a = _align(cash)
+    debt_a = _align_balance(debt)
+    cash_a = _align_balance(cash)
+    # Normalize XBRL unit inconsistencies: some companies (e.g. MRK 2012 10-K)
+    # report shares in millions while other quarters of the same series use
+    # raw counts. Detect this by comparing each value to the series median;
+    # any reading more than 1000× smaller than the median is upscaled.
+    if shares_raw is not None and len(shares_raw.dropna()) >= 3:
+        med = shares_raw.dropna().median()
+        if med > 1e7:  # series median in raw-units territory
+            shares_raw = shares_raw.where(
+                shares_raw > med / 1000.0,
+                shares_raw * 1e6,  # presumed millions → upscale by 1M
+            )
+
     # Scale shares up by cumulative post-as_of splits so downstream WACC /
     # DCF math (which reads `statements.shares_outstanding`) sees shares in
     # the same units as the yfinance split-adjusted prices used elsewhere.
     split_ratio = cumulative_split_ratio_after(ticker, as_of)
-    shares_a = _align(shares_raw) * split_ratio
+    shares_a = _align_balance(shares_raw) * split_ratio
     sbc_a = _align(sbc)
-    total_assets_a = _align(total_assets_raw)
-    curr_assets_a = _align(current_assets)
-    curr_liab_a = _align(current_liabilities)
+    total_assets_a = _align_balance(total_assets_raw)
+    curr_assets_a = _align_balance(current_assets)
+    curr_liab_a = _align_balance(current_liabilities)
 
     fcf = ocf_a - capex_a
     nwc = curr_assets_a - curr_liab_a
