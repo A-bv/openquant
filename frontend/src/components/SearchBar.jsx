@@ -8,8 +8,8 @@ function fmt(n, decimals = 1) {
   return `$${n.toFixed(2)}`
 }
 
-export default function SearchBar({ onAnalyse, loading, data }) {
-  const [input, setInput] = useState('')
+export default function SearchBar({ onAnalyse, loading, data, value = '' }) {
+  const [input, setInput] = useState(value)
 
   const handleSubmit = (e) => {
     e.preventDefault()

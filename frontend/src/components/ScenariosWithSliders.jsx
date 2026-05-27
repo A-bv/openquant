@@ -8,7 +8,8 @@
 
 import { useState, useMemo } from 'react'
 import EPFLCitation from './EPFLCitation'
-import Term, { DEFS } from './Term'
+import Term from './Term'
+import { DEFS } from './defs'
 import LearnMore from './LearnMore'
 
 const fmt$ = (v) => v == null || !Number.isFinite(v) ? '—' : `$${v.toFixed(2)}`
@@ -36,7 +37,7 @@ function computeIV({ baseFcf, growth, wacc, terminalGrowth, horizon, netDebt, sh
   return { iv, pvFcfs, pvTv, ev, equity }
 }
 
-function ScenarioCard({ name, scenario, currentPrice, accent, bg }) {
+function ScenarioCard({ name, scenario, currentPrice, accent }) {
   if (!scenario) return null
   const haveIv = Number.isFinite(scenario.iv) && Number.isFinite(currentPrice)
   const above = haveIv ? scenario.iv > currentPrice : null

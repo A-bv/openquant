@@ -2,7 +2,8 @@
  * Sanity check — how does the DCF verdict compare to relative valuation
  * (P/E, EV/EBITDA, FCF yield)?
  */
-import Term, { DEFS } from './Term'
+import Term from './Term'
+import { DEFS } from './defs'
 
 const fmt = (v, d = 1) => v == null || !Number.isFinite(v) ? '—' : v.toFixed(d)
 const pct = (v, d = 2) => v == null || !Number.isFinite(v) ? '—' : `${(v * 100).toFixed(d)}%`
