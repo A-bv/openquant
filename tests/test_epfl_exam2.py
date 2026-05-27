@@ -23,8 +23,11 @@ import math
 import pytest
 
 from core.dcf import DCFEngine
-from core.portfolio import min_variance_two_asset_weight
-from core.utils import capital_gain_rate, sharpe_from_stats
+from core.utils import (
+    capital_gain_rate,
+    min_variance_two_asset_weight,
+    sharpe_from_stats,
+)
 from core.wacc import (
     capm_cost_of_equity,
     beta_from_correlation,

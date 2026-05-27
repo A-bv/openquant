@@ -22,7 +22,6 @@ from pydantic import ValidationError
 from core.data import FinancialStatements
 from core.dcf import DCFEngine
 from core.fcf import FCFAnalyser
-from core.portfolio import PortfolioAnalyser
 from core.suitability import (
     SuitabilityChecker,
     SuitabilityRating,
@@ -79,38 +78,10 @@ class TestWACCRejectsBadValues:
             WACCBuilder().compute_wacc(st, pd_data, current_share_price=0.0)
 
 
-# ── Fix #13: portfolio weights summing to <= 0 must raise ────────────────────
-
-class TestPortfolioWeightsGuard:
-
-    def _builder_call_compute(self, weights):
-        """Call PortfolioAnalyser._compute_portfolio with synthetic inputs."""
-        tickers = ["A", "B"]
-        idx = pd.date_range("2020-01-01", periods=300)
-        returns_df = pd.DataFrame(
-            {"A": np.random.normal(0, 0.01, 300),
-             "B": np.random.normal(0, 0.01, 300)},
-            index=idx,
-        )
-        cov = returns_df.cov() * 252
-        corr = returns_df.corr()
-        mu = returns_df.mean() * 252
-        D = np.diag(np.sqrt(np.diag(cov.values)))
-        C = corr.values
-        return PortfolioAnalyser()._compute_portfolio(
-            weights=np.array(weights), tickers=tickers, returns_df=returns_df,
-            cov_annual=cov, corr_matrix=corr, mu=mu,
-            risk_free_rate=0.045, market_returns=None, name="test",
-            D=D, C=C,
-        )
-
-    def test_zero_sum_weights_raises(self):
-        with pytest.raises(ValueError, match="weights sum"):
-            self._builder_call_compute([0.0, 0.0])
-
-    def test_negative_sum_weights_raises(self):
-        with pytest.raises(ValueError, match="weights sum"):
-            self._builder_call_compute([-0.5, -0.5])
+# Fix #13 (portfolio weights sum guard) was removed when the portfolio
+# module was deleted as part of the v1.0 scope tightening (equity valuation
+# only). The helper `min_variance_two_asset_weight` remains in core/utils.py
+# and is tested in tests/test_epfl_exam2.py against the EPFL exam answer key.
 
 
 # ── Fix #15: base_fcf fallback must not project from a negative base ─────────

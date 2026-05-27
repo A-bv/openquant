@@ -86,6 +86,44 @@ def simple_returns(prices: pd.Series) -> pd.Series:
     return prices.pct_change().dropna()
 
 
+# ── Two-asset portfolio helper (used in EPFL Sample Exam 2 problems) ─────────
+
+def min_variance_two_asset_weight(
+    sigma_a: float,
+    sigma_b: float,
+    correlation: float,
+) -> tuple[float, float]:
+    """
+    Closed-form minimum-variance weights for a two-asset portfolio.
+
+    EPFL formula sheet:
+        ω_A = (σ_B² − ρ_AB σ_A σ_B) / (σ_A² + σ_B² − 2 ρ_AB σ_A σ_B)
+        ω_B = 1 − ω_A
+
+    EPFL Sample Exam 2 Problem 4-Q4b (assets Y and Z):
+        σ_Y = 0.24, σ_Z = 0.15, ρ_YZ = 0.3  →  ω_Y = 0.2, ω_Z = 0.8
+
+    Returns can be negative (implying a short sale) when one asset is much
+    less volatile and the pair is strongly positively correlated.
+
+    NOTE: This is the only piece of full portfolio theory remaining in
+    OpenQuant. The full portfolio-construction module (efficient frontier,
+    five-portfolio comparison) was removed when the project was refocused
+    on equity valuation only. The closed-form weight is kept because it
+    appears on the EPFL Sample Exam 2 answer key and is needed by the
+    `test_epfl_exam2.py` test of that problem.
+    """
+    if sigma_a < 0 or sigma_b < 0:
+        raise ValueError("volatilities must be non-negative")
+    if not -1.0 <= correlation <= 1.0:
+        raise ValueError(f"correlation {correlation} not in [-1, 1]")
+    denominator = sigma_a ** 2 + sigma_b ** 2 - 2 * correlation * sigma_a * sigma_b
+    if denominator <= 0:
+        return 0.5, 0.5
+    w_a = (sigma_b ** 2 - correlation * sigma_a * sigma_b) / denominator
+    return w_a, 1.0 - w_a
+
+
 # ── Annualisation ─────────────────────────────────────────────────────────────
 
 def annualise_return(
