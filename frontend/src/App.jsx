@@ -9,6 +9,7 @@ import ScenariosWithSliders from './components/ScenariosWithSliders'
 import WhatYouNeedToBelieve from './components/WhatYouNeedToBelieve'
 import MultiplesCheck from './components/MultiplesCheck'
 import CalibrationPanel from './components/CalibrationPanel'
+import Conclusion from './components/Conclusion'
 
 // retained components (well-tested)
 import SearchBar from './components/SearchBar'
@@ -206,6 +207,9 @@ export default function App() {
               </p>
               <WACCBreakdown wacc={d.wacc} />
             </section>
+
+            {/* Per-stock conclusion + take-aways + next actions */}
+            <Conclusion d={d} onAnalyse={analyse} />
 
             {/* Buffett footer */}
             <section style={{
