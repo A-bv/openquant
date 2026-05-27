@@ -72,7 +72,7 @@ export default function App() {
           <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#185FA5' }} />
         </div>
         <div style={{ flex: 1, fontSize: 12, color: '#9CA3AF', display: isMobile ? 'none' : undefined }}>
-          Academic-grade valuation, every formula traceable to its source, backtested on history.
+          The corporate finance textbook, made interactive — and tested against reality.
         </div>
         <a href="https://github.com/A-bv/openquant" target="_blank" rel="noreferrer"
           style={{ fontSize: 12, color: '#6B7280' }}>
@@ -94,12 +94,13 @@ export default function App() {
           padding: isMobile ? '20px 16px' : '24px 28px',
         }}>
           <h1 style={{ fontSize: 24, fontWeight: 800, color: '#111827', marginBottom: 10, lineHeight: 1.15 }}>
-            Reverse-engineer any stock price.
+            The corporate finance textbook, made interactive — and tested against reality.
           </h1>
           <p style={{ fontSize: 14, color: '#6B7280', marginBottom: 18, lineHeight: 1.6, maxWidth: 660 }}>
-            Type a US ticker. We'll show you the growth assumptions baked into today's price,
-            estimate what the company is actually worth, and tell you exactly where our model
-            could be wrong. Every formula traceable to academic source; backtested on 10 years of history.
+            Type a US ticker. We apply the valuation method from Berk-DeMarzo's
+            <em> Corporate Finance</em> textbook step by step — every formula traceable to
+            its chapter, every assumption you can change live. Then we show our 10-year
+            track record so you can see where the method works and where it doesn't.
           </p>
           <SearchBar onAnalyse={analyse} loading={loading} data={d} />
         </section>
@@ -219,10 +220,19 @@ export default function App() {
               <strong style={{ color: '#374151' }}>Note on methodology.</strong>{' '}
               Buffett doesn't use WACC — he discounts at the long-bond yield (~5%), uses
               "owner's earnings" instead of FCF, and demands a 30%+ margin of safety. His
-              method gives different (often higher) IVs but he'd refuse to apply it to many of these companies. We use
-              the academic method because every step is traceable to a published curriculum
-              and verifiable against exam answer keys. Both philosophies are legitimate.
+              method gives different (often higher) IVs but he'd refuse to apply it to many
+              of these companies. We use the textbook method (Berk-DeMarzo) because every
+              step is traceable to a chapter and verifiable against the textbook's worked
+              problems. Both philosophies are legitimate.
             </section>
+
+            {/* Brand footer */}
+            <div style={{
+              textAlign: 'center', fontSize: 11, color: '#9CA3AF',
+              padding: '12px 0', letterSpacing: '0.04em',
+            }}>
+              <strong style={{ color: '#6B7280' }}>OpenQuant</strong> · Theory. Reality. You decide.
+            </div>
           </>
         )}
       </main>

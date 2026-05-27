@@ -50,7 +50,7 @@ export default function CalibrationPanel({ placement = 'full' }) {
         <div style={{ fontSize: 12, color: '#78350F', lineHeight: 1.5, flex: 1, minWidth: 200 }}>
           {wellCalibrated
             ? `Backtested on 50 S&P 500 stocks 2014-2024 — model's verdicts explain ${pct((reg.r_squared || 0) * 100)} of realized return variance.`
-            : `Math is correct (163 EPFL tests pass), but our predictions on 50 real stocks 2014-2024 do NOT yet predict actual returns reliably (R² = ${reg.r_squared?.toFixed(3) ?? '—'}). Read the page knowing this.`}
+            : `Math correctly implements the textbook (161 tests pass against Berk-DeMarzo sample-exam answers), but our predictions on 50 real stocks 2014-2024 do NOT yet predict actual returns reliably (R² = ${reg.r_squared?.toFixed(3) ?? '—'}). Read the page knowing this.`}
         </div>
         <a href="https://github.com/A-bv/openquant/blob/main/docs/backtest_2014_2024.md" target="_blank" rel="noreferrer"
           style={{
@@ -75,8 +75,9 @@ export default function CalibrationPanel({ placement = 'full' }) {
         🟡 How much should you trust this?
       </h3>
       <p style={{ fontSize: 13, color: '#78350F', lineHeight: 1.6, marginBottom: 16, maxWidth: 720 }}>
-        Our model's <strong>formulas</strong> are pinned to the EPFL Principles of Finance answer keys
-        (163 unit tests). Its <strong>predictions on real stocks</strong> are still being calibrated.
+        Our model's <strong>formulas</strong> are pinned to the Berk-DeMarzo
+        <em> Corporate Finance</em> textbook's sample-exam answer keys (161 unit tests).
+        Its <strong>predictions on real stocks</strong> are still being calibrated.
         We ran the full model on 50 S&P 500 stocks starting in Jan 2014 and compared verdicts to
         what actually happened through Jan 2024:
       </p>

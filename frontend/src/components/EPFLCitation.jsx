@@ -24,7 +24,7 @@ export default function EPFLCitation({ source, test }) {
         letterSpacing: '0.02em',
       }}
     >
-      EPFL
+      B&D
     </span>
   )
 }
