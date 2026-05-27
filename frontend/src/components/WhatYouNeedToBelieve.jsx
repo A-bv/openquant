@@ -26,17 +26,13 @@ export default function WhatYouNeedToBelieve({ d }) {
   const waccPct = waccVal != null ? (waccVal * 100).toFixed(1) : '—'
   const marginPct = margin != null ? (margin * 100).toFixed(1) : '—'
 
-  // Title clarity: if model says overvalued, we list what you'd need to
-  // believe to think the *stock is still worth buying* (i.e. the model is
-  // missing something). If the model says undervalued, we list what you'd
-  // need to believe to *avoid the stock* anyway.
   const headlinePhrase = modelSays === 'overvalued'
-    ? `Why might ${d.company_name} be worth buying anyway?`
-    : `Why might ${d.company_name} not be the bargain it looks?`
+    ? `What would need to be true for today's price to make sense?`
+    : `What would need to be false for today's price to disappoint?`
   const cards = modelSays === 'overvalued' ? [
     {
       claim: `Growth will exceed ${impliedPct}%/yr`,
-      detail: `The implied growth rate is what today's price already assumes. To justify the price you'd need growth above that — historically rare for any large-cap over a decade.`,
+      detail: `The implied growth rate is what today's price already assumes. To make the price look reasonable, you need growth above that — historically rare for any large-cap over a decade.`,
     },
     {
       claim: 'Discount rate should be much lower',
@@ -48,7 +44,7 @@ export default function WhatYouNeedToBelieve({ d }) {
     },
     {
       claim: 'DCF is the wrong framework',
-      detail: 'For high-growth capex-heavy firms still in expansion phase, DCF systematically understates value. Compare with revenue multiples and option-value approaches.',
+      detail: 'If the company is driven by option-like upside, platform effects, or assets not captured in FCF, a standard DCF can understate value.',
     },
   ] : [
     {
@@ -70,32 +66,22 @@ export default function WhatYouNeedToBelieve({ d }) {
   ]
 
   return (
-    <section style={{
-      background: '#FFFFFF',
-      border: '0.5px solid #E5E7EB',
-      borderRadius: 12,
-      padding: '24px 28px',
-    }}>
-      <h3 style={{ fontSize: 16, fontWeight: 700, color: '#111827', margin: 0, marginBottom: 6 }}>
+    <section className="card decision-card">
+      <h3 className="section-title">
         {headlinePhrase}
       </h3>
-      <p style={{ fontSize: 13, color: '#6B7280', lineHeight: 1.5, marginBottom: 16, maxWidth: 720 }}>
-        Our model says <strong>{modelSays}</strong>. For that verdict to be wrong, you'd need to hold at
-        least one of these beliefs. Each is defensible — the model can't tell you which is true.
-        Decide for yourself.
+      <p className="section-copy">
+        The model says <strong>{modelSays}</strong>, but the useful output is not the label.
+        It is the list of assumptions that would make the market price reasonable.
       </p>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 12 }}>
+      <div className="belief-grid">
         {cards.map((card, i) => (
-          <div key={i} style={{
-            background: '#FAFBFC',
-            border: '0.5px solid #E5E7EB',
-            borderRadius: 8,
-            padding: '14px 16px',
-          }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: '#111827', marginBottom: 6, lineHeight: 1.3 }}>
+          <div key={i} className="belief-card">
+            <div className="belief-number">{i + 1}</div>
+            <div className="belief-claim">
               {card.claim}
             </div>
-            <div style={{ fontSize: 11, color: '#6B7280', lineHeight: 1.5 }}>
+            <div className="belief-detail">
               {card.detail}
             </div>
           </div>

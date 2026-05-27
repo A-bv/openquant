@@ -8,7 +8,7 @@ function fmt(n, decimals = 1) {
   return `$${n.toFixed(2)}`
 }
 
-export default function SearchBar({ onAnalyse, loading, data, value = '' }) {
+export default function SearchBar({ onAnalyse, loading, data, value = '', showSummary = true }) {
   const [input, setInput] = useState(value)
 
   const handleSubmit = (e) => {
@@ -19,45 +19,24 @@ export default function SearchBar({ onAnalyse, loading, data, value = '' }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <form onSubmit={handleSubmit} style={{ display: 'flex', gap: 8 }}>
+      <form onSubmit={handleSubmit} className="search-form">
         <input
           value={input}
           onChange={e => setInput(e.target.value.toUpperCase())}
           placeholder="Enter ticker — e.g. ACN, AAPL, MSFT"
           disabled={loading}
-          style={{
-            flex: 1,
-            padding: '10px 14px',
-            fontSize: 15,
-            border: '0.5px solid #E5E7EB',
-            borderRadius: 8,
-            background: '#FFFFFF',
-            color: '#111827',
-            outline: 'none',
-            fontFamily: 'inherit',
-          }}
+          className="ticker-input"
         />
         <button
           type="submit"
           disabled={loading || !input.trim()}
-          style={{
-            padding: '10px 22px',
-            fontSize: 13,
-            fontWeight: 600,
-            background: loading ? '#9CA3AF' : '#185FA5',
-            color: '#FFFFFF',
-            border: 'none',
-            borderRadius: 8,
-            cursor: loading ? 'default' : 'pointer',
-            fontFamily: 'inherit',
-            whiteSpace: 'nowrap',
-          }}
+          className="primary-button"
         >
           {loading ? 'Analysing…' : 'Analyse'}
         </button>
       </form>
 
-      {data && (
+      {showSummary && data && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
           <span style={{
             background: '#E6F1FB',

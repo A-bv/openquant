@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
 import axios from 'axios'
-import { useIsMobile } from './components/useIsMobile'
 
 // v3 flow components
 import HeroVerdict from './components/HeroVerdict'
@@ -91,7 +90,6 @@ export default function App() {
   const [data, setData]           = useState(null)
   const [activeTicker, setActive] = useState(initialTicker)
   const [glossaryOpen, setGlossaryOpen] = useState(false)
-  const isMobile = useIsMobile()
 
   const analyse = useCallback(async (ticker, { syncUrl = true } = {}) => {
     const normalizedTicker = ticker.trim().toUpperCase()
@@ -135,115 +133,99 @@ export default function App() {
   const d = data
 
   return (
-    <div style={{ minHeight: '100vh', background: '#F9FAFB' }}>
+    <div className="app-shell">
       {/* Topbar */}
-      <header style={{
-        background: '#FFFFFF',
-        borderBottom: '0.5px solid #E5E7EB',
-        padding: isMobile ? '0 16px' : '0 48px',
-        display: 'flex',
-        alignItems: 'center',
-        height: 56,
-        gap: 20,
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ fontSize: 16, fontWeight: 800, color: '#111827', letterSpacing: '-0.02em' }}>
-            OpenQuant
-          </span>
-          <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#185FA5' }} />
+      <header className="topbar">
+        <div className="topbar-inner">
+          <div className="brand-mark">
+            <span>OpenQuant</span>
+            <span className="brand-dot" />
+          </div>
+          <div className="topbar-subtitle">
+            Finance formulas turned into decision tools.
+          </div>
+          <button
+            onClick={() => setGlossaryOpen(true)}
+            aria-label="Open glossary"
+            className="topbar-action"
+          >
+            📖 Glossary
+          </button>
+          <a href="https://github.com/A-bv/openquant" target="_blank" rel="noreferrer"
+            className="topbar-link">
+            GitHub ↗
+          </a>
         </div>
-        <div style={{ flex: 1, fontSize: 12, color: '#9CA3AF', display: isMobile ? 'none' : undefined }}>
-          The corporate finance textbook, made interactive — and tested against reality.
-        </div>
-        <button
-          onClick={() => setGlossaryOpen(true)}
-          aria-label="Open glossary"
-          style={{
-            fontSize: 12, fontWeight: 600,
-            color: '#374151', background: '#F3F4F6',
-            border: '0.5px solid #E5E7EB', borderRadius: 999,
-            padding: '4px 10px', cursor: 'pointer',
-            fontFamily: 'inherit',
-          }}
-        >
-          📖 Glossary
-        </button>
-        <a href="https://github.com/A-bv/openquant" target="_blank" rel="noreferrer"
-          style={{ fontSize: 12, color: '#6B7280' }}>
-          GitHub ↗
-        </a>
       </header>
 
       {/* Glossary drawer */}
       <Glossary open={glossaryOpen} onClose={() => setGlossaryOpen(false)} />
 
-      <main style={{
-        maxWidth: 940, margin: '0 auto',
-        padding: isMobile ? '16px 12px' : '28px 24px',
-        display: 'flex', flexDirection: 'column', gap: 18,
-      }}>
+      <main className="page">
 
         {/* Search */}
-        <section style={{
-          background: '#FFFFFF',
-          border: '0.5px solid #E5E7EB',
-          borderRadius: 12,
-          padding: isMobile ? '20px 16px' : '24px 28px',
-        }}>
-          <div style={{
-            fontSize: 11,
-            fontWeight: 800,
-            color: '#185FA5',
-            textTransform: 'uppercase',
-            letterSpacing: '0.08em',
-            marginBottom: 8,
-          }}>
-            Stock Valuation Lab
+        <section className={`card ${d ? 'analysis-toolbar' : 'intro-card'}`}>
+          {!d && (
+            <>
+              <div className="eyebrow">
+                Stock Valuation Lab
+              </div>
+              <h1 className="page-title">
+                What is the market already pricing in?
+              </h1>
+              <p className="page-copy">
+                Type a US ticker. OpenQuant translates Berk-DeMarzo's valuation
+                framework into one practical question: what growth, risk, and cash-flow
+                assumptions must be true for today's price to make sense?
+              </p>
+            </>
+          )}
+          <div className={d ? 'toolbar-grid' : undefined}>
+            {d && (
+              <div>
+                <div className="eyebrow">
+                  Stock Valuation Lab
+                </div>
+                <div className="toolbar-title">
+                  What is the market already pricing in?
+                </div>
+              </div>
+            )}
+            <SearchBar
+              key={activeTicker || 'empty-search'}
+              onAnalyse={analyse}
+              loading={loading}
+              data={d}
+              value={activeTicker}
+              showSummary={false}
+            />
           </div>
-          <h1 style={{ fontSize: 26, fontWeight: 800, color: '#111827', marginBottom: 10, lineHeight: 1.12 }}>
-            What is the market already pricing in?
-          </h1>
-          <p style={{ fontSize: 14, color: '#6B7280', marginBottom: 18, lineHeight: 1.6, maxWidth: 660 }}>
-            Type a US ticker. OpenQuant translates Berk-DeMarzo's valuation
-            framework into one practical question: what growth, risk, and cash-flow
-            assumptions must be true for today's price to make sense?
-          </p>
-          <SearchBar
-            key={activeTicker || 'empty-search'}
-            onAnalyse={analyse}
-            loading={loading}
-            data={d}
-            value={activeTicker}
-          />
         </section>
 
         {!d && !loading && (
-          <section style={{
-            background: '#FFFFFF',
-            border: '0.5px solid #E5E7EB',
-            borderRadius: 12,
-            padding: isMobile ? '18px 16px' : '20px 24px',
-          }}>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, 1fr)',
-              gap: 16,
-            }}>
+          <section className="workflow-grid">
+            <div className="card workflow-card">
               <WorkflowStep
                 number="1"
                 title="Read the price"
                 text="Start from the market price, not from a target price."
               />
+            </div>
+            <div className="card workflow-card">
               <WorkflowStep
                 number="2"
                 title="Extract the belief"
                 text="Reverse the DCF to estimate what growth the price implies."
               />
+            </div>
+            <div className="card workflow-card">
               <WorkflowStep
                 number="3"
                 title="Challenge assumptions"
                 text="Move growth, WACC, and terminal growth to test your view."
               />
+            </div>
+            <div className="card workflow-card">
               <WorkflowStep
                 number="4"
                 title="Open the audit"
@@ -301,9 +283,16 @@ export default function App() {
           <>
             <HeroVerdict d={d} />
 
-            <MarketBetPanel d={d} />
-            <ScenariosWithSliders d={d} />
+            <ScenariosWithSliders key={d.ticker} d={d} />
             <WhatYouNeedToBelieve d={d} />
+
+            <DisclosureSection
+              eyebrow="Reverse DCF detail"
+              title="Compare implied growth with the company's history"
+              summary="Open this to see the full reverse DCF comparison against historical median, mean, revenue CAGR, and GDP."
+            >
+              <MarketBetPanel d={d} />
+            </DisclosureSection>
 
             <DisclosureSection
               eyebrow="Model reliability"
