@@ -9,6 +9,7 @@
 import { useState, useMemo } from 'react'
 import EPFLCitation from './EPFLCitation'
 import Term, { DEFS } from './Term'
+import LearnMore from './LearnMore'
 
 const fmt$ = (v) => v == null || !Number.isFinite(v) ? '—' : `$${v.toFixed(2)}`
 const pct = (v, d = 1) => v == null || !Number.isFinite(v) ? '—' : `${(v * 100).toFixed(d)}%`
@@ -134,7 +135,8 @@ export default function ScenariosWithSliders({ d }) {
     }}>
       <h3 style={{ fontSize: 16, fontWeight: 700, color: '#111827', margin: 0, marginBottom: 4 }}>
         Three scenarios
-        <EPFLCitation source="EPFL FS p.4 · WACC · Berk-DeMarzo Ch.15.5" test="test_epfl_exam1.py::TestExam1Problem2_HamadaCAPM" />
+        <EPFLCitation source="Berk-DeMarzo Ch.15 · WACC + DCF" test="test_epfl_exam1.py::TestExam1Problem2_HamadaCAPM" />
+        <LearnMore section="scenarios" />
       </h3>
       <p style={{ fontSize: 13, color: '#6B7280', lineHeight: 1.5, marginBottom: 16, maxWidth: 720 }}>
         Each scenario picks different assumptions for{' '}

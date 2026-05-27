@@ -6,6 +6,7 @@
  */
 
 import EPFLCitation from './EPFLCitation'
+import LearnMore from './LearnMore'
 
 const pct = (v, d = 1) => v == null || !Number.isFinite(v) ? '—' : `${(v * 100).toFixed(d)}%`
 
@@ -60,7 +61,8 @@ export default function MarketBetPanel({ d }) {
     }}>
       <h3 style={{ fontSize: 16, fontWeight: 700, color: '#111827', margin: 0, marginBottom: 4 }}>
         What is the market's bet?
-        <EPFLCitation source="EPFL FS p.1 · growing perpetuity · Berk-DeMarzo Ch.9.2" test="test_epfl_exam1.py::TestExam1Problem3_NPV_IRR" />
+        <EPFLCitation source="Berk-DeMarzo Ch.9 · growing perpetuity (reverse DCF)" test="test_epfl_exam1.py::TestExam1Problem3_NPV_IRR" />
+        <LearnMore section="marketsBet" />
       </h3>
       <p style={{ fontSize: 13, color: '#6B7280', lineHeight: 1.5, marginBottom: 16, maxWidth: 720 }}>
         Instead of asking <em>"what is {d.company_name} worth?"</em>, we work backwards:

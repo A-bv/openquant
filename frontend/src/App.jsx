@@ -10,6 +10,8 @@ import WhatYouNeedToBelieve from './components/WhatYouNeedToBelieve'
 import MultiplesCheck from './components/MultiplesCheck'
 import CalibrationPanel from './components/CalibrationPanel'
 import Conclusion from './components/Conclusion'
+import Glossary from './components/Glossary'
+import LearnMore from './components/LearnMore'
 
 // retained components (well-tested)
 import SearchBar from './components/SearchBar'
@@ -26,6 +28,7 @@ export default function App() {
   const [error, setError]         = useState(null)
   const [data, setData]           = useState(null)
   const [activeTicker, setActive] = useState('')
+  const [glossaryOpen, setGlossaryOpen] = useState(false)
   const isMobile = useIsMobile()
 
   const analyse = async (ticker) => {
@@ -75,11 +78,27 @@ export default function App() {
         <div style={{ flex: 1, fontSize: 12, color: '#9CA3AF', display: isMobile ? 'none' : undefined }}>
           The corporate finance textbook, made interactive — and tested against reality.
         </div>
+        <button
+          onClick={() => setGlossaryOpen(true)}
+          aria-label="Open glossary"
+          style={{
+            fontSize: 12, fontWeight: 600,
+            color: '#374151', background: '#F3F4F6',
+            border: '0.5px solid #E5E7EB', borderRadius: 999,
+            padding: '4px 10px', cursor: 'pointer',
+            fontFamily: 'inherit',
+          }}
+        >
+          📖 Glossary
+        </button>
         <a href="https://github.com/A-bv/openquant" target="_blank" rel="noreferrer"
           style={{ fontSize: 12, color: '#6B7280' }}>
           GitHub ↗
         </a>
       </header>
+
+      {/* Glossary drawer */}
+      <Glossary open={glossaryOpen} onClose={() => setGlossaryOpen(false)} />
 
       <main style={{
         maxWidth: 940, margin: '0 auto',
@@ -169,7 +188,8 @@ export default function App() {
             }}>
               <h3 style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: 0, marginBottom: 4 }}>
                 Free cash flow history
-                <EPFLCitation source="EPFL FS p.4 · FCF formula · Berk-DeMarzo Ch.7.1" test="test_epfl_exam1.py::TestExam1Problem2_FCF" />
+                <EPFLCitation source="Berk-DeMarzo Ch.7 · FCF formula" test="test_epfl_exam1.py::TestExam1Problem2_FCF" />
+                <LearnMore section="fcfHistory" />
               </h3>
               <p style={{ fontSize: 12, color: '#6B7280', marginBottom: 12 }}>
                 What the business actually generated. Red bars = negative FCF.
@@ -184,6 +204,7 @@ export default function App() {
             }}>
               <h3 style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: 0, marginBottom: 4 }}>
                 Sensitivity heatmap
+                <LearnMore section="sensitivity" />
               </h3>
               <p style={{ fontSize: 12, color: '#6B7280', marginBottom: 12, lineHeight: 1.5 }}>
                 Each cell shows what the model says the stock is worth, at that combination of growth rate (rows) and discount rate (columns).
@@ -200,7 +221,8 @@ export default function App() {
             }}>
               <h3 style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: 0, marginBottom: 4 }}>
                 Show your work — discount rate (WACC)
-                <EPFLCitation source="EPFL FS p.4 · WACC · CAPM · Berk-DeMarzo Ch.12, 15" />
+                <EPFLCitation source="Berk-DeMarzo Ch.12 (CAPM), Ch.15 (WACC)" />
+                <LearnMore section="wacc" />
               </h3>
               <p style={{ fontSize: 12, color: '#6B7280', marginBottom: 12 }}>
                 Every component of the discount rate, sourced and explained.
