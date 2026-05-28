@@ -40,6 +40,41 @@ def _sanitize(obj: Any) -> Any:
         return [_sanitize(v) for v in obj]
     return obj
 
+
+def _diagnostic_payload(diagnostic: Any) -> dict:
+    return {
+        "rating": diagnostic.overall_rating.value,
+        "total_severity": diagnostic.total_severity,
+        "summary": diagnostic.summary_text,
+        "disclaimer": diagnostic.disclaimer,
+        "dimensions": [
+            {
+                "name": d.name,
+                "rating": d.rating.value,
+                "severity": d.severity,
+                "message": d.message,
+                "detail": d.detail,
+            }
+            for d in diagnostic.dimensions
+        ],
+    }
+
+
+def _red_flags_payload(summary: Any) -> dict:
+    return {
+        "flags": summary.flags,
+        "has_blocking_issues": summary.has_blocking_issues,
+        "overall_confidence": summary.overall_confidence,
+    }
+
+
+def _audit_payload(audit: Any) -> dict:
+    return {
+        "summary": audit.to_display_dict(),
+        "formula_references": audit.formula_references,
+        "warnings": audit.all_warnings,
+    }
+
 app = FastAPI(title="OpenQuant API", version="1.0.0")
 CALIBRATION_SUMMARY_PATH = (
     Path(__file__).resolve().parents[1]
@@ -250,6 +285,36 @@ def analyse(req: AnalyseRequest):
 
         rev_failed = not isinstance(rev_r, ReverseDCFResult)
 
+        # 8b — Assumption diagnostic, red flags, and audit trail.
+        from core.assumption_diagnostic import DiagnosticBuilder
+        from core.red_flags import RedFlagBuilder
+        from core.audit_trail import AuditTrailBuilder
+
+        rev_for_context = rev_r if not rev_failed else None
+        diagnostic = DiagnosticBuilder().build(
+            statements=statements,
+            dcf_result=dcf_r,
+            beta_result=beta_r,
+            reverse_result=rev_for_context,
+        )
+        red_flags = RedFlagBuilder().build(
+            ticker=ticker,
+            diagnostic=diagnostic,
+            suitability=suit,
+            dcf_result=dcf_r,
+            reverse_result=rev_for_context,
+        )
+        audit = AuditTrailBuilder().build(
+            statements=statements,
+            fcf_analysis=fcf_a,
+            wacc_result=wacc_r,
+            dcf_result=dcf_r,
+            suitability=suit,
+            diagnostic=diagnostic,
+            reverse_result=rev_for_context,
+            terminal_growth_rate=tg,
+        )
+
         # 9 — Sensitivity
         from core.sensitivity import SensitivityAnalyser
         sa = SensitivityAnalyser()
@@ -325,7 +390,7 @@ def analyse(req: AnalyseRequest):
                 "historical_mean": rev_r.historical_mean_growth if not rev_failed else fcf_a.mean_growth_rate,
                 "revenue_cagr": rev_r.revenue_cagr if not rev_failed else fcf_a.revenue_cagr_5yr,
                 "gap_vs_historical": rev_r.growth_vs_history if not rev_failed else None,
-                "verdict": rev_r.verdict if not rev_failed else getattr(rev_r, "reason", "Reverse DCF failed."),
+                "conclusion": rev_r.verdict if not rev_failed else getattr(rev_r, "reason", "Reverse DCF failed."),
                 "gdp_growth": 0.030,
                 "failed": rev_failed,
             },
@@ -381,7 +446,11 @@ def analyse(req: AnalyseRequest):
                 "fcf_yield": mult.fcf_yield,
             },
 
-            "warnings": suit.red_flags and [c.message for c in suit.red_flags] or [],
+            "diagnostic": _diagnostic_payload(diagnostic),
+            "red_flags": _red_flags_payload(red_flags),
+            "audit": _audit_payload(audit),
+
+            "warnings": red_flags.flags or (suit.red_flags and [c.message for c in suit.red_flags]) or [],
         }
 
         return _sanitize(response)

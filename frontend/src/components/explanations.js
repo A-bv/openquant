@@ -19,10 +19,10 @@
 
 export const SECTION_EXPLANATIONS = {
   hero: {
-    title: 'How to read this verdict',
+    title: 'How to read this analysis',
     body: [
       'The big number is the company\'s current market price. The price gauge below it shows three intrinsic-value estimates our model produced: a Conservative case, a Base case, and an Optimistic case. The market price marker is the black tag.',
-      'If all three of our estimates are BELOW the market price, our model thinks the stock is overvalued — i.e. you\'re paying more than the model says it\'s worth. If all three are ABOVE, the model thinks it\'s undervalued. If they straddle the price, the model is uncertain.',
+      'If all three estimates are below the market price, the model value is below price. If all three are above, the model value is above price. If they straddle the price, small assumption changes can flip the conclusion.',
       'The five colored dots below the gauge are our Confidence Scorecard. Each measures one quality of the analysis (the value gap, the implied growth, the company\'s track record, its balance sheet, and whether DCF even fits this company). 🟢 means safe; 🟡 means caveats; 🔴 means warning.',
     ],
   },
@@ -39,9 +39,9 @@ export const SECTION_EXPLANATIONS = {
   scenarios: {
     title: 'Why three scenarios?',
     body: [
-      'A single "fair value" number hides uncertainty. Three scenarios show you the range produced by the same model when you change just two assumptions: the FCF growth rate and the discount rate (WACC).',
+      'A single model value hides uncertainty. Three scenarios show you the range produced by the same model when you change just two assumptions: the FCF growth rate and the discount rate (WACC).',
       'Conservative: lower growth, higher WACC — penalises the company. Base: median historical growth, current WACC. Optimistic: higher growth, lower WACC — rewards the company.',
-      'If all three scenarios agree on the direction (over- or under-valued), the model\'s verdict is robust. If they straddle the market price, the verdict is fragile — small changes in your beliefs flip the answer.',
+      'If all three scenarios agree on the direction, the model gap is robust. If they straddle the market price, the result is fragile — small changes in your beliefs flip the answer.',
     ],
   },
 
@@ -49,7 +49,7 @@ export const SECTION_EXPLANATIONS = {
     title: 'How to use the sliders',
     body: [
       'Our model has chosen specific values for FCF growth (the median of the company\'s recent history), discount rate (computed via WACC and CAPM), and terminal growth (a long-run GDP-anchored 2.5%). You may disagree with any of them.',
-      'Drag the sliders and the intrinsic value recomputes live, here in your browser, using exactly the same math the backend used. This is the answer to "what if I don\'t buy your assumptions?": you can see precisely.',
+      'Drag the sliders and the intrinsic value recomputes live, here in your browser, using exactly the same math the backend used. This is the answer to "what if I do not accept your assumptions?": you can see precisely.',
       'The hint under each slider shows the model\'s default and a reference anchor (historical median, Buffett-style discount, GDP). Use these to calibrate your override.',
     ],
   },
@@ -59,7 +59,7 @@ export const SECTION_EXPLANATIONS = {
     body: [
       'The model says one thing; the market says another. For one of them to be wrong, the other has to be right for a specific reason. This section lists those reasons.',
       'Each card states a single specific belief — about growth, about discount rate, about terminal value, about the appropriateness of DCF itself. To take a position against our model, you need to hold at least one of these beliefs.',
-      'The point isn\'t to convince you. It\'s to make your bet explicit: if you act on the market price (buy), you implicitly hold at least one of these views. If you act on the model (don\'t buy), you implicitly reject all of them.',
+      'The point is not to convince you. It is to make the market-implied belief explicit: for today\'s price to make sense, at least one of these views must be true.',
     ],
   },
 
@@ -67,7 +67,7 @@ export const SECTION_EXPLANATIONS = {
     title: 'Why cross-check with multiples?',
     body: [
       'DCF is one valuation approach. Multiples (P/E, EV/EBITDA, FCF yield) are another. They\'re cruder — they compare ratios across companies instead of forecasting cash flows — but they\'re less sensitive to long-horizon assumptions.',
-      'If a stock looks expensive on DCF AND on multiples AND on FCF yield, the conclusion is robust across three different lenses. If they disagree, one lens is catching something the others miss — and that\'s a question worth investigating.',
+      'If the DCF output, multiples, and FCF yield all point in the same direction, the conclusion is more robust across lenses. If they disagree, one lens is catching something the others miss — and that is a question worth investigating.',
       'For Tesla today, all three multiples flag it as expensive. The DCF agrees. That convergence is itself a signal.',
     ],
   },
@@ -106,18 +106,18 @@ export const SECTION_EXPLANATIONS = {
     title: 'What is "backtest" and why R² = 0.04?',
     body: [
       'A backtest is the financial equivalent of going back in time and asking: "if I had used this model in 2014, would it have been right?"',
-      'We took the full pipeline, ran it on 50 S&P 500 stocks "as of" January 2014 (using only data and macro inputs available then), and recorded each verdict. Then we measured what those stocks actually did from 2014 to 2024.',
-      'R² (R-squared) is a statistical measure between 0 and 1 that tells you how much of the variation in real returns the model\'s predictions explain. R² = 1 would mean the model explains everything; R² = 0 would mean it explains nothing — a coin flip is just as informative.',
-      'We got R² = 0.04, meaning our model\'s verdicts explained about 4% of cross-sectional real returns. That\'s low. We publish it because it\'s the truth — and because no other free tool publishes their track record at all.',
+      'We took the full pipeline, ran it on 50 S&P 500 stocks "as of" January 2014 (using only data and macro inputs available then), and recorded each valuation conclusion. Then we measured what those stocks actually did from 2014 to 2024.',
+      'R² (R-squared) is a statistical measure between 0 and 1 that tells you how much of the variation in real returns the model signal explains. R² = 1 would mean the model explains everything; R² = 0 would mean it explains nothing.',
+      'We got R² = 0.04, meaning the model signal explained about 4% of cross-sectional realized returns. That is low. We publish it because it is the truth.',
     ],
   },
 
   conclusion: {
     title: 'How to use this analysis',
     body: [
-      'OpenQuant doesn\'t tell you to buy or sell. It surfaces the assumptions your buy/sell decision implicitly contains, and tells you honestly how well the model has predicted real outcomes in the past.',
-      'Use the analysis as a thinking frame: "for me to buy at this price, I have to believe X about the company\'s future." If you can name that X clearly, you have a thesis. If you can\'t, you\'re probably trading on noise.',
-      'And remember the calibration: even when the math is right, the verdict has limited predictive power. Treat the model as one defensible lens, not the answer.',
+      'OpenQuant does not tell you what to do. It surfaces the assumptions that today\'s market price already contains, and tells you honestly how well the model signal worked on historical data.',
+      'Use the analysis as a thinking frame: "for this price to make sense, I have to believe X about the company\'s future." If you can name that X clearly, you understand the financial assumption.',
+      'And remember the calibration: even when the math is right, the stock-return signal has limited predictive power. Treat the model as one defensible lens, not the answer.',
     ],
   },
 }
@@ -174,7 +174,7 @@ export const GLOSSARY = [
     chapter: 'Ch. 8',
   },
   { term: 'Intrinsic value (IV)',
-    def: 'What our DCF model says one share is worth, based on projected future cash flows discounted to today. Sometimes called "fair value." Compare to market price.',
+    def: 'What our DCF model outputs for one share, based on projected future cash flows discounted to today. Compare to market price, but do not treat it as a forecast.',
     chapter: 'Ch. 9',
   },
   { term: 'MRP',
@@ -182,7 +182,7 @@ export const GLOSSARY = [
     chapter: 'Ch. 12',
   },
   { term: 'Margin of safety',
-    def: 'Buffett\'s principle: only buy when intrinsic value is materially above market price (e.g. 30%+). Built-in tolerance for being wrong.',
+    def: 'Buffett\'s principle that model value should be materially above market price before relying on the gap. It is a tolerance for being wrong.',
   },
   { term: 'NPV',
     def: 'Net Present Value. The sum of all future cash flows discounted to today, minus the initial investment. NPV > 0 → project creates value; NPV < 0 → destroys it.',

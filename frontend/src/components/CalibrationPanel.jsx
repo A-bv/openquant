@@ -76,9 +76,9 @@ export default function CalibrationPanel({ placement = 'full' }) {
         valuation conclusions to what actually happened through Jan 2024:
       </p>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 16 }}>
-        <BacktestStat label='Called "undervalued"' n={verdicts.undervalued?.n} mean={verdicts.undervalued?.mean_realized_annualised} />
-        <BacktestStat label='Called "overvalued"' n={verdicts.overvalued?.n} mean={verdicts.overvalued?.mean_realized_annualised} />
-        <BacktestStat label='Called "fairly priced"' n={verdicts.fairly_priced?.n} mean={verdicts.fairly_priced?.mean_realized_annualised} />
+        <BacktestStat label='Model value above price' n={verdicts.undervalued?.n} mean={verdicts.undervalued?.mean_realized_annualised} />
+        <BacktestStat label='Model value below price' n={verdicts.overvalued?.n} mean={verdicts.overvalued?.mean_realized_annualised} />
+        <BacktestStat label='Model value near price' n={verdicts.fairly_priced?.n} mean={verdicts.fairly_priced?.mean_realized_annualised} />
       </div>
     </section>
   )

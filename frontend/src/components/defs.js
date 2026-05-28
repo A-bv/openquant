@@ -13,5 +13,5 @@ export const DEFS = {
   MRP: 'Market Risk Premium — the extra return investors demand from stocks vs Treasury bonds. Historically ~5-6% per year.',
   rf: 'Risk-free rate — the return on a "safe" investment (typically 10-year US Treasury yield).',
   hurdle: 'Hurdle rate — the minimum return YOU personally require to invest. The model uses WACC; you may use your own.',
-  marginOfSafety: 'Margin of Safety — Buffett\'s principle of only buying when intrinsic value is materially above price (e.g. 30%+).',
+  marginOfSafety: 'Margin of Safety — Buffett\'s principle that model value should be materially above price before relying on the gap (e.g. 30%+).',
 }

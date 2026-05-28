@@ -21,12 +21,12 @@ export default function Conclusion({ d, onAnalyse }) {
   const ivBase = d.dcf?.base?.iv
   const haveValues = Number.isFinite(p) && Number.isFinite(ivBase)
 
-  // Verdict (overvalued / undervalued / fair)
+  // Model gap bucket, not an investment recommendation.
   const upside = haveValues ? (ivBase / p - 1) : null
-  const verdict = upside == null ? null
-    : upside > 0.20 ? 'undervalued'
-    : upside < -0.20 ? 'overvalued'
-    : 'fair'
+  const modelGap = upside == null ? null
+    : upside > 0.20 ? 'model value above price'
+    : upside < -0.20 ? 'model value below price'
+    : 'model value near price'
 
   // Three sentences in plain English
   const implied = d.reverse_dcf?.implied_growth
@@ -42,9 +42,9 @@ export default function Conclusion({ d, onAnalyse }) {
         gap of <strong>{(gap != null ? (gap >= 0 ? '+' : '') + (gap * 100).toFixed(1) : '—')}pp</strong>.
       </p>
       <p style={{ marginBottom: 8 }}>
-        Under our textbook DCF model, the base-case intrinsic value is <strong>{fmt$(ivBase)}</strong>{' '}
-        — {verdict === 'undervalued' ? <>about <strong>{pct(upside)}</strong> above today's price.</>
-            : verdict === 'overvalued' ? <>about <strong>{pct(Math.abs(upside))}</strong> below today's price.</>
+        Under our textbook DCF model, the base-case value is <strong>{fmt$(ivBase)}</strong>{' '}
+        — {modelGap === 'model value above price' ? <>about <strong>{pct(upside)}</strong> above today's price.</>
+            : modelGap === 'model value below price' ? <>about <strong>{pct(Math.abs(upside))}</strong> below today's price.</>
             : <>roughly in line with the market.</>}
       </p>
       <p>
@@ -73,15 +73,15 @@ export default function Conclusion({ d, onAnalyse }) {
     })
   }
   takeaways.push({
-    label: verdict === 'overvalued'
-      ? `Our model says overvalued. But to bet against the market you'd need to disagree with at least one specific assumption above.`
-      : verdict === 'undervalued'
-        ? `Our model says undervalued. But to act on this you'd need to believe our growth/WACC inputs and our backtest hasn't shown reliable predictive power.`
-        : `Our model says fairly priced — meaning either the market and the model agree, or both are missing the same thing.`,
-    detail: 'No model can tell you the future. It can only make explicit what bet you are taking when you buy or pass.',
+      label: modelGap === 'model value below price'
+      ? `The model value is below the market price. To justify today's price, at least one assumption above needs to be too conservative.`
+      : modelGap === 'model value above price'
+        ? `The model value is above the market price. To rely on that gap, you need to believe the growth and WACC assumptions are defensible.`
+        : `The model value is near the market price, meaning the market and model assumptions are broadly similar.`,
+    detail: 'No model can tell you the future. It can only make explicit what belief the market price already contains.',
   })
   takeaways.push({
-    label: 'The strongest signal in this report is the calibration: a published R² = 0.04 means even when the math is right, the verdict has limited predictive power.',
+    label: 'The strongest caution in this report is calibration: R² = 0.04 means even when the math is right, the stock-return signal has limited predictive power.',
     detail: "That's not a flaw of this tool — it's a property of DCF valuation in general. The advantage of OpenQuant is that we tell you, instead of pretending otherwise.",
   })
 

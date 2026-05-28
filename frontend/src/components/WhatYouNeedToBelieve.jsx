@@ -1,6 +1,6 @@
 /**
- * Four cards showing exactly what assumptions you'd need to hold for
- * the model's verdict to be wrong. Empowers disagreement.
+ * Four cards showing exactly what assumptions would need to hold for
+ * the market price to make sense under the model.
  */
 
 export default function WhatYouNeedToBelieve({ d }) {
@@ -10,11 +10,11 @@ export default function WhatYouNeedToBelieve({ d }) {
   const p = d.current_price
   const gap = Number.isFinite(ivBase) && Number.isFinite(p) ? (ivBase - p) / p : null
 
-  const modelSays = gap > 0.20 ? 'undervalued'
-    : gap < -0.20 ? 'overvalued'
-    : 'fairly priced'
+  const modelGap = gap > 0.20 ? 'model value above price'
+    : gap < -0.20 ? 'model value below price'
+    : 'model value near price'
 
-  if (modelSays === 'fairly priced' || gap == null) {
+  if (modelGap === 'model value near price' || gap == null) {
     return null
   }
 
@@ -26,10 +26,10 @@ export default function WhatYouNeedToBelieve({ d }) {
   const waccPct = waccVal != null ? (waccVal * 100).toFixed(1) : '—'
   const marginPct = margin != null ? (margin * 100).toFixed(1) : '—'
 
-  const headlinePhrase = modelSays === 'overvalued'
+  const headlinePhrase = modelGap === 'model value below price'
     ? `What would need to be true for today's price to make sense?`
     : `What would need to be false for today's price to disappoint?`
-  const cards = modelSays === 'overvalued' ? [
+  const cards = modelGap === 'model value below price' ? [
     {
       claim: `Growth will exceed ${impliedPct}%/yr`,
       detail: `The implied growth rate is what today's price already assumes. To make the price look reasonable, you need growth above that — historically rare for any large-cap over a decade.`,
@@ -71,7 +71,7 @@ export default function WhatYouNeedToBelieve({ d }) {
         {headlinePhrase}
       </h3>
       <p className="section-copy">
-        The model says <strong>{modelSays}</strong>, but the useful output is not the label.
+        The useful output is not a label.
         It is the list of assumptions that would make the market price reasonable.
       </p>
       <div className="belief-grid">

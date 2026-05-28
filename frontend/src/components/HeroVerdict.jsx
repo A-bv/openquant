@@ -44,7 +44,7 @@ export default function HeroVerdict({ d }) {
   const gap = d.reverse_dcf?.gap_vs_historical
   const baseGap = upside == null ? null : Math.abs(upside)
 
-  const verdictText = !d.dcf || !Number.isFinite(implied)
+  const analysisText = !d.dcf || !Number.isFinite(implied)
     ? `The DCF model could not be fully computed for ${d.company_name}. See the warnings below.`
     : `At ${fmt$(p)}, the market is asking you to believe ${d.company_name} can grow free cash flow at ${pct(implied)} per year for the next decade.`
 
@@ -54,7 +54,7 @@ export default function HeroVerdict({ d }) {
       : gap < -0.05
         ? `That is ${pct(Math.abs(gap))} below its historical median. The price is assuming a slowdown.`
         : `That is close to its historical median. The price mostly assumes continuity.`
-    : 'The useful output is the assumption, not a buy/sell label.'
+    : 'The useful output is the assumption, not an action label.'
 
   return (
     <section className="card hero-card">
@@ -68,7 +68,7 @@ export default function HeroVerdict({ d }) {
             <span style={{ fontSize: 12, color: '#9CA3AF' }}>· {d.sector}</span>
           </div>
           <div className="hero-statement">
-            {verdictText}
+            {analysisText}
           </div>
           <p className="hero-support">
             {decisionText}
@@ -97,7 +97,7 @@ export default function HeroVerdict({ d }) {
       </div>
 
       <div className="method-note">
-        This is not a buy/sell signal. It is a map of the assumptions today's
+        This is not an action signal. It is a map of the assumptions today's
         price requires.
       </div>
     </section>

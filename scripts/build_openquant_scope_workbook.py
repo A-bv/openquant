@@ -174,9 +174,9 @@ OPENQUANT_ROWS = [
     ("core/sensitivity.py", "Sensitivity analysis", "Growth x WACC and terminal growth x WACC tables", "Yes", "Yes", "Yes", "Productized"),
     ("core/multiples.py", "Market cross-check", "P/E, EV/EBITDA, FCF yield", "Yes", "Yes", "Yes", "Not course core, but useful sanity check"),
     ("core/suitability.py", "Suitability gate", "DCF appropriateness checks and alternatives", "Yes", "Yes", "Yes", "Important for not overclaiming"),
-    ("core/assumption_diagnostic.py", "Diagnostic scoring", "Assumption risk scoring", "Yes", "No", "Yes", "Implemented and tested, but not wired into current API/UI product flow"),
-    ("core/red_flags.py", "Red flag summary", "Aggregates diagnostic and suitability caveats", "Yes", "No", "Yes", "Implemented/tested, but not wired into current API/UI product flow"),
-    ("core/audit_trail.py", "Formula trace", "Display formula references and inputs used", "Yes", "No", "No", "Implemented, but not wired into API/UI and not covered by dedicated tests"),
+    ("core/assumption_diagnostic.py", "Diagnostic scoring", "Assumption risk scoring", "Yes", "Yes", "Yes", "Wired into /analyse and shown in the model reliability panel"),
+    ("core/red_flags.py", "Red flag summary", "Aggregates diagnostic and suitability caveats", "Yes", "Yes", "Yes", "Wired into /analyse and shown before detailed formula evidence"),
+    ("core/audit_trail.py", "Formula trace", "Display formula references and inputs used", "Yes", "Yes", "No", "Wired into /analyse and UI; add dedicated tests next"),
     ("backtest/", "Historical validation", "Run OpenQuant as of past dates and compare later outcomes", "Yes", "Yes", "Yes", "Backtest informativeness, not formula correctness"),
     ("tests/test_epfl_exam1.py", "Sample exam 1 formula tests", "FCF, Hamada, CAPM, PVTS, NPV, IRR", "Yes", "No", "Yes", "Formula correctness layer"),
     ("tests/test_epfl_exam2.py", "Sample exam 2 formula tests", "Growing annuity, DDM, beta/CAPM, portfolio, Sharpe", "Yes", "No", "Yes", "Formula correctness layer"),
@@ -195,8 +195,7 @@ MISSING_ROWS = [
     ("Product gap", "NWC component explanation", "Partial", "High later", "Important for FCF and project decisions", "Expose AR/inventory/AP and delta NWC in FCF audit"),
     ("Product gap", "APV full workflow", "Partial", "Medium later", "PV tax shield exists but APV is not a product flow", "Build APV as alternative to WACC valuation when leverage changes"),
     ("Product gap", "Backtest breadth", "Partial", "High later", "Current headline backtest is one 2014-2024 stock valuation run", "Add multiple as-of dates and scenario variants"),
-    ("Implementation gap", "Assumption diagnostic wiring", "Implemented, not productized", "High", "DiagnosticBuilder exists and is tested but API/UI do not expose it", "Call diagnostic builder in analysis flow and surface concise output in reliability/assumption panel"),
-    ("Implementation gap", "Audit trail wiring", "Implemented, not productized", "Medium", "AuditTrailBuilder exists but is not returned by API/UI and has no dedicated tests", "Add API payload, UI disclosure panel, and tests before marking productized"),
+    ("Testing gap", "Audit trail dedicated tests", "Productized, not directly tested", "Medium", "Audit trail is now returned by API/UI but lacks focused tests", "Add tests for audit payload shape and formula references"),
     ("UX gap", "Market-implied belief as first screen", "Partial", "High", "README/strategy now say this, UI still includes fair-value framing", "Move reverse DCF and assumptions before intrinsic-value verdict language"),
 ]
 

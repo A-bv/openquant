@@ -8,6 +8,7 @@ import ScenariosWithSliders from './components/ScenariosWithSliders'
 import WhatYouNeedToBelieve from './components/WhatYouNeedToBelieve'
 import MultiplesCheck from './components/MultiplesCheck'
 import CalibrationPanel from './components/CalibrationPanel'
+import ModelQualityPanel from './components/ModelQualityPanel'
 import Conclusion from './components/Conclusion'
 import Glossary from './components/Glossary'
 import LearnMore from './components/LearnMore'
@@ -255,7 +256,7 @@ export default function App() {
 
         {loading && <LoadingState ticker={activeTicker} />}
 
-        {/* Not-suitable verdict */}
+        {/* Not-suitable analysis */}
         {d && !d.is_suitable && (
           <section style={{
             background: '#FCEBEB', border: '0.5px solid #F5B5B5',
@@ -296,15 +297,18 @@ export default function App() {
 
             <DisclosureSection
               eyebrow="Model reliability"
-              title="How much should you trust the verdict?"
-              summary="The formula can be correct while the prediction remains weak. Open this before treating any fair value as a forecast."
+              title="How much should you trust this analysis?"
+              summary="The formula can be correct while the stock-return signal remains weak. Open this before treating any model value as a forecast."
             >
               <CalibrationPanel placement="hero" />
+              <div style={{ marginTop: 12 }}>
+                <ModelQualityPanel d={d} />
+              </div>
             </DisclosureSection>
 
             <DisclosureSection
               eyebrow="Cross-check"
-              title="Check the verdict against market multiples"
+              title="Check the model output against market multiples"
               summary="P/E, EV/EBITDA, and FCF yield provide a quick sanity check, separate from the DCF."
             >
               <MultiplesCheck d={d} />

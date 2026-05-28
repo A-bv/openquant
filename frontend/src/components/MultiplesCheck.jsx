@@ -1,5 +1,5 @@
 /**
- * Sanity check — how does the DCF verdict compare to relative valuation
+ * Sanity check — how does the DCF output compare to relative valuation
  * (P/E, EV/EBITDA, FCF yield)?
  */
 import Term from './Term'
@@ -66,7 +66,7 @@ export default function MultiplesCheck({ d }) {
         Sanity check — multiples
       </h3>
       <p style={{ fontSize: 12, color: '#6B7280', lineHeight: 1.5, marginBottom: 14, maxWidth: 720 }}>
-        Three independent metrics, cross-validating the DCF verdict. They don't prove the model
+        Three independent metrics, cross-checking the DCF output. They don't prove the model
         right — they show whether the conclusion is corroborated by other ways of looking at the stock.
       </p>
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
