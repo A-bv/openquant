@@ -14,6 +14,9 @@ value creation.
 It is a Python-powered web app that can be tested live online on real US market
 data, or cloned and run locally.
 
+Data comes from SEC EDGAR for company financials and yfinance for market prices
+and historical returns.
+
 Course/formula coverage is tracked in `docs/openquant_scope_table.xlsx`.
 
 ## Run Locally
