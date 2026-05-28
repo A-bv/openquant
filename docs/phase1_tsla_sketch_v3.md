@@ -4,7 +4,7 @@
 > 1. **Sliders** — interactive panel for growth/WACC/terminal growth + a "your personal hurdle rate" input
 > 2. **Precise EPFL citations** — every formula references the exact textbook chapter / exam problem / test that pins it
 > 3. **Demonstration traces** — show the computation step-by-step, not just the result (brentq iterations, equity bridge, etc.)
-> 4. **Calibration section** structured for backtest results (`docs/backtest_plan.md` scopes how we fill it)
+> 4. **Calibration section** structured for implemented backtest results
 > 5. Visual treatments — cards, color-coded callouts, structured layouts — described in `[Visual]` blocks
 
 ---
@@ -187,15 +187,15 @@ The closest-to-price cell is $301 (25% growth, 6% WACC) — **still $125 short o
 
 > 🟡 **Calibration status: PENDING.**
 >
-> **What we've verified:** 163 unit tests pin every formula on this page against the EPFL Sample Exam 1 and 2 answer keys. The math is provably correct against a published academic curriculum.
+> **What we've verified:** 161 offline tests pin the formula implementation against course-style expected answers.
 >
-> **What we haven't yet verified:** Whether the model's verdicts have been *empirically accurate*. A walk-forward backtest across 50 S&P 500 stocks (2014→2024) is in progress — when complete, this section will show:
+> **Historical reliability:** The implemented backtest across 50 S&P 500 stocks (2014→2024) shows the current stock-valuation signal is not calibrated as a reliable return predictor.
 >
 > - When the model said "fairly priced," average realized 5-year return: __[TBD]__%
 > - When the model said "overvalued by 30%+," average realized 5-year return: __[TBD]__%
 > - Where the model has been wrong: __[TBD]__
 >
-> Until the backtest report lands (`docs/backtest_2014_2024.md`), treat every conclusion on this page as *"under the formal model, …"* — not as *"the truth is …"*.
+> Treat every conclusion on this page as *"under the formal model, …"* — not as *"the truth is …"*.
 
 This is unusual disclosure. We surface it because it's the single hardest question about every valuation tool on the internet: *does its math actually work on real history?* Most retail tools dodge that question. We commit to answering it.
 

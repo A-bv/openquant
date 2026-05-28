@@ -185,7 +185,7 @@ export default function Conclusion({ d, onAnalyse }) {
           </div>
         </div>
 
-        {/* Read backtest */}
+        {/* Backtest summary */}
         <div style={{
           background: '#F5F3FF',
           border: '0.5px solid #DDD6FE',
@@ -196,15 +196,9 @@ export default function Conclusion({ d, onAnalyse }) {
             → Understand the model's track record
           </div>
           <div style={{ fontSize: 12, color: '#5B21B6', lineHeight: 1.5 }}>
-            Read the full 50-stock backtest, including sector failure modes and proposed fixes:{' '}
-            <a
-              href="https://github.com/A-bv/openquant/blob/main/docs/backtest_2014_2024.md"
-              target="_blank"
-              rel="noreferrer"
-              style={{ color: '#5B21B6', fontWeight: 600, textDecoration: 'underline' }}
-            >
-              backtest_2014_2024.md
-            </a>
+            The reliability panel above shows the main 2014-2024 backtest result:
+            the formulas are tested, but the stock-valuation signal is not yet
+            calibrated as a reliable return predictor.
           </div>
         </div>
       </div>

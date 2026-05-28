@@ -15,6 +15,8 @@ import logging
 import math
 import os
 import uuid
+import json
+from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI, HTTPException
@@ -39,6 +41,12 @@ def _sanitize(obj: Any) -> Any:
     return obj
 
 app = FastAPI(title="OpenQuant API", version="1.0.0")
+CALIBRATION_SUMMARY_PATH = (
+    Path(__file__).resolve().parents[1]
+    / "backtest"
+    / "results"
+    / "calibration_summary.json"
+)
 
 # CORS — explicit local dev origins plus an anchored regex for this project's
 # Vercel deployments. The previous regex `https://.*\.vercel\.app` was both
@@ -79,6 +87,23 @@ class AnalyseRequest(BaseModel):
 @app.get("/health")
 def health():
     return {"status": "ok", "version": "1.0.0"}
+
+
+@app.get("/calibration")
+def calibration():
+    """Return the main historical backtest reliability results used by the app."""
+    try:
+        return _sanitize(json.loads(CALIBRATION_SUMMARY_PATH.read_text()))
+    except FileNotFoundError:
+        raise HTTPException(
+            status_code=503,
+            detail={"error": "Calibration summary has not been generated."},
+        )
+    except json.JSONDecodeError:
+        raise HTTPException(
+            status_code=500,
+            detail={"error": "Calibration summary is not valid JSON."},
+        )
 
 
 # ── Analyse ───────────────────────────────────────────────────────────────────
