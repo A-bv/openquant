@@ -22,7 +22,11 @@ import SensitivityTable from './components/SensitivityTable'
 import WACCBreakdown from './components/WACCBreakdown'
 import EPFLCitation from './components/EPFLCitation'
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const API = import.meta.env.VITE_API_URL || (
+  typeof window !== 'undefined'
+    ? `${window.location.protocol}//${window.location.hostname}:8000`
+    : 'http://127.0.0.1:8000'
+)
 
 function getInitialTicker() {
   if (typeof window === 'undefined') return ''
@@ -39,7 +43,7 @@ function getAnalysisError(e) {
   if (e.code === 'ERR_NETWORK') {
     return [
       'The analysis API is not reachable.',
-      'Start the backend on http://localhost:8000 or check the frontend API URL.',
+      `Start the backend on ${API} or check the frontend API URL.`,
     ].join(' ')
   }
 
@@ -48,40 +52,6 @@ function getAnalysisError(e) {
   }
 
   return 'Analysis failed. Please try again.'
-}
-
-function WorkflowStep({ number, title, text }) {
-  return (
-    <div style={{
-      display: 'grid',
-      gridTemplateColumns: '28px 1fr',
-      gap: 10,
-      alignItems: 'start',
-    }}>
-      <div style={{
-        width: 28,
-        height: 28,
-        borderRadius: 999,
-        background: '#EAF2FB',
-        color: '#185FA5',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontSize: 12,
-        fontWeight: 800,
-      }}>
-        {number}
-      </div>
-      <div>
-        <div style={{ fontSize: 13, fontWeight: 800, color: '#111827', marginBottom: 3 }}>
-          {title}
-        </div>
-        <div style={{ fontSize: 12, color: '#6B7280', lineHeight: 1.45 }}>
-          {text}
-        </div>
-      </div>
-    </div>
-  )
 }
 
 export default function App() {
@@ -143,7 +113,7 @@ export default function App() {
             <span className="brand-dot" />
           </div>
           <div className="topbar-subtitle">
-            Finance formulas turned into decision tools.
+            EPFL finance applied to live US market data.
           </div>
           <button
             onClick={() => setGlossaryOpen(true)}
@@ -169,15 +139,20 @@ export default function App() {
           {!d && (
             <>
               <div className="eyebrow">
-                Stock Valuation Lab
+                Live Corporate Finance Lab
               </div>
               <h1 className="page-title">
-                What is the market already pricing in?
+                What Is the Market Already Assuming?
               </h1>
               <p className="page-copy">
-                Type a US ticker. OpenQuant translates Berk-DeMarzo's valuation
-                framework into one practical question: what growth, risk, and cash-flow
-                assumptions must be true for today's price to make sense?
+                A stock price is more than a quote. It carries assumptions about
+                future cash flows, risk, and growth. OpenQuant makes those
+                assumptions visible, then checks how similar conclusions held up
+                in historical backtests.
+              </p>
+              <p className="intro-proof">
+                Real US market data · Direct application of EPFL finance theory ·
+                historical backtests
               </p>
             </>
           )}
@@ -185,10 +160,10 @@ export default function App() {
             {d && (
               <div>
                 <div className="eyebrow">
-                  Stock Valuation Lab
+                  EPFL Finance Lab
                 </div>
                 <div className="toolbar-title">
-                  What is the market already pricing in?
+                  Ticker converted into a finance case
                 </div>
               </div>
             )}
@@ -202,39 +177,6 @@ export default function App() {
             />
           </div>
         </section>
-
-        {!d && !loading && (
-          <section className="workflow-grid">
-            <div className="card workflow-card">
-              <WorkflowStep
-                number="1"
-                title="Read the price"
-                text="Start from the market price, not from a target price."
-              />
-            </div>
-            <div className="card workflow-card">
-              <WorkflowStep
-                number="2"
-                title="Extract the belief"
-                text="Reverse the DCF to estimate what growth the price implies."
-              />
-            </div>
-            <div className="card workflow-card">
-              <WorkflowStep
-                number="3"
-                title="Challenge assumptions"
-                text="Move growth, WACC, and terminal growth to test your view."
-              />
-            </div>
-            <div className="card workflow-card">
-              <WorkflowStep
-                number="4"
-                title="Open the audit"
-                text="Use the course formulas only when you want the full detail."
-              />
-            </div>
-          </section>
-        )}
 
         {/* Error */}
         {error && (

@@ -9,7 +9,11 @@
 import { useEffect, useState } from 'react'
 
 const pct = (v, d = 1) => v == null || !Number.isFinite(v) ? '—' : `${v.toFixed(d)}%`
-const API = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const API = import.meta.env.VITE_API_URL || (
+  typeof window !== 'undefined'
+    ? `${window.location.protocol}//${window.location.hostname}:8000`
+    : 'http://127.0.0.1:8000'
+)
 
 export default function CalibrationPanel({ placement = 'full' }) {
   const [cal, setCal] = useState(null)

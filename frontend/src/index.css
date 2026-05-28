@@ -156,10 +156,19 @@ button, input {
 .page-copy {
   max-width: 690px;
   margin-top: 12px;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
   color: var(--muted);
   font-size: 15px;
   line-height: 1.65;
+}
+
+.intro-proof {
+  max-width: 690px;
+  margin-bottom: 22px;
+  color: #475467;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0;
 }
 
 .toolbar-title {
