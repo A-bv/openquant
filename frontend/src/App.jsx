@@ -142,17 +142,15 @@ export default function App() {
                 Live Corporate Finance Lab
               </div>
               <h1 className="page-title">
-                What Is the Market Already Assuming?
+                What Does a Stock Price Tell You?
               </h1>
               <p className="page-copy">
-                A stock price is more than a quote. It carries assumptions about
-                future cash flows, risk, and growth. OpenQuant makes those
-                assumptions visible, then checks how similar conclusions held up
-                in historical backtests.
+                OpenQuant uses real market data and EPFL finance formulas to
+                estimate the cash-flow growth required to justify today's price,
+                then backtests whether similar past conclusions were informative.
               </p>
               <p className="intro-proof">
-                Real US market data · Direct application of EPFL finance theory ·
-                historical backtests
+                Real US market data · EPFL course formulas · Historical backtests
               </p>
             </>
           )}
