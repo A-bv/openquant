@@ -517,6 +517,151 @@
         q(root,'actval').textContent=v.act+'%'; q(root,'reqval').textContent=req.toFixed(1)+'%';
         q(root,'actbar').style.width=(v.act/mx*100)+'%'; q(root,'reqbar').style.width=(req/mx*100)+'%'; q(root,'reqbar').style.background='var(--faint)';
         K(q(root,'fnum'),v.act+' - (4 + '+v.beta+'\\times 6) = '+(a>=0?'+':'')+a.toFixed(1)+'\\%');}}
+,
+
+    fcf:{ch:'H3 · valuing a firm',eyebrow:'free cash flow',idea:'Profit on paper is not the same as cash in hand.',
+      usecase:"Judging a company. This strips accounting profit down to the cash it actually frees up after taxes and reinvesting in the business, which is what owners can really take out.",
+      fixed:"a 25% tax rate", src:'Berk-DeMarzo Ch.7 · test_epfl_exam1.py',
+      inputs:[{k:'ebit',label:'operating profit',min:20,max:300,step:10,val:100,unit:'$'},{k:'rein',label:'share of profit put back into the business',min:0,max:80,step:5,val:40,unit:'%'}],
+      viz:twoBarHTML('after-tax profit','free cash flow'),
+      fgen:"\\text{FCF} \\;=\\; \\text{EBIT}\\,(1-\\tau) \\;-\\; \\text{reinvestment}",
+      explain:'A fast-growing firm can show a big profit yet free little cash, because so much is plowed back into the business. Free cash flow is what is truly left over.',
+      update:function(v,root){var aft=v.ebit*0.75, fcf=aft*(1-v.rein/100), mx=aft;
+        q(root,'ans').textContent=money(fcf)+'M'; var c=q(root,'chip'); c.className='chip info'; c.textContent=money(aft*v.rein/100)+'M reinvested';
+        q(root,'note').textContent='of '+money(aft)+'M after-tax profit, '+money(fcf)+'M is free cash';
+        q(root,'av').textContent=money(aft)+'M'; q(root,'bv').textContent=money(fcf)+'M';
+        q(root,'abar').style.height='144px'; q(root,'bbar').style.height=(fcf/mx*144)+'px';
+        K(q(root,'fnum'),Math.round(aft)+' - '+Math.round(aft*v.rein/100)+' = '+Math.round(fcf));}},
+
+    nwc:{ch:'H3 · valuing a firm',eyebrow:'cash trapped by growth',idea:'Growth ties up cash in stock and unpaid bills.',
+      usecase:"Understanding why a profitable, fast-growing company can still run short of cash. Each extra sale locks money into inventory and customer credit before it ever comes back.",
+      fixed:"on $1,000M of current sales", src:'Berk-DeMarzo Ch.7',
+      inputs:[{k:'g',label:'how fast sales grow',min:0,max:50,step:5,val:30,unit:'%'},{k:'int',label:'cash tied up per $1 of new sales',min:5,max:40,step:5,val:20,unit:'%'}],
+      viz:hbar('lock','var(--lost)','cash locked up by growing'),
+      fgen:"\\Delta\\text{working capital} \\;=\\; \\text{intensity} \\times \\Delta\\text{sales}",
+      explain:'The faster it grows, the more cash gets trapped before customers pay and stock sells. Growth that outruns cash can sink an otherwise healthy firm.',
+      update:function(v,root){var newSales=1000*v.g/100, locked=newSales*v.int/100;
+        q(root,'ans').textContent=money(locked)+'M'; var c=q(root,'chip'); c.className='chip lost'; c.textContent='trapped this year';
+        q(root,'note').textContent='growing '+v.g+'% locks '+money(locked)+'M into stock and unpaid bills';
+        q(root,'lockval').textContent=money(locked)+'M'; q(root,'lockbar').style.width=Math.min(locked/200*100,100)+'%';
+        K(q(root,'fnum'),(v.int/100).toFixed(2)+' \\times '+Math.round(newSales)+' = '+Math.round(locked));}},
+
+    npvirr:{ch:'H3 · project decisions',eyebrow:'NPV vs IRR',idea:'The highest percentage return is not always the most value.',
+      usecase:"Choosing between two projects when you can only do one. A small project can show a higher rate of return yet create far less total value than a big one. Value should win.",
+      fixed:"A: cost $5k, $3,600/yr for 2 yrs (28% return). B: cost $100k, $66k/yr for 2 yrs (21%)", src:'Berk-DeMarzo Ch.7 · test_epfl_exam1.py',
+      inputs:[{k:'r',label:'your rate (the cost of money)',min:1,max:35,step:1,val:15,unit:'%'}],
+      viz:hbar('a','var(--accent)','Project A value (28% return)')+hbar('b','var(--good)','Project B value (21% return)'),
+      fgen:"\\text{pick the higher NPV, not the higher rate}",
+      explain:'Below the crossover rate, the big project B wins on value. Only above it does the high-rate project A pull ahead. The rate alone can point you the wrong way.',
+      update:function(v,root){var r=v.r/100, npv=function(cost,cf){return -cost+cf/(1+r)+cf/Math.pow(1+r,2);}, na=npv(5000,3600), nb=npv(100000,66000), mx=Math.max(Math.abs(na),Math.abs(nb),1);
+        var pick=na>nb?'Project A':'Project B';
+        q(root,'ans').textContent='pick '+pick; var c=q(root,'chip'); c.className='chip info'; c.textContent=(na>nb?'A':'B')+' creates more value';
+        q(root,'note').textContent='A is worth '+money(na)+', B is worth '+money(nb)+' at your '+v.r+'% rate';
+        q(root,'aval').textContent=money(na); q(root,'bval').textContent=money(nb);
+        q(root,'abar').style.width=(Math.max(na,0)/mx*100)+'%'; q(root,'bbar').style.width=(Math.max(nb,0)/mx*100)+'%';
+        K(q(root,'fnum'),'NPV_A = '+Math.round(na)+',\\;\\; NPV_B = '+Math.round(nb));}},
+
+    dcf:{ch:'H3 · valuing a firm',eyebrow:'value a whole company',idea:'A business is worth its future cash, brought back to today.',
+      usecase:"Putting a value on an entire company. This takes the cash it throws off, grows it, and discounts it back, giving an estimate of what the whole business is worth.",
+      fixed:"this year it frees $100M of cash", src:'Berk-DeMarzo Ch.9',
+      inputs:[{k:'g',label:'how fast its cash grows each year',min:0,max:6,step:0.5,val:3,unit:'%'},{k:'wacc',label:'the return investors require (WACC)',min:5,max:14,step:0.5,val:9,unit:'%'}],
+      viz:hbar('ev','var(--accent)','what the whole business is worth'),
+      fgen:"\\text{value} \\;=\\; \\dfrac{\\text{next year cash}}{\\text{WACC} - g}",
+      explain:'The closer growth gets to the required return, the larger the value, because the cash keeps growing nearly as fast as you discount it. Small changes swing it a lot.',
+      update:function(v,root){var spread=(v.wacc-v.g)/100;
+        if(spread<=0){q(root,'ans').textContent='∞'; var c0=q(root,'chip'); c0.className='chip lost'; c0.textContent='growth cannot beat the required return'; q(root,'note').textContent='if growth reaches the required return, the simple formula breaks down'; q(root,'evval').textContent='∞'; q(root,'evbar').style.width='100%'; K(q(root,'fnum'),'\\to \\infty'); return;}
+        var ev=100*(1+v.g/100)/spread;
+        q(root,'ans').textContent=money(ev)+'M'; var c=q(root,'chip'); c.className='chip info'; c.textContent='enterprise value';
+        q(root,'note').textContent='at '+v.g+'% growth and a '+v.wacc+'% required return, the business is worth '+money(ev)+'M';
+        q(root,'evval').textContent=money(ev)+'M'; q(root,'evbar').style.width=Math.min(ev/3000*100,100)+'%';
+        K(q(root,'fnum'),'100\\times(1+'+(v.g/100).toFixed(3)+') / '+spread.toFixed(3)+' = '+Math.round(ev));}},
+
+    terminal:{ch:'H3 · valuing a firm',eyebrow:'terminal value',idea:'Most of a valuation often sits beyond the forecast years.',
+      usecase:"Reading a DCF with a critical eye. A large share of the value usually comes from a terminal value after the forecast, which rests on long-run assumptions, not hard numbers.",
+      fixed:"a 9% required return and 2.5% long-run growth", src:'Berk-DeMarzo Ch.9',
+      inputs:[{k:'n',label:'how many years you forecast in detail',min:3,max:20,step:1,val:10,unit:'yr'}],
+      viz:'<div class="hblab"><span>forecast years vs everything after</span><b data-r="sv"></b></div><div class="hbar" style="height:26px;display:flex;"><div data-r="fseg" style="background:var(--accent);height:100%;"></div><div data-r="tseg" style="background:var(--lost);height:100%;"></div></div><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--faint);margin-top:5px;"><span data-r="flab"></span><span data-r="tlab"></span></div>',
+      fgen:"\\text{terminal value} \\;=\\; \\dfrac{\\text{FCF after year }n}{\\text{WACC}-g}",
+      explain:'Even with a 10-year forecast, more than half the value can come from the years beyond it. That part is the least certain, so treat the assumptions with care.',
+      update:function(v,root){var wacc=0.09,g=0.025,fcf=100, sum=0; for(var t=1;t<=v.n;t++){sum+=fcf*Math.pow(1+g,t-1)/Math.pow(1+wacc,t);}
+        var tv=fcf*Math.pow(1+g,v.n)/(wacc-g), pvtv=tv/Math.pow(1+wacc,v.n), total=sum+pvtv, tpct=pvtv/total*100, fpct=100-tpct;
+        q(root,'ans').textContent=Math.round(tpct)+'% beyond year '+v.n; var c=q(root,'chip'); c.className='chip lost'; c.textContent='the least certain part';
+        q(root,'note').textContent=Math.round(tpct)+'% of the value comes from after your '+v.n+'-year forecast';
+        q(root,'sv').textContent=Math.round(fpct)+' / '+Math.round(tpct);
+        q(root,'fseg').style.width=fpct+'%'; q(root,'tseg').style.width=tpct+'%';
+        q(root,'flab').textContent='forecast '+Math.round(fpct)+'%'; q(root,'tlab').textContent='after '+Math.round(tpct)+'%';
+        K(q(root,'fnum'),'\\text{after year '+v.n+'} = '+Math.round(tpct)+'\\%');}},
+
+    hamada:{ch:'H3 · financing',eyebrow:'how debt adds risk',idea:'Borrowing makes a company’s stock swing more.',
+      usecase:"Comparing firms that carry different amounts of debt. This separates the steady business risk from the extra swing that debt piles on top, so you compare like with like.",
+      fixed:"the business alone has a beta of 0.8, tax 21%", src:'Berk-DeMarzo Ch.14 · test_epfl_exam1.py',
+      inputs:[{k:'dv',label:'share of the company funded by debt',min:0,max:80,step:5,val:40,unit:'%'}],
+      viz:twoBarHTML('business alone','with its debt'),
+      fgen:"\\beta_{\\text{equity}} \\;=\\; \\beta_{\\text{business}}\\,(1+(1-\\tau)\\,\\tfrac{D}{E})",
+      explain:'Debt does not change the business, but it concentrates its ups and downs onto the shareholders, so the stock swings harder. More debt means more equity risk.',
+      update:function(v,root){var dv=v.dv/100, de=dv/(1-dv), bu=0.8, bl=bu*(1+(1-0.21)*de), mx=Math.max(bu,bl);
+        q(root,'ans').textContent=bl.toFixed(2); var c=q(root,'chip'); c.className='chip info'; c.textContent='equity beta';
+        q(root,'note').textContent='debt lifts the stock’s beta from 0.80 to '+bl.toFixed(2);
+        q(root,'av').textContent='0.80'; q(root,'bv').textContent=bl.toFixed(2);
+        q(root,'abar').style.height=(bu/mx*144)+'px'; q(root,'bbar').style.height=(bl/mx*144)+'px';
+        K(q(root,'fnum'),'0.8\\times(1+0.79\\times'+de.toFixed(2)+') = '+bl.toFixed(2));}},
+
+    mm:{ch:'H3 · financing',eyebrow:'Modigliani-Miller',idea:'In a perfect world, how you finance a firm does not change its value.',
+      usecase:"A reality check before believing that clever debt creates value. Setting taxes and trouble aside, slicing the firm into more debt and less equity leaves the total worth unchanged.",
+      fixed:"a firm worth $1,000M, no taxes or distress", src:'Berk-DeMarzo Ch.14',
+      inputs:[{k:'d',label:'share funded by debt',min:0,max:80,step:5,val:40,unit:'%'}],
+      viz:'<div class="hblab"><span>equity + debt = the same total</span><b data-r="tv"></b></div><div class="hbar" style="height:26px;display:flex;"><div data-r="eseg" style="background:var(--accent);height:100%;"></div><div data-r="dseg" style="background:var(--good);height:100%;"></div></div><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--faint);margin-top:5px;"><span data-r="elab"></span><span data-r="dlab"></span></div>',
+      fgen:"V_{\\text{with debt}} \\;=\\; V_{\\text{no debt}}",
+      explain:'Add more debt and the equity shrinks by exactly as much, so the whole pie stays the same size. Value comes from the business, not the way you finance it.',
+      update:function(v,root){var total=1000, d=v.d/100*1000, e=total-d;
+        q(root,'ans').textContent='$1,000M'; var c=q(root,'chip'); c.className='chip info'; c.textContent='value unchanged';
+        q(root,'note').textContent='at '+v.d+'% debt the equity is '+money(e)+'M and debt '+money(d)+'M, still $1,000M in total';
+        q(root,'tv').textContent='$1,000M';
+        q(root,'eseg').style.width=(e/total*100)+'%'; q(root,'dseg').style.width=(d/total*100)+'%';
+        q(root,'elab').textContent='equity '+money(e)+'M'; q(root,'dlab').textContent='debt '+money(d)+'M';
+        K(q(root,'fnum'),'\\text{equity }'+Math.round(e)+' + \\text{debt }'+Math.round(d)+' = 1000');}},
+
+    taxshield:{ch:'H3 · financing',eyebrow:'the tax break on debt',idea:'Debt is cheaper because interest is tax-deductible.',
+      usecase:"Seeing the upside of borrowing. Interest is deducted before tax, so each dollar of lasting debt hands the company a permanent tax saving worth real money today.",
+      fixed:"debt that stays on the books", src:'Berk-DeMarzo Ch.15 · test_epfl_exam1.py',
+      inputs:[{k:'debt',label:'how much lasting debt the firm carries',min:0,max:1000,step:50,val:400,unit:'$'},{k:'tax',label:'the tax rate',min:0,max:40,step:1,val:21,unit:'%'}],
+      viz:hbar('sh','var(--good)','value the tax break adds'),
+      fgen:"\\text{value of tax break} \\;=\\; \\tau \\times \\text{debt}",
+      explain:'Every dollar of permanent debt adds about the tax rate in value, because the government effectively pays that share of the interest. This is why some debt helps.',
+      update:function(v,root){var sh=v.tax/100*v.debt;
+        q(root,'ans').textContent=money(sh)+'M'; var c=q(root,'chip'); c.className='chip good'; c.textContent='added by the tax break';
+        q(root,'note').textContent='each $1 of lasting debt adds about $'+(v.tax/100).toFixed(2)+' of value';
+        q(root,'shval').textContent=money(sh)+'M'; q(root,'shbar').style.width=Math.min(sh/300*100,100)+'%';
+        K(q(root,'fnum'),(v.tax/100).toFixed(2)+' \\times '+v.debt+' = '+Math.round(sh));}},
+
+    apv:{ch:'H3 · financing',eyebrow:'APV',idea:'Value the business first, then add the financing perks.',
+      usecase:"Valuing a company in a clean, layered way. Start with what the business is worth on its own, then add the value of the tax break from its debt. Honest and easy to audit.",
+      fixed:"the business alone is worth $1,000M, tax 21%", src:'Berk-DeMarzo Ch.15',
+      inputs:[{k:'debt',label:'how much lasting debt it carries',min:0,max:1000,step:50,val:400,unit:'$'}],
+      viz:'<div class="hblab"><span>business value + tax break</span><b data-r="tv"></b></div><div class="hbar" style="height:26px;display:flex;"><div data-r="bseg" style="background:var(--accent);height:100%;"></div><div data-r="sseg" style="background:var(--good);height:100%;"></div></div><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--faint);margin-top:5px;"><span data-r="blab"></span><span data-r="slab"></span></div>',
+      fgen:"\\text{APV} \\;=\\; V_{\\text{business}} \\;+\\; \\tau \\times \\text{debt}",
+      explain:'Keeping the operating value and the financing value in separate layers makes it clear where worth comes from, instead of blending everything into one rate.',
+      update:function(v,root){var vu=1000, sh=0.21*v.debt, apv=vu+sh, mx=apv;
+        q(root,'ans').textContent=money(apv)+'M'; var c=q(root,'chip'); c.className='chip info'; c.textContent='+'+money(sh)+'M from debt';
+        q(root,'note').textContent='$1,000M of business plus '+money(sh)+'M of tax break = '+money(apv)+'M';
+        q(root,'tv').textContent=money(apv)+'M';
+        q(root,'bseg').style.width=(vu/mx*100)+'%'; q(root,'sseg').style.width=(sh/mx*100)+'%';
+        q(root,'blab').textContent='business $1,000M'; q(root,'slab').textContent='tax break '+money(sh)+'M';
+        K(q(root,'fnum'),'1000 + 0.21\\times'+v.debt+' = '+Math.round(apv));}},
+
+    distress:{ch:'H3 · financing',eyebrow:'how much debt is healthy',idea:'Too much debt costs more than it saves.',
+      usecase:"Finding a sensible debt level. The tax break grows with debt, but so does the risk of trouble, and faster. Past a point, more debt destroys value instead of adding it.",
+      fixed:"on a $1,000M firm", src:'Berk-DeMarzo Ch.16',
+      inputs:[{k:'d',label:'share funded by debt',min:0,max:80,step:5,val:35,unit:'%'}],
+      viz:hbar('ben','var(--good)','value the tax break adds')+hbar('cost','var(--lost)','expected cost of trouble'),
+      fgen:"\\text{net} \\;=\\; \\underbrace{\\text{tax break}}_{\\text{rises}} - \\underbrace{\\text{distress cost}}_{\\text{rises faster}}",
+      explain:'The tax break rises steadily with debt, but the cost of possible trouble rises much faster. The best debt level is where the gap between them is widest.',
+      update:function(v,root){var f=v.d/100, ben=210*f, cost=400*f*f, net=ben-cost, mx=Math.max(ben,cost,1);
+        q(root,'ans').textContent=(net>=0?'+':'')+money(net)+'M'; var c=q(root,'chip'); c.className='chip '+(net>=0?'good':'lost'); c.textContent=net>=0?'debt still helps':'too much debt';
+        q(root,'note').textContent='at '+v.d+'% debt the tax break adds '+money(ben)+'M but trouble costs '+money(cost)+'M';
+        q(root,'benval').textContent=money(ben)+'M'; q(root,'costval').textContent=money(cost)+'M';
+        q(root,'benbar').style.width=(ben/mx*100)+'%'; q(root,'costbar').style.width=(cost/mx*100)+'%';
+        K(q(root,'fnum'),Math.round(ben)+' - '+Math.round(cost)+' = '+(net>=0?'+':'')+Math.round(net));}}
   };
 
   var CHAPTERS=[
@@ -528,7 +673,7 @@
             {id:'expvar',t:'Expected return & volatility',r:1},{id:'covcorr',t:'Covariance & correlation',r:1},{id:'portvar',t:'Portfolio variance',r:1},{id:'riskcontrib',t:'Risk contribution',r:1},{id:'minvar',t:'Minimum-variance',r:1},{id:'frontier',t:'Efficient frontier',r:1},{id:'sharpe',t:'Sharpe ratio',r:1},{id:'beta',t:'Beta',r:1},{id:'sysidio',t:'Systematic vs idiosyncratic',r:1},{id:'alpha',t:'Alpha',r:1}]},
     {id:'H3',title:'Capital budgeting & financing',sub:'judging companies and how they pay for themselves',
      cards:[{id:'wacc',t:'WACC',r:1},
-            {id:'_',t:'Free cash flow'},{id:'_',t:'Net working capital'},{id:'_',t:'NPV vs IRR'},{id:'_',t:'DCF / enterprise value'},{id:'_',t:'Terminal value'},{id:'_',t:'Unlever / relever beta'},{id:'_',t:'Modigliani-Miller'},{id:'_',t:'APV'},{id:'_',t:'Tax shield'},{id:'_',t:'Distress costs'}]},
+            {id:'fcf',t:'Free cash flow',r:1},{id:'nwc',t:'Net working capital',r:1},{id:'npvirr',t:'NPV vs IRR',r:1},{id:'dcf',t:'DCF / enterprise value',r:1},{id:'terminal',t:'Terminal value',r:1},{id:'hamada',t:'Unlever / relever beta',r:1},{id:'mm',t:'Modigliani-Miller',r:1},{id:'apv',t:'APV',r:1},{id:'taxshield',t:'Tax shield',r:1},{id:'distress',t:'Distress costs',r:1}]},
     {id:'H4',title:'Derivatives',sub:'moving and pricing risk',
      cards:[{id:'_',t:'Forward vs futures'},{id:'_',t:'Forward pricing'},{id:'_',t:'Swaps'},{id:'_',t:'Option payoffs'},{id:'_',t:'Put-call parity'},{id:'_',t:'Binomial model'},{id:'_',t:'Black-Scholes'}]}
   ];
