@@ -22,43 +22,43 @@
       --shadow:0 1px 2px rgba(0,0,0,.3), 0 12px 32px rgba(0,0,0,.4); }
   }
   *{box-sizing:border-box} html,body{margin:0}
-  body{background:var(--bg); color:var(--text); padding:26px 16px 60px;
+  body{background:var(--bg); color:var(--text); padding:24px 16px 56px;
     font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif; line-height:1.5; -webkit-font-smoothing:antialiased;}
   .wrap{max-width:560px; margin:0 auto;}
   a{color:inherit; text-decoration:none;}
 
-  .top{display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;}
-  .brand{display:flex; align-items:baseline; gap:8px;}
-  .brand b{font-size:18px; font-weight:700; letter-spacing:-.01em;}
-  .brand span{font-size:13px; color:var(--muted);}
-  .pill{font-size:11px; font-weight:500; color:var(--accent-2); background:var(--accent-soft); padding:4px 10px; border-radius:999px;}
+  .top{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:8px;}
+  .bname{font-size:19px; font-weight:700; letter-spacing:-.01em;}
+  .pill{font-size:11px; font-weight:500; color:var(--accent-2); background:var(--accent-soft); padding:5px 11px; border-radius:999px; white-space:nowrap; flex:none;}
   .lede{font-size:14px; color:var(--muted); margin:0 0 22px;}
 
   .chap{margin-bottom:26px;}
   .chap h2{font-size:13px; font-weight:600; letter-spacing:.04em; text-transform:uppercase; color:var(--accent); margin:0 0 2px;}
   .chap .cs{font-size:13px; color:var(--faint); margin:0 0 12px;}
-  .grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:10px;}
+  .grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:10px;}
   .tile{background:var(--surface); border:1px solid var(--border); border-radius:13px; padding:13px 14px; cursor:pointer;
     transition:border-color .15s, transform .12s; display:flex; flex-direction:column; gap:7px; min-height:62px;}
   .tile:hover{border-color:var(--accent); transform:translateY(-1px);}
   .tile .tt{font-size:13.5px; font-weight:600; line-height:1.3;}
   .tile .ts{display:flex; align-items:center; gap:5px; font-size:11px; color:var(--good);}
-  .tile.soon{cursor:default; opacity:.62;}
+  .tile.soon{cursor:default; opacity:.6;}
   .tile.soon:hover{border-color:var(--border); transform:none;}
   .tile.soon .ts{color:var(--faint);}
   .ddot{width:6px; height:6px; border-radius:50%; background:var(--good);}
   .ddot.s{background:var(--faint);}
 
-  .card{background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:24px 22px; box-shadow:var(--shadow);}
-  .crumb{display:flex; align-items:center; gap:10px; margin-bottom:16px;}
-  .back{font-size:13px; color:var(--accent); cursor:pointer; display:inline-flex; align-items:center; gap:5px;}
+  .card{background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:24px 20px; box-shadow:var(--shadow);}
+  .crumb{display:flex; align-items:center; gap:10px; margin-bottom:16px; flex-wrap:wrap;}
+  .back{font-size:13px; color:var(--accent); cursor:pointer;}
   .crumb .ch{font-size:11px; font-weight:600; letter-spacing:.04em; text-transform:uppercase; color:var(--faint);}
   .eyebrow{font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--accent); margin-bottom:8px;}
-  h1{font-size:21px; font-weight:600; letter-spacing:-.01em; margin:0 0 16px; line-height:1.35;}
+  h1{font-size:20px; font-weight:600; letter-spacing:-.01em; margin:0 0 14px; line-height:1.35;}
+  .usecase{background:var(--accent-soft); border-radius:12px; padding:11px 13px; margin:0 0 18px; font-size:13px; color:var(--accent-2); line-height:1.5;}
+  .usecase b{font-weight:600;}
 
-  .hero{display:flex; align-items:flex-end; gap:12px; flex-wrap:wrap; margin-bottom:2px;}
-  .hero .big{font-size:40px; font-weight:700; letter-spacing:-.025em; line-height:1.04; color:var(--text);}
-  .chip{font-size:12px; font-weight:500; padding:4px 10px; border-radius:999px; margin-bottom:7px;}
+  .hero{display:flex; align-items:flex-end; gap:10px; flex-wrap:wrap; margin-bottom:2px;}
+  .hero .big{font-size:38px; font-weight:700; letter-spacing:-.025em; line-height:1.04; color:var(--text);}
+  .chip{font-size:12px; font-weight:500; padding:4px 10px; border-radius:999px; margin-bottom:6px; white-space:nowrap;}
   .chip.lost{color:var(--lost); background:var(--lost-soft);}
   .chip.good{color:var(--good); background:var(--good-soft);}
   .chip.info{color:var(--accent-2); background:var(--accent-soft);}
@@ -66,24 +66,27 @@
 
   .viz{margin:8px 0 4px;}
   .ctrls{margin-top:16px; display:flex; flex-direction:column; gap:15px;}
-  .ctrl .row{display:flex; justify-content:space-between; font-size:13px; color:var(--muted); margin-bottom:6px;}
-  .ctrl .row b{color:var(--text); font-weight:600;}
+  .ctrl .row{display:flex; justify-content:space-between; gap:10px; font-size:13px; color:var(--muted); margin-bottom:6px;}
+  .ctrl .row b{color:var(--text); font-weight:600; white-space:nowrap;}
   input[type=range]{width:100%; accent-color:var(--accent); height:4px;}
+  .fixed{font-size:11.5px; color:var(--faint); margin-top:12px;}
+  .fixed::before{content:"assumes "; color:var(--faint);}
 
-  .formula{background:var(--bg); border:1px solid var(--border); border-radius:14px; padding:16px 14px; margin-top:20px; text-align:center; overflow-x:auto;}
+  .formula{background:var(--bg); border:1px solid var(--border); border-radius:14px; padding:16px 12px; margin-top:18px; text-align:center; overflow-x:auto;}
   .formula .gen .katex{opacity:.78;}
   .formula .num{margin-top:10px;}
   .explain{font-size:13px; color:var(--muted); margin-top:12px; line-height:1.55;}
   .src{font-size:11px; color:var(--faint); margin-top:10px;}
 
-  .vbartrack{position:relative; width:60px; height:170px; flex:none;}
+  .vbartrack{position:relative; width:58px; height:166px; flex:none;}
   .seg2{position:absolute; left:0; width:100%; transition:height .5s cubic-bezier(.33,.02,.18,1);}
   .hbar{height:18px; background:var(--track); border-radius:5px; overflow:hidden;}
   .hbar > div{height:100%; transition:width .5s cubic-bezier(.33,.02,.18,1);}
   .hbrow{margin:9px 0;}
-  .hblab{display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:4px;}
+  .hblab{display:flex; justify-content:space-between; gap:10px; font-size:12.5px; margin-bottom:4px;}
   .foot{text-align:center; font-size:11px; color:var(--faint); margin-top:24px;}
   svg text{font-family:'Inter',sans-serif;}
+  @media (max-width:430px){ body{padding:20px 12px 48px;} .card{padding:20px 16px;} .hero .big{font-size:34px;} }
 </style>
 </head>
 <body>
@@ -95,137 +98,145 @@
 <script>
 (function(){
   var app=document.getElementById('app');
-  function money(v){return '$'+v.toLocaleString('en-US',{maximumFractionDigits:2});}
-  function pct(v){return (v*100).toFixed(1)+'%';}
+  function money(v){return '$'+Math.round(v).toLocaleString('en-US');}
+  function pct(v){return Math.round(v*100)+'%';}
   function K(el,tex){ if(window.katex&&el) katex.render(tex,el,{throwOnError:false,displayMode:true}); }
   function q(root,r){return root.querySelector('[data-r="'+r+'"]');}
+  var TH=166;
 
-  var TH=170;
-  function splitBarHTML(){return '<div style="display:flex;align-items:center;gap:18px;padding:4px 0;">'
+  function splitBarHTML(){return '<div style="display:flex;align-items:center;gap:16px;padding:4px 0;">'
     +'<div class="vbartrack"><div class="seg2" data-r="lost" style="top:0;background:var(--lost-soft);border:1px dashed var(--lost);border-bottom:none;border-radius:8px 8px 0 0;"></div>'
     +'<div class="seg2" data-r="kept" style="bottom:0;background:var(--accent);border-radius:8px;"></div></div>'
     +'<div style="display:flex;flex-direction:column;gap:14px;">'
-    +'<div style="display:flex;gap:9px;align-items:flex-start;"><span style="width:12px;height:12px;border-radius:3px;margin-top:3px;background:var(--lost-soft);border:1px dashed var(--lost);"></span><span><span style="font-size:13px;font-weight:600;">lost to waiting</span><br><span class="explain" style="margin:0;" data-r="lostlab"></span></span></div>'
-    +'<div style="display:flex;gap:9px;align-items:flex-start;"><span style="width:12px;height:12px;border-radius:3px;margin-top:3px;background:var(--accent);"></span><span><span style="font-size:13px;font-weight:600;">worth to you today</span><br><span class="explain" style="margin:0;" data-r="keptlab"></span></span></div>'
+    +'<div style="display:flex;gap:9px;align-items:flex-start;"><span style="width:12px;height:12px;border-radius:3px;margin-top:3px;flex:none;background:var(--lost-soft);border:1px dashed var(--lost);"></span><span><span style="font-size:13px;font-weight:600;">lost to waiting</span><br><span class="explain" style="margin:0;" data-r="lostlab"></span></span></div>'
+    +'<div style="display:flex;gap:9px;align-items:flex-start;"><span style="width:12px;height:12px;border-radius:3px;margin-top:3px;flex:none;background:var(--accent);"></span><span><span style="font-size:13px;font-weight:600;">worth today</span><br><span class="explain" style="margin:0;" data-r="keptlab"></span></span></div>'
     +'</div></div>';}
-  function twoBarHTML(la,lb){return '<div style="display:flex;align-items:flex-end;justify-content:center;gap:54px;height:184px;">'
-    +'<div style="display:flex;flex-direction:column;align-items:center;width:78px;"><div style="font-size:13px;font-weight:600;margin-bottom:6px;" data-r="av"></div><div class="vbartrack" style="height:150px;"><div class="seg2" data-r="abar" style="bottom:0;background:var(--accent);border-radius:8px;"></div></div><div class="explain" style="margin-top:8px;">'+la+'</div></div>'
-    +'<div style="display:flex;flex-direction:column;align-items:center;width:78px;"><div style="font-size:13px;font-weight:600;margin-bottom:6px;" data-r="bv"></div><div class="vbartrack" style="height:150px;"><div class="seg2" data-r="bbar" style="bottom:0;background:var(--good);border-radius:8px;"></div></div><div class="explain" style="margin-top:8px;">'+lb+'</div></div></div>';}
+  function twoBarHTML(la,lb){return '<div style="display:flex;align-items:flex-end;justify-content:center;gap:50px;height:178px;">'
+    +'<div style="display:flex;flex-direction:column;align-items:center;width:74px;"><div style="font-size:13px;font-weight:600;margin-bottom:6px;" data-r="av"></div><div class="vbartrack" style="height:144px;"><div class="seg2" data-r="abar" style="bottom:0;background:var(--accent);border-radius:8px;"></div></div><div class="explain" style="margin-top:8px;">'+la+'</div></div>'
+    +'<div style="display:flex;flex-direction:column;align-items:center;width:74px;"><div style="font-size:13px;font-weight:600;margin-bottom:6px;" data-r="bv"></div><div class="vbartrack" style="height:144px;"><div class="seg2" data-r="bbar" style="bottom:0;background:var(--good);border-radius:8px;"></div></div><div class="explain" style="margin-top:8px;">'+lb+'</div></div></div>';}
   function hbar(r,color,lab){return '<div class="hbrow"><div class="hblab"><span data-r="'+r+'lab">'+lab+'</span><b data-r="'+r+'val"></b></div><div class="hbar"><div data-r="'+r+'bar" style="background:'+color+';width:0%;"></div></div></div>';}
 
   var CARDS={
     pv:{ch:'H1 · discounting',eyebrow:'time value of money',idea:'Money later is worth less than money now.',
-      src:'Berk-DeMarzo Ch.4 · pinned in test_money.py',
-      inputs:[{k:'fv',label:'the future amount',min:50,max:5000,step:50,val:100,unit:'$'},{k:'n',label:'how far in the future',min:1,max:30,step:1,val:10,unit:'yr'},{k:'r',label:'your rate — a dollar now beats a dollar later by',min:1,max:12,step:0.5,val:5,unit:'%'}],
+      usecase:"Someone promises you money in the future — a payout, a refund, a bond, a settlement. This shows what it is really worth today, so a big future number does not fool you.",
+      fixed:"for every $100 you would receive later", src:'Berk-DeMarzo Ch.4 · test_money.py',
+      inputs:[{k:'n',label:'how many years until you get it',min:1,max:30,step:1,val:10,unit:'yr'},{k:'r',label:'your rate (what you could earn meanwhile)',min:1,max:12,step:0.5,val:5,unit:'%'}],
       viz:splitBarHTML(), fgen:"\\text{today} \\;=\\; \\dfrac{\\text{future amount}}{(1+r)^{\\,n}}",
-      explain:'Each year of waiting divides the value by (1 + your rate). Wait longer or use a higher rate and the value today shrinks.',
-      update:function(v,root){var val=v.fv/Math.pow(1+v.r/100,v.n),loss=v.fv-val,f=val/v.fv;
-        q(root,'ans').textContent=money(val); var c=q(root,'chip'); c.className='chip lost'; c.textContent='−'+money(loss)+' lost to waiting';
-        q(root,'note').textContent="all your future "+money(v.fv)+" is really worth this much today";
+      explain:'Each year of waiting divides the value by (1 + your rate). Wait longer, or earn more elsewhere, and the future promise is worth less today.',
+      update:function(v,root){var fv=100,val=fv/Math.pow(1+v.r/100,v.n),loss=fv-val,f=val/fv;
+        q(root,'ans').textContent=money(val); var c=q(root,'chip'); c.className='chip lost'; c.textContent=money(loss)+' lost to waiting';
+        q(root,'note').textContent="$100 paid to you in "+v.n+" years is really worth this much now";
         q(root,'kept').style.height=(f*TH)+'px'; q(root,'lost').style.height=((1-f)*TH)+'px';
-        q(root,'keptlab').textContent=money(val)+' is real'; q(root,'lostlab').textContent=money(loss)+' evaporates';
-        K(q(root,'fnum'),"\\dfrac{"+v.fv+"}{(1+"+(v.r/100).toFixed(3)+")^{"+v.n+"}}="+val.toFixed(2));}},
+        q(root,'keptlab').textContent=money(val); q(root,'lostlab').textContent=money(loss);
+        K(q(root,'fnum'),"\\dfrac{100}{(1+"+(v.r/100).toFixed(3)+")^{"+v.n+"}}="+Math.round(val));}},
 
     fv:{ch:'H1 · discounting',eyebrow:'compounding',idea:'Money you keep now grows over time.',
-      src:'Berk-DeMarzo Ch.4',
-      inputs:[{k:'pv',label:'amount today',min:50,max:5000,step:50,val:100,unit:'$'},{k:'n',label:'years it grows',min:1,max:30,step:1,val:10,unit:'yr'},{k:'r',label:'rate it earns',min:1,max:12,step:0.5,val:5,unit:'%'}],
+      usecase:"You put money aside today — savings, an investment, a deposit. This shows what it grows into, and why starting early matters so much.",
+      fixed:"starting from $100 today", src:'Berk-DeMarzo Ch.4',
+      inputs:[{k:'n',label:'years it grows',min:1,max:30,step:1,val:10,unit:'yr'},{k:'r',label:'yearly return it earns',min:1,max:12,step:0.5,val:5,unit:'%'}],
       viz:twoBarHTML('today','in N years'), fgen:"\\text{future} \\;=\\; \\text{today}\\times(1+r)^{\\,n}",
-      explain:'The reverse of discounting: multiply by (1 + rate) each year. Small rates compound into big gaps over time.',
-      update:function(v,root){var fv=v.pv*Math.pow(1+v.r/100,v.n),gain=fv-v.pv;
+      explain:'The reverse of discounting: multiply by (1 + return) each year. Even small returns compound into a big gap over time.',
+      update:function(v,root){var pv=100,fv=pv*Math.pow(1+v.r/100,v.n),gain=fv-pv;
         q(root,'ans').textContent=money(fv); var c=q(root,'chip'); c.className='chip good'; c.textContent='+'+money(gain)+' earned';
-        q(root,'note').textContent=money(v.pv)+" kept today grows into this in "+v.n+" years";
-        q(root,'av').textContent=money(v.pv); q(root,'bv').textContent=money(fv);
-        q(root,'abar').style.height=(v.pv/fv*150)+'px'; q(root,'bbar').style.height='150px';
-        K(q(root,'fnum'),v.pv+"\\times(1+"+(v.r/100).toFixed(3)+")^{"+v.n+"}="+fv.toFixed(2));}},
+        q(root,'note').textContent="$100 kept today grows into this in "+v.n+" years";
+        q(root,'av').textContent=money(pv); q(root,'bv').textContent=money(fv);
+        q(root,'abar').style.height=(pv/fv*144)+'px'; q(root,'bbar').style.height='144px';
+        K(q(root,'fnum'),"100\\times(1+"+(v.r/100).toFixed(3)+")^{"+v.n+"}="+Math.round(fv));}},
 
     perpetuity:{ch:'H1 · discounting',eyebrow:'a forever stream',idea:'A payment that never stops still has a finite value today.',
-      src:'Berk-DeMarzo Ch.4 · pinned in test_epfl_exam2.py',
-      inputs:[{k:'c',label:'paid to you every year, forever',min:100,max:50000,step:100,val:1000,unit:'$'},{k:'r',label:'your rate',min:1,max:12,step:0.5,val:5,unit:'%'}],
-      viz:'<div style="display:flex;align-items:flex-end;gap:6px;height:96px;justify-content:center;">'
-        +[0,1,2,3,4,5,6,7].map(function(i){return '<div style="display:flex;flex-direction:column;align-items:center;opacity:'+(1-i*0.11).toFixed(2)+';"><div style="width:20px;height:'+(58-i*5)+'px;background:var(--accent);border-radius:4px;"></div></div>';}).join('')
-        +'<div style="font-size:22px;color:var(--faint);align-self:center;margin:0 6px;">&hellip;&infin;</div></div>'
-        +'<div class="explain" style="text-align:center;">the same payment, every year, forever &mdash; yet worth a finite amount now</div>',
+      usecase:"Something pays you a fixed amount every year, with no end — a rental property, an endowment, a perpetual bond. This is what that endless stream is worth right now.",
+      fixed:"$1,000 paid to you every year, forever", src:'Berk-DeMarzo Ch.4 · test_epfl_exam2.py',
+      inputs:[{k:'r',label:'your rate',min:1,max:12,step:0.5,val:5,unit:'%'}],
+      viz:'<div style="display:flex;align-items:flex-end;gap:6px;height:92px;justify-content:center;">'
+        +[0,1,2,3,4,5,6,7].map(function(i){return '<div style="width:18px;height:'+(56-i*5)+'px;background:var(--accent);border-radius:4px;opacity:'+(1-i*0.11).toFixed(2)+';"></div>';}).join('')
+        +'<div style="font-size:22px;color:var(--faint);align-self:center;margin:0 4px;">&hellip;&infin;</div></div>'
+        +'<div class="explain" style="text-align:center;">the same payment, every year, forever &mdash; worth a finite amount now</div>',
       fgen:"\\text{value} \\;=\\; \\dfrac{C}{r}",
-      explain:'Because far-future payments are discounted to almost nothing, an endless stream sums to a finite number: the payment divided by your rate.',
-      update:function(v,root){var val=v.c/(v.r/100);
-        q(root,'ans').textContent=money(val); var c=q(root,'chip'); c.className='chip info'; c.textContent=money(v.c)+'/yr forever';
-        q(root,'note').textContent="getting "+money(v.c)+" every year forever is worth this much to you today";
-        K(q(root,'fnum'),"\\dfrac{"+v.c+"}{"+(v.r/100).toFixed(3)+"}="+val.toFixed(0));}},
+      explain:'Far-future payments discount to almost nothing, so an endless stream still sums to a finite number: the payment divided by your rate.',
+      update:function(v,root){var c0=1000,val=c0/(v.r/100);
+        q(root,'ans').textContent=money(val); var c=q(root,'chip'); c.className='chip info'; c.textContent='$1,000 / year forever';
+        q(root,'note').textContent="getting $1,000 every year forever is worth this much to you today";
+        K(q(root,'fnum'),"\\dfrac{1000}{"+(v.r/100).toFixed(3)+"}="+Math.round(val));}},
 
-    annuity:{ch:'H1 · discounting',eyebrow:'a stream of payments',idea:'Many future payments, each shrunk, then added up.',
-      src:'Berk-DeMarzo Ch.4 · pinned in test_epfl_exam2.py',
-      inputs:[{k:'c',label:'each yearly payment',min:100,max:10000,step:100,val:1000,unit:'$'},{k:'n',label:'number of years',min:1,max:25,step:1,val:10,unit:'yr'},{k:'r',label:'your rate',min:1,max:12,step:0.5,val:5,unit:'%'}],
-      viz:'<div data-r="bars" style="display:flex;align-items:flex-end;gap:4px;height:110px;justify-content:center;"></div><div class="explain" style="text-align:center;" data-r="sumnote"></div>',
+    annuity:{ch:'H1 · discounting',eyebrow:'a stream of payments',idea:'Many fixed payments add up to a single lump sum today.',
+      usecase:"Fixed payments for a set number of years — a loan, a pension, a lease, a car plan, a lottery paid yearly. This is the one lump sum they are all worth.",
+      fixed:"$1,000 paid to you each year", src:'Berk-DeMarzo Ch.4 · test_epfl_exam2.py',
+      inputs:[{k:'n',label:'number of years',min:1,max:25,step:1,val:10,unit:'yr'},{k:'r',label:'your rate',min:1,max:12,step:0.5,val:5,unit:'%'}],
+      viz:'<div data-r="bars" style="display:flex;align-items:flex-end;gap:4px;height:104px;justify-content:center;"></div><div class="explain" style="text-align:center;" data-r="sumnote"></div>',
       fgen:"PV \\;=\\; \\dfrac{C}{r}\\left(1-\\dfrac{1}{(1+r)^{n}}\\right)",
-      explain:'Each bar is one payment discounted to today (it shrinks the further out it is). Their total is what the whole stream is worth now.',
-      update:function(v,root){var r=v.r/100, pv=v.c/r*(1-1/Math.pow(1+r,v.n));
-        q(root,'ans').textContent=money(pv); var c=q(root,'chip'); c.className='chip info'; c.textContent=money(v.c*v.n)+' on paper';
-        q(root,'note').textContent=money(v.c)+" a year for "+v.n+" years is worth this much today";
+      explain:'Each bar is one payment discounted back to today (smaller the further out it is). Add them all up and that is what the whole stream is worth now.',
+      update:function(v,root){var r=v.r/100, c0=1000, pv=c0/r*(1-1/Math.pow(1+r,v.n));
+        q(root,'ans').textContent=money(pv); var c=q(root,'chip'); c.className='chip info'; c.textContent=money(c0*v.n)+' on paper';
+        q(root,'note').textContent="$1,000 a year for "+v.n+" years is worth this much today";
         var shown=Math.min(v.n,16), bars='';
-        for(var t=0;t<shown;t++){var h=Math.max(4,(1/Math.pow(1+r,t))*86);bars+='<div style="width:'+(shown>12?10:14)+'px;height:'+h+'px;background:var(--accent);border-radius:3px;opacity:'+(0.5+0.5/Math.pow(1+r,t)).toFixed(2)+';"></div>';}
+        for(var t=0;t<shown;t++){var h=Math.max(4,(1/Math.pow(1+r,t))*84);bars+='<div style="width:'+(shown>12?9:13)+'px;height:'+h+'px;background:var(--accent);border-radius:3px;opacity:'+(0.5+0.5/Math.pow(1+r,t)).toFixed(2)+';"></div>';}
         q(root,'bars').innerHTML=bars;
-        q(root,'sumnote').textContent='each payment, discounted to today — summed = '+money(pv);
-        K(q(root,'fnum'),"\\dfrac{"+v.c+"}{"+r.toFixed(3)+"}\\left(1-\\dfrac{1}{(1+"+r.toFixed(3)+")^{"+v.n+"}}\\right)="+pv.toFixed(0));}},
+        q(root,'sumnote').textContent='each yearly payment, shrunk to today, then summed';
+        K(q(root,'fnum'),"\\dfrac{1000}{"+r.toFixed(3)+"}\\left(1-\\dfrac{1}{(1+"+r.toFixed(3)+")^{"+v.n+"}}\\right)="+Math.round(pv));}},
 
-    npv:{ch:'H1 · capital budgeting',eyebrow:'is it worth it?',idea:'A project is worth doing only if its future cash is worth more than its cost today.',
-      src:'Berk-DeMarzo Ch.7 · pinned in test_epfl_exam1.py',
-      inputs:[{k:'x',label:'it costs you, today',min:1000,max:100000,step:1000,val:20000,unit:'$'},{k:'c',label:'it returns each year',min:1000,max:30000,step:500,val:5000,unit:'$'},{k:'n',label:'for this many years',min:1,max:20,step:1,val:6,unit:'yr'},{k:'r',label:'your rate',min:1,max:15,step:0.5,val:10,unit:'%'}],
+    npv:{ch:'H1 · capital budgeting',eyebrow:'is it worth it?',idea:'Only do it if the future cash beats the cost, in today’s money.',
+      usecase:"Deciding whether to buy equipment, a rental, solar panels, or take on any project that costs money now and pays back over years. Positive means do it; negative means walk away.",
+      fixed:"it costs $20,000 today and runs for 6 years", src:'Berk-DeMarzo Ch.7 · test_epfl_exam1.py',
+      inputs:[{k:'c',label:'cash it returns each year',min:1000,max:8000,step:250,val:5000,unit:'$'},{k:'r',label:'your rate',min:1,max:15,step:0.5,val:10,unit:'%'}],
       viz:hbar('cost','var(--lost)','what it costs today')+hbar('ben','var(--good)','what it returns, valued today'),
       fgen:"\\text{NPV} \\;=\\; \\underbrace{\\textstyle\\sum \\dfrac{C}{(1+r)^t}}_{\\text{benefits today}} \\;-\\; \\text{cost}",
-      explain:'Bring every future payment back to today, add them up, and subtract the cost. Positive means it creates value; negative means it destroys value.',
-      update:function(v,root){var r=v.r/100, pvB=v.c/r*(1-1/Math.pow(1+r,v.n)), npv=pvB-v.x, mx=Math.max(pvB,v.x);
-        q(root,'ans').textContent=(npv>=0?'+':'')+money(npv); var c=q(root,'chip'); c.className='chip '+(npv>=0?'good':'lost'); c.textContent=npv>=0?'worth doing':'destroys value';
-        q(root,'note').textContent=npv>=0?"after covering the cost, you're ahead by this much in today's money":"the cost outweighs what it's worth today";
-        q(root,'costval').textContent=money(v.x); q(root,'benval').textContent=money(pvB);
-        q(root,'costbar').style.width=(v.x/mx*100)+'%'; q(root,'benbar').style.width=(pvB/mx*100)+'%';
-        K(q(root,'fnum'),money(pvB).replace('$','')+" - "+v.x+" = "+npv.toFixed(0));}},
+      explain:'Bring every future payment back to today, add them up, and subtract the cost. Positive creates value; negative destroys it.',
+      update:function(v,root){var r=v.r/100, X=20000, n=6, pvB=v.c/r*(1-1/Math.pow(1+r,n)), npv=pvB-X, mx=Math.max(pvB,X);
+        q(root,'ans').textContent=(npv>=0?'+':'−')+money(Math.abs(npv)); var c=q(root,'chip'); c.className='chip '+(npv>=0?'good':'lost'); c.textContent=npv>=0?'worth doing':'destroys value';
+        q(root,'note').textContent=npv>=0?"after covering the cost you are ahead by this much, in today’s money":"the cost outweighs what it is worth today";
+        q(root,'costval').textContent=money(X); q(root,'benval').textContent=money(pvB);
+        q(root,'costbar').style.width=(X/mx*100)+'%'; q(root,'benbar').style.width=(pvB/mx*100)+'%';
+        K(q(root,'fnum'),Math.round(pvB)+" - "+X+" = "+(npv>=0?'+':'')+Math.round(npv));}},
 
-    diversification:{ch:'H2 · risk & return',eyebrow:'diversification',idea:'You hold fewer real bets than you think.',
-      src:'Berk-DeMarzo Ch.11 · pinned in test_portfolio.py',
-      inputs:[{k:'n',label:'number of holdings',min:1,max:20,step:1,val:8,unit:''},{k:'rho',label:'how much they move together',min:0,max:100,step:5,val:70,unit:'%'}],
-      viz:hbar('real','var(--accent)','your real volatility')+hbar('ind','var(--good)','if they were independent'),
-      fgen:"\\text{effective bets} \\;=\\; \\dfrac{n}{1+(n-1)\\,\\rho}",
-      explain:'If your holdings move together (high correlation), diversification barely helps — many names collapse into a few real bets, and your risk stays high.',
+    diversification:{ch:'H2 · risk & return',eyebrow:'diversification',idea:'You may hold fewer real bets than you think.',
+      usecase:"You own several stocks and feel diversified. This reveals whether you truly are, or whether they all move together — secretly one big bet that could drop at once.",
+      fixed:"each stock swings about 35% a year", src:'Berk-DeMarzo Ch.11 · test_portfolio.py',
+      inputs:[{k:'n',label:'how many stocks you hold',min:1,max:20,step:1,val:8,unit:''},{k:'rho',label:'how much they move together',min:0,max:100,step:5,val:70,unit:'%'}],
+      viz:hbar('real','var(--accent)','your real risk')+hbar('ind','var(--good)','if they were truly independent'),
+      fgen:"\\text{real bets} \\;=\\; \\dfrac{n}{1+(n-1)\\,\\rho}",
+      explain:'When holdings move together (high correlation), diversification barely helps — many names collapse into a few real bets and your risk stays high.',
       update:function(v,root){var rho=v.rho/100, sig=0.35, eff=v.n/(1+(v.n-1)*rho), pVol=sig*Math.sqrt((1+(v.n-1)*rho)/v.n), iVol=sig/Math.sqrt(v.n), mx=sig;
-        q(root,'ans').textContent=v.n+' holdings = '+eff.toFixed(1)+' bets'; var c=q(root,'chip'); c.className='chip info'; c.textContent='real vol '+pct(pVol);
-        q(root,'note').textContent='in risk terms your '+v.n+' positions act like only '+eff.toFixed(1)+' independent bets';
+        q(root,'ans').textContent=v.n+' stocks = '+eff.toFixed(1)+' real bets'; var c=q(root,'chip'); c.className='chip info'; c.textContent='risk '+pct(pVol);
+        q(root,'note').textContent="in risk terms your "+v.n+" stocks act like only "+eff.toFixed(1)+" independent bets";
         q(root,'realval').textContent=pct(pVol); q(root,'indval').textContent=pct(iVol);
         q(root,'realbar').style.width=(pVol/mx*100)+'%'; q(root,'indbar').style.width=(iVol/mx*100)+'%';
-        K(q(root,'fnum'),"\\dfrac{"+v.n+"}{1+("+(v.n-1)+")\\times"+rho.toFixed(2)+"}="+eff.toFixed(2));}},
+        K(q(root,'fnum'),"\\dfrac{"+v.n+"}{1+("+(v.n-1)+")\\times"+rho.toFixed(2)+"}="+eff.toFixed(1));}},
 
-    capm:{ch:'H2 · risk & return',eyebrow:'CAPM',idea:'The riskier it moves with the market, the more return you should demand.',
-      src:'Berk-DeMarzo Ch.12 · pinned in test_epfl_exam2.py',
-      inputs:[{k:'beta',label:'beta — how much it amplifies the market',min:0,max:2.5,step:0.05,val:1,unit:''},{k:'rf',label:'risk-free rate',min:0,max:8,step:0.5,val:4,unit:'%'},{k:'mrp',label:'market risk premium',min:2,max:10,step:0.5,val:6,unit:'%'}],
+    capm:{ch:'H2 · risk & return',eyebrow:'CAPM',idea:'The riskier a stock, the more return you should demand.',
+      usecase:"Before buying a stock, this is the minimum yearly return you should demand for its risk — your “is the reward worth it?” bar. Below it, you are not paid enough.",
+      fixed:"a 4% safe rate and a 6% market premium", src:'Berk-DeMarzo Ch.12 · test_epfl_exam2.py',
+      inputs:[{k:'beta',label:'beta — how much it swings vs the market (1 = same)',min:0,max:2.5,step:0.05,val:1,unit:''}],
       viz:'<svg data-r="svg" viewBox="0 0 320 170" width="100%" style="max-width:340px;display:block;margin:0 auto;"></svg>',
-      fgen:"E[R] \\;=\\; r_f + \\beta\\,(E[R_m]-r_f)",
-      explain:'Only market risk (beta) earns a premium — risk you cannot diversify away. Plug in beta and the line gives the return to demand before buying.',
-      update:function(v,root){var req=v.rf+v.beta*v.mrp;
-        q(root,'ans').textContent=req.toFixed(1)+'%'; var c=q(root,'chip'); c.className='chip info'; c.textContent='required return';
-        q(root,'note').textContent='for this much market risk, demand '+req.toFixed(1)+'% a year before buying';
-        var maxY=12, x0=42,x1=300,y0=148,y1=18, bx=function(b){return x0+(b/2.5)*(x1-x0);}, by=function(r){return y0-(r/maxY)*(y0-y1);};
-        var line='<line x1="'+x0+'" y1="'+y0+'" x2="'+x1+'" y2="'+y0+'" stroke="var(--border)"/><line x1="'+x0+'" y1="'+y0+'" x2="'+x0+'" y2="'+y1+'" stroke="var(--border)"/>';
-        line+='<line x1="'+bx(0)+'" y1="'+by(v.rf)+'" x2="'+bx(2.5)+'" y2="'+by(v.rf+2.5*v.mrp)+'" stroke="var(--accent)" stroke-width="2"/>';
-        line+='<line x1="'+bx(v.beta)+'" y1="'+y0+'" x2="'+bx(v.beta)+'" y2="'+by(req)+'" stroke="var(--faint)" stroke-dasharray="3 3"/>';
-        line+='<circle cx="'+bx(v.beta)+'" cy="'+by(req)+'" r="5" fill="var(--accent)"/>';
-        line+='<text x="'+x0+'" y="165" font-size="10" fill="var(--faint)">β=0</text><text x="'+(x1-18)+'" y="165" font-size="10" fill="var(--faint)">β=2.5</text>';
-        line+='<text x="6" y="'+y1+'" font-size="10" fill="var(--faint)">return</text>';
-        line+='<text x="'+(bx(v.beta)+8)+'" y="'+(by(req)+4)+'" font-size="11" fill="var(--text)">'+req.toFixed(1)+'%</text>';
-        q(root,'svg').innerHTML=line;
-        K(q(root,'fnum'),v.rf+" + "+v.beta+"\\times"+v.mrp+" = "+req.toFixed(2)+"\\%");}},
+      fgen:"\\text{demand} \\;=\\; r_f + \\beta\\,(\\text{market premium})",
+      explain:'Only market risk (beta) earns a premium — risk you cannot diversify away. A beta of 2 swings twice as hard as the market, so you demand a bigger return.',
+      update:function(v,root){var rf=4,mrp=6,req=rf+v.beta*mrp;
+        q(root,'ans').textContent=req.toFixed(1)+'%'; var c=q(root,'chip'); c.className='chip info'; c.textContent='minimum return to demand';
+        q(root,'note').textContent="for this much risk, demand at least "+req.toFixed(1)+"% a year before buying";
+        var maxY=22, x0=42,x1=300,y0=148,y1=18, bx=function(b){return x0+(b/2.5)*(x1-x0);}, by=function(r){return y0-(r/maxY)*(y0-y1);};
+        var s='<line x1="'+x0+'" y1="'+y0+'" x2="'+x1+'" y2="'+y0+'" stroke="var(--border)"/><line x1="'+x0+'" y1="'+y0+'" x2="'+x0+'" y2="'+y1+'" stroke="var(--border)"/>';
+        s+='<line x1="'+bx(0)+'" y1="'+by(rf)+'" x2="'+bx(2.5)+'" y2="'+by(rf+2.5*mrp)+'" stroke="var(--accent)" stroke-width="2"/>';
+        s+='<line x1="'+bx(v.beta)+'" y1="'+y0+'" x2="'+bx(v.beta)+'" y2="'+by(req)+'" stroke="var(--faint)" stroke-dasharray="3 3"/>';
+        s+='<circle cx="'+bx(v.beta)+'" cy="'+by(req)+'" r="5" fill="var(--accent)"/>';
+        s+='<text x="'+x0+'" y="165" font-size="10" fill="var(--faint)">no risk</text><text x="'+(x1-30)+'" y="165" font-size="10" fill="var(--faint)">2.5x market</text>';
+        s+='<text x="6" y="'+y1+'" font-size="10" fill="var(--faint)">return</text>';
+        s+='<text x="'+(bx(v.beta)+8)+'" y="'+(by(req)+4)+'" font-size="11" fill="var(--text)">'+req.toFixed(1)+'%</text>';
+        q(root,'svg').innerHTML=s;
+        K(q(root,'fnum'),"4 + "+v.beta+"\\times 6 = "+req.toFixed(1)+"\\%");}},
 
-    wacc:{ch:'H3 · financing',eyebrow:'WACC',idea:'The discount rate for a company is a blend of what its lenders and owners each demand.',
-      src:'Berk-DeMarzo Ch.15 · pinned in test_epfl_exam1.py',
-      inputs:[{k:'d',label:'share funded by debt',min:0,max:80,step:5,val:40,unit:'%'},{k:'re',label:'return equity demands',min:4,max:16,step:0.5,val:11,unit:'%'},{k:'rd',label:'interest on debt',min:1,max:10,step:0.5,val:5,unit:'%'},{k:'tax',label:'tax rate (debt is tax-deductible)',min:0,max:40,step:1,val:21,unit:'%'}],
-      viz:'<div class="hblab"><span>equity portion + debt portion (after tax)</span><b data-r="waccval"></b></div><div class="hbar" style="height:26px;display:flex;"><div data-r="eqseg" style="background:var(--accent);height:100%;"></div><div data-r="dbseg" style="background:var(--good);height:100%;"></div></div><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--faint);margin-top:5px;"><span data-r="eqlab"></span><span data-r="dblab"></span></div>',
+    wacc:{ch:'H3 · financing',eyebrow:'WACC',idea:'A company’s hurdle rate is a blend of what lenders and owners demand.',
+      usecase:"A company funds itself with debt and equity. This blends the two into one hurdle rate — the return its projects must beat to create value. Analysts use it to value the whole business.",
+      fixed:"owners want 11%, debt costs 5%, tax is 21%", src:'Berk-DeMarzo Ch.15 · test_epfl_exam1.py',
+      inputs:[{k:'d',label:'how much of the company is funded by debt',min:0,max:80,step:5,val:40,unit:'%'}],
+      viz:'<div class="hblab"><span>equity part + debt part (after tax break)</span><b data-r="waccval"></b></div><div class="hbar" style="height:26px;display:flex;"><div data-r="eqseg" style="background:var(--accent);height:100%;"></div><div data-r="dbseg" style="background:var(--good);height:100%;"></div></div><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--faint);margin-top:5px;"><span data-r="eqlab"></span><span data-r="dblab"></span></div>',
       fgen:"\\text{WACC} \\;=\\; \\tfrac{E}{V}\\,r_e \\;+\\; \\tfrac{D}{V}\\,r_d\\,(1-\\tau)",
-      explain:'Equity is dearer than debt, and debt gets a tax break — so loading on debt lowers the blend, up to a point. This rate is what the business must beat to create value.',
-      update:function(v,root){var d=v.d/100, eqC=(1-d)*v.re, dbC=d*v.rd*(1-v.tax/100), wacc=eqC+dbC;
-        q(root,'ans').textContent=wacc.toFixed(1)+'%'; var c=q(root,'chip'); c.className='chip info'; c.textContent='blended discount rate';
-        q(root,'note').textContent='the business must earn more than '+wacc.toFixed(1)+'% to create value';
+      explain:'Equity is dearer than debt, and debt gets a tax break — so adding some debt lowers the blend, up to a point. The business must out-earn this rate to be worth it.',
+      update:function(v,root){var d=v.d/100, re=11, rd=5, tax=0.21, eqC=(1-d)*re, dbC=d*rd*(1-tax), wacc=eqC+dbC;
+        q(root,'ans').textContent=wacc.toFixed(1)+'%'; var c=q(root,'chip'); c.className='chip info'; c.textContent='hurdle rate to beat';
+        q(root,'note').textContent="the business must earn more than "+wacc.toFixed(1)+"% to create value";
         q(root,'waccval').textContent=wacc.toFixed(1)+'%';
         q(root,'eqseg').style.width=(wacc>0?eqC/wacc*100:50)+'%'; q(root,'dbseg').style.width=(wacc>0?dbC/wacc*100:50)+'%';
         q(root,'eqlab').textContent='equity '+eqC.toFixed(1)+'%'; q(root,'dblab').textContent='debt '+dbC.toFixed(1)+'%';
-        K(q(root,'fnum'),(1-d).toFixed(2)+"\\times"+v.re+" + "+d.toFixed(2)+"\\times"+v.rd+"\\times(1-"+(v.tax/100).toFixed(2)+") = "+wacc.toFixed(2)+"\\%");}}
+        K(q(root,'fnum'),(1-d).toFixed(2)+"\\times 11 + "+d.toFixed(2)+"\\times 5\\times 0.79 = "+wacc.toFixed(1)+"\\%");}}
   };
 
   var CHAPTERS=[
@@ -245,8 +256,8 @@
   function renderHome(){
     var ready=0,total=0;
     CHAPTERS.forEach(function(c){c.cards.forEach(function(k){total++; if(k.r)ready++;});});
-    var h='<div class="top"><div class="brand"><b>OpenQuant</b><span>finance, one card at a time</span></div><span class="pill">'+ready+' of '+total+' cards live</span></div>'
-      +'<p class="lede">The EPFL <i>Principles of Finance</i> course as a deck of cards — each one idea, one visual, one formula, on real numbers you can move. Pick any concept.</p>';
+    var h='<div class="top"><span class="bname">OpenQuant</span><span class="pill">'+ready+' of '+total+' cards live</span></div>'
+      +'<p class="lede">Finance, one card at a time — the EPFL <i>Principles of Finance</i> course as a deck of cards. Each one: one idea, one picture, one formula, on numbers you can move. Tap any concept.</p>';
     CHAPTERS.forEach(function(c){
       h+='<div class="chap"><h2>'+c.id+' · '+c.title+'</h2><div class="cs">'+c.sub+'</div><div class="grid">';
       c.cards.forEach(function(k){
@@ -263,9 +274,11 @@
     var inp=c.inputs.map(function(i){return '<div class="ctrl"><div class="row"><span>'+i.label+'</span><b data-rk="'+i.k+'"></b></div><input type="range" data-key="'+i.k+'" min="'+i.min+'" max="'+i.max+'" step="'+i.step+'" value="'+i.val+'"></div>';}).join('');
     app.innerHTML='<div class="crumb"><span class="back" onclick="location.hash=\'#/\'">← all concepts</span><span class="ch">'+c.ch+'</span></div>'
       +'<div class="card"><div class="eyebrow">'+c.eyebrow+'</div><h1>'+c.idea+'</h1>'
+      +'<div class="usecase">'+c.usecase+'</div>'
       +'<div class="hero"><span class="big" data-r="ans"></span><span data-r="chip"></span></div><p class="heronote" data-r="note"></p>'
       +'<div class="viz">'+c.viz+'</div>'
       +'<div class="ctrls">'+inp+'</div>'
+      +(c.fixed?'<div class="fixed">'+c.fixed+'</div>':'')
       +'<div class="formula"><div class="gen" data-r="fgen"></div><div class="num" data-r="fnum"></div></div>'
       +'<p class="explain">'+c.explain+'</p><p class="src">'+c.src+'</p></div>';
     var root=app;
