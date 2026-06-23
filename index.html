@@ -282,12 +282,10 @@
       +'<div class="ctrls">'+inp+'</div>'
       +(c.fixed?'<div class="fixed">'+c.fixed+'</div>':'')
       +'<p class="explain">'+c.explain+'</p>'
-      +'<button class="fbtn" data-r="fbtn">show the formula ↓</button>'
-      +'<div class="formula" data-r="formula" style="display:none;"><div class="gen" data-r="fgen"></div><div class="num" data-r="fnum"></div><div class="src">'+c.src+'</div></div></div>';
+      +'<div class="formula"><div class="gen" data-r="fgen"></div><div class="num" data-r="fnum"></div></div>'
+      +'<p class="src">'+c.src+'</p></div>';
     var root=app;
     K(q(root,'fgen'),c.fgen);
-    var fb=q(root,'fbtn'), fm=q(root,'formula');
-    fb.addEventListener('click',function(){var open=fm.style.display==='none'; fm.style.display=open?'block':'none'; fb.textContent=open?'hide the formula ↑':'show the formula ↓';});
     function recompute(){
       var v={}; c.inputs.forEach(function(i){var el=root.querySelector('[data-key="'+i.k+'"]'),val=+el.value; v[i.k]=val;
         var disp=i.fmt?i.fmt(val):(i.unit==='$'?money(val):i.unit==='%'?val+'%':i.unit==='yr'?val+(val===1?' yr':' yrs'):val);
