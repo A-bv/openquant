@@ -70,6 +70,7 @@
   .ctrl .row{display:flex; justify-content:space-between; gap:10px; font-size:13px; color:var(--muted); margin-bottom:6px;}
   .ctrl .row b{color:var(--text); font-weight:600; white-space:nowrap;}
   input[type=range]{width:100%; accent-color:var(--accent); height:4px;}
+  .sanchor{display:flex; justify-content:space-between; gap:10px; font-size:11px; color:var(--faint); margin-top:4px;}
   .fixed{font-size:11.5px; color:var(--faint); margin-top:12px;}
   .fixed::before{content:"assumes "; color:var(--faint);}
 
@@ -192,7 +193,7 @@
     diversification:{ch:'H2 · risk & return',eyebrow:'diversification',idea:'You may hold fewer real bets than you think.',
       usecase:"You own several stocks and feel safe because you have many. This shows whether you are really spread out, or whether they all move together as one big bet that could drop at once.",
       fixed:"each stock swings about 35% a year", src:'Berk-DeMarzo Ch.11 · test_portfolio.py',
-      inputs:[{k:'n',label:'how many stocks you hold',min:1,max:20,step:1,val:8,unit:''},{k:'rho',label:'how much they move together',min:0,max:100,step:5,val:70,unit:'%'}],
+      inputs:[{k:'n',label:'how many stocks you hold',min:1,max:20,step:1,val:8,unit:''},{k:'rho',label:'how much they move together',min:0,max:100,step:5,val:70,unit:'%',lo:'each on its own',hi:'all as one',fmt:function(v){var w=v<5?'not at all':v<25?'barely':v<55?'somewhat':v<85?'a lot':'almost fully';return w+' ('+v+'%)';}}],
       viz:hbar('real','var(--accent)','your real risk')+hbar('ind','var(--good)','if they were truly independent'),
       fgen:"\\text{real bets} \\;=\\; \\dfrac{n}{1+(n-1)\\,\\rho}",
       explain:'When your stocks move together a lot, owning more hardly helps. Many of them act like just a few real bets, so your risk stays high.',
@@ -206,7 +207,7 @@
     capm:{ch:'H2 · risk & return',eyebrow:'CAPM',idea:'The riskier a stock, the more return you should ask for.',
       usecase:"Before buying a stock, this is the lowest yearly return you should ask for, given its risk. If a stock offers less than this, you are not paid enough for the risk.",
       fixed:"a 4% safe rate and a 6% market premium", src:'Berk-DeMarzo Ch.12 · test_epfl_exam2.py',
-      inputs:[{k:'beta',label:'how much it moves with the market (1 = the same)',min:0,max:2.5,step:0.05,val:1,unit:''}],
+      inputs:[{k:'beta',label:'how much it moves with the market',min:0,max:2.5,step:0.05,val:1,unit:'',lo:'steady',hi:'2.5x the market',fmt:function(v){return v.toFixed(2)+(v<0.95?' (calmer)':v>1.05?' (wilder)':' (same as market)');}}],
       viz:'<svg data-r="svg" viewBox="0 0 320 170" width="100%" style="max-width:340px;display:block;margin:0 auto;"></svg>',
       fgen:"\\text{fair return} \\;=\\; r_f + \\beta\\,(\\text{market premium})",
       explain:'Only the risk you cannot spread away earns extra return. A stock that moves twice as hard as the market should pay you a bigger return.',
@@ -272,7 +273,7 @@
 
   function renderCard(id){
     var c=CARDS[id]; if(!c){location.hash='#/';return;}
-    var inp=c.inputs.map(function(i){return '<div class="ctrl"><div class="row"><span>'+i.label+'</span><b data-rk="'+i.k+'"></b></div><input type="range" data-key="'+i.k+'" min="'+i.min+'" max="'+i.max+'" step="'+i.step+'" value="'+i.val+'"></div>';}).join('');
+    var inp=c.inputs.map(function(i){return '<div class="ctrl"><div class="row"><span>'+i.label+'</span><b data-rk="'+i.k+'"></b></div><input type="range" data-key="'+i.k+'" min="'+i.min+'" max="'+i.max+'" step="'+i.step+'" value="'+i.val+'">'+((i.lo||i.hi)?'<div class="sanchor"><span>'+(i.lo||'')+'</span><span>'+(i.hi||'')+'</span></div>':'')+'</div>';}).join('');
     app.innerHTML='<div class="crumb"><span class="back" onclick="location.hash=\'#/\'">← all concepts</span><span class="ch">'+c.ch+'</span></div>'
       +'<div class="card"><div class="eyebrow">'+c.eyebrow+'</div><h1>'+c.idea+'</h1>'
       +'<div class="usecase">'+c.usecase+'</div>'
@@ -288,8 +289,8 @@
     var fb=q(root,'fbtn'), fm=q(root,'formula');
     fb.addEventListener('click',function(){var open=fm.style.display==='none'; fm.style.display=open?'block':'none'; fb.textContent=open?'hide the formula ↑':'show the formula ↓';});
     function recompute(){
-      var v={}; c.inputs.forEach(function(i){var el=root.querySelector('[data-key="'+i.k+'"]'); v[i.k]=+el.value;
-        var disp=i.unit==='$'?money(+el.value):i.unit==='%'?(+el.value)+'%':i.unit==='yr'?(+el.value)+(+el.value===1?' yr':' yrs'):(+el.value);
+      var v={}; c.inputs.forEach(function(i){var el=root.querySelector('[data-key="'+i.k+'"]'),val=+el.value; v[i.k]=val;
+        var disp=i.fmt?i.fmt(val):(i.unit==='$'?money(val):i.unit==='%'?val+'%':i.unit==='yr'?val+(val===1?' yr':' yrs'):val);
         root.querySelector('[data-rk="'+i.k+'"]').textContent=disp;});
       c.update(v,root);
     }
