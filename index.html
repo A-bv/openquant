@@ -239,12 +239,139 @@
         q(root,'eqseg').style.width=(wacc>0?eqC/wacc*100:50)+'%'; q(root,'dbseg').style.width=(wacc>0?dbC/wacc*100:50)+'%';
         q(root,'eqlab').textContent='equity '+eqC.toFixed(1)+'%'; q(root,'dblab').textContent='debt '+dbC.toFixed(1)+'%';
         K(q(root,'fnum'),(1-d).toFixed(2)+"\\times 11 + "+d.toFixed(2)+"\\times 5\\times 0.79 = "+wacc.toFixed(1)+"\\%");}}
+,
+
+    pi:{ch:'H1 · project decisions',eyebrow:'profitability index',idea:'When money is tight, back the projects that give the most value per dollar.',
+      usecase:"You have a limited budget and several projects competing for it. This ranks them by value created per dollar spent, so you fund the most efficient ones first.",
+      fixed:"the project pays back over 6 years at a 10% rate", src:'Berk-DeMarzo Ch.7',
+      inputs:[{k:'x',label:'it costs you, today',min:1000,max:100000,step:1000,val:20000,unit:'$'},{k:'c',label:'cash it returns each year',min:1000,max:8000,step:250,val:5000,unit:'$'}],
+      viz:hbar('pi','var(--accent)','value you get back per $1 put in'),
+      fgen:"\\text{PI} \\;=\\; \\dfrac{\\text{value of the future cash, today}}{\\text{cost}}",
+      explain:'Above 1, each dollar you invest comes back as more than a dollar of value. Use it to pick winners when you cannot fund every project.',
+      update:function(v,root){var r=0.10,n=6,pvB=v.c/r*(1-1/Math.pow(1+r,n)),pi=pvB/v.x;
+        q(root,'ans').textContent=pi.toFixed(2)+'x'; var c=q(root,'chip'); c.className='chip '+(pi>=1?'good':'lost'); c.textContent=pi>=1?'worth funding':'destroys value';
+        q(root,'note').textContent='each $1 you put in comes back as '+pi.toFixed(2)+' of value today';
+        q(root,'pival').textContent=pi.toFixed(2)+'x'; q(root,'pibar').style.width=Math.min(pi/2*100,100)+'%';
+        K(q(root,'fnum'),Math.round(pvB)+' / '+v.x+' = '+pi.toFixed(2));}},
+
+    ear:{ch:'H1 · rates',eyebrow:'real yearly rate',idea:'A rate quoted per month hides its true yearly cost.',
+      usecase:"Comparing a credit card, a loan, or a savings account that compound at different speeds. This turns the headline rate into the true yearly rate so you compare fairly.",
+      fixed:"the same headline rate, compounded the chosen number of times", src:'Berk-DeMarzo Ch.5',
+      inputs:[{k:'apr',label:'headline yearly rate (APR)',min:1,max:30,step:0.5,val:18,unit:'%'},{k:'k',label:'times it compounds per year',min:1,max:12,step:1,val:12,unit:'',lo:'once a year',hi:'every month',fmt:function(v){return v+(v===1?' time':' times')+' a year';}}],
+      viz:twoBarHTML('quoted (APR)','real (EAR)'),
+      fgen:"\\text{EAR} \\;=\\; \\left(1+\\dfrac{\\text{APR}}{k}\\right)^{k} - 1",
+      explain:'The more often interest is added, the more you really pay or earn. Always line up offers on their EAR, not their APR.',
+      update:function(v,root){var ear=Math.pow(1+v.apr/100/v.k,v.k)-1, earp=ear*100, mx=Math.max(v.apr,earp);
+        q(root,'ans').textContent=earp.toFixed(2)+'%'; var c=q(root,'chip'); c.className='chip lost'; c.textContent='+'+(earp-v.apr).toFixed(2)+'% hidden';
+        q(root,'note').textContent='a '+v.apr+'% APR is really '+earp.toFixed(2)+'% a year once compounding is counted';
+        q(root,'av').textContent=v.apr+'%'; q(root,'bv').textContent=earp.toFixed(2)+'%';
+        q(root,'abar').style.height=(v.apr/mx*144)+'px'; q(root,'bbar').style.height=(earp/mx*144)+'px';
+        K(q(root,'fnum'),'(1+'+(v.apr/100).toFixed(3)+'/'+v.k+')^{'+v.k+'} - 1 = '+earp.toFixed(2)+'\\%');}},
+
+    loan:{ch:'H1 · rates',eyebrow:'loan payment',idea:'A loan is the amount you borrowed plus interest, spread over time.',
+      usecase:"Taking a car loan or a mortgage. This shows your monthly payment and how much of everything you pay is just interest.",
+      fixed:"you borrow $20,000", src:'Berk-DeMarzo Ch.5',
+      inputs:[{k:'r',label:'yearly rate',min:1,max:12,step:0.5,val:6,unit:'%'},{k:'n',label:'how many years to pay it back',min:1,max:30,step:1,val:5,unit:'yr'}],
+      viz:hbar('prin','var(--accent)','the amount you borrowed')+hbar('int','var(--lost)','interest you pay on top'),
+      fgen:"\\text{payment} \\;=\\; \\dfrac{P\\,r}{1-(1+r)^{-N}}",
+      explain:'A lower rate or a shorter term means far less interest. Stretch the loan longer and the total interest climbs fast.',
+      update:function(v,root){var P=20000, mr=v.r/100/12, N=v.n*12, pay=P*mr/(1-Math.pow(1+mr,-N)), total=pay*N, interest=total-P, mx=total;
+        q(root,'ans').textContent=money(pay)+'/mo'; var c=q(root,'chip'); c.className='chip lost'; c.textContent=money(interest)+' total interest';
+        q(root,'note').textContent='you pay '+money(pay)+' a month, '+money(total)+' in all';
+        q(root,'prinval').textContent=money(P); q(root,'intval').textContent=money(interest);
+        q(root,'prinbar').style.width=(P/mx*100)+'%'; q(root,'intbar').style.width=(interest/mx*100)+'%';
+        K(q(root,'fnum'),'\\text{monthly} = '+pay.toFixed(0)+', \\text{ interest} = '+Math.round(interest));}},
+
+    spot:{ch:'H1 · bonds & rates',eyebrow:'the rate for one maturity',idea:'A bond bought below its payout locks in a yearly rate.',
+      usecase:"A bond pays you $100 at the end and nothing before. You pay less than $100 today. This is the yearly rate you lock in, the building block of the yield curve.",
+      fixed:"the bond pays you $100 at maturity", src:'Berk-DeMarzo Ch.8',
+      inputs:[{k:'price',label:'price you pay today (for $100 at the end)',min:50,max:99,step:1,val:90,unit:'$'},{k:'n',label:'years until it pays out',min:1,max:15,step:1,val:3,unit:'yr'}],
+      viz:twoBarHTML('you pay now','you get at the end'),
+      fgen:"r_n \\;=\\; \\left(\\dfrac{100}{\\text{price}}\\right)^{1/n} - 1",
+      explain:'A lower price for the same $100 means a higher rate. The rate is usually different for each maturity, which traces out the yield curve.',
+      update:function(v,root){var rate=Math.pow(100/v.price,1/v.n)-1, rp=rate*100;
+        q(root,'ans').textContent=rp.toFixed(2)+'%'; var c=q(root,'chip'); c.className='chip info'; c.textContent='locked for '+v.n+(v.n===1?' year':' years');
+        q(root,'note').textContent='paying '+money(v.price)+' now for $100 in '+v.n+' years earns '+rp.toFixed(2)+'% a year';
+        q(root,'av').textContent=money(v.price); q(root,'bv').textContent='$100';
+        q(root,'abar').style.height=(v.price/100*144)+'px'; q(root,'bbar').style.height='144px';
+        K(q(root,'fnum'),'(100/'+v.price+')^{1/'+v.n+'} - 1 = '+rp.toFixed(2)+'\\%');}},
+
+    forward:{ch:'H1 · bonds & rates',eyebrow:'a future rate, locked today',idea:'Today’s rates already imply a rate for next year.',
+      usecase:"Wondering whether to lock a rate now or wait. The rates for 1 and 2 years already imply the market’s rate for the second year. Beat it and waiting pays.",
+      fixed:"using the 1-year and 2-year rates", src:'Berk-DeMarzo Ch.8',
+      inputs:[{k:'r1',label:'rate to lock money for 1 year',min:1,max:10,step:0.25,val:3,unit:'%'},{k:'r2',label:'rate to lock money for 2 years',min:1,max:10,step:0.25,val:4,unit:'%'}],
+      viz:hbar('a','var(--accent)','rate for year 1')+hbar('b','var(--good)','rate the market implies for year 2'),
+      fgen:"(1+r_2)^2 \\;=\\; (1+r_1)\\,(1+f)",
+      explain:'If two years pays more than one, the gap is the rate the market expects for the second year. That implied rate is the forward rate.',
+      update:function(v,root){var f=(Math.pow(1+v.r2/100,2)/(1+v.r1/100))-1, fp=f*100, mx=Math.max(v.r1,fp,v.r2);
+        q(root,'ans').textContent=fp.toFixed(2)+'%'; var c=q(root,'chip'); c.className='chip info'; c.textContent='implied year-2 rate';
+        q(root,'note').textContent='the market is already pricing '+fp.toFixed(2)+'% for the second year';
+        q(root,'aval').textContent=v.r1+'%'; q(root,'bval').textContent=fp.toFixed(2)+'%';
+        q(root,'abar').style.width=(v.r1/mx*100)+'%'; q(root,'bbar').style.width=(fp/mx*100)+'%';
+        K(q(root,'fnum'),'(1+'+(v.r2/100).toFixed(3)+')^2 / (1+'+(v.r1/100).toFixed(3)+') - 1 = '+fp.toFixed(2)+'\\%');}},
+
+    bond:{ch:'H1 · bonds & rates',eyebrow:'price a bond',idea:'A bond is worth more when its coupon beats today’s rate.',
+      usecase:"A bond pays a fixed coupon each year plus $100 at the end. Given the rate you require today, this is what it should be worth, and whether it is cheap or dear.",
+      fixed:"a 10-year bond with $100 face value", src:'Berk-DeMarzo Ch.8',
+      inputs:[{k:'cpn',label:'yearly coupon it pays (on $100)',min:0,max:10,step:0.5,val:5,unit:'$'},{k:'y',label:'the yearly return you require',min:1,max:12,step:0.5,val:4,unit:'%'}],
+      viz:twoBarHTML('its price','its $100 face'),
+      fgen:"\\text{price} \\;=\\; \\textstyle\\sum \\dfrac{\\text{coupon}}{(1+y)^t} + \\dfrac{100}{(1+y)^N}",
+      explain:'If the coupon beats the rate you require, the bond is worth more than $100 (a premium). If it is below, the bond trades for less (a discount).',
+      update:function(v,root){var y=v.y/100, n=10, price=v.cpn/y*(1-1/Math.pow(1+y,n))+100/Math.pow(1+y,n), mx=Math.max(price,100);
+        q(root,'ans').textContent=money(price); var c=q(root,'chip'); c.className='chip '+(price>100.5?'good':price<99.5?'lost':'info'); c.textContent=price>100.5?'above face (premium)':price<99.5?'below face (discount)':'about face value';
+        q(root,'note').textContent='at a '+v.y+'% required return this bond is worth '+money(price);
+        q(root,'av').textContent=money(price); q(root,'bv').textContent='$100';
+        q(root,'abar').style.height=(price/mx*144)+'px'; q(root,'bbar').style.height=(100/mx*144)+'px';
+        K(q(root,'fnum'),'\\text{price} = '+price.toFixed(2));}},
+
+    ytm:{ch:'H1 · bonds & rates',eyebrow:'return from a price',idea:'A bond’s price tells you the return you actually earn.',
+      usecase:"A bond is on sale at some price. This is the true yearly return you earn if you buy at that price and hold it to the end, so you can compare bonds fairly.",
+      fixed:"a 10-year bond paying a $5 coupon, $100 face", src:'Berk-DeMarzo Ch.8 · test_epfl_exam2.py',
+      inputs:[{k:'price',label:'price you pay today',min:60,max:130,step:1,val:95,unit:'$'}],
+      viz:hbar('cpn','var(--accent)','coupon rate it prints')+hbar('ytm','var(--good)','your real return (yield to maturity)'),
+      fgen:"\\text{price} \\;=\\; \\textstyle\\sum \\dfrac{5}{(1+y)^t} + \\dfrac{100}{(1+y)^{10}}",
+      explain:'Buy below face and your real return beats the coupon, because you also gain as the price rises to $100. Buy above face and it is the reverse.',
+      update:function(v,root){var n=10,cpn=5,lo=0.0001,hi=0.6,f=function(y){return cpn/y*(1-1/Math.pow(1+y,n))+100/Math.pow(1+y,n)-v.price;};
+        for(var i=0;i<60;i++){var m=(lo+hi)/2; if(f(m)>0) lo=m; else hi=m;} var y=(lo+hi)/2, yp=y*100, mx=Math.max(5,yp);
+        q(root,'ans').textContent=yp.toFixed(2)+'%'; var c=q(root,'chip'); c.className='chip info'; c.textContent='real return if held to the end';
+        q(root,'note').textContent='buying at '+money(v.price)+' earns '+yp.toFixed(2)+'% a year to maturity';
+        q(root,'cpnval').textContent='5%'; q(root,'ytmval').textContent=yp.toFixed(2)+'%';
+        q(root,'cpnbar').style.width=(5/mx*100)+'%'; q(root,'ytmbar').style.width=(yp/mx*100)+'%';
+        K(q(root,'fnum'),'\\text{solve } y: \\;\\text{price}='+v.price+' \\Rightarrow y='+yp.toFixed(2)+'\\%');}},
+
+    duration:{ch:'H1 · bonds & rates',eyebrow:'rate-change risk',idea:'When rates rise, bond prices fall, and longer bonds fall harder.',
+      usecase:"You hold bonds or a bond fund and rates are moving. This estimates how much your value drops or rises for a given change in rates.",
+      fixed:"a bond fund with the chosen duration", src:'Berk-DeMarzo Ch.8',
+      inputs:[{k:'d',label:'duration (roughly its average life, in years)',min:1,max:20,step:1,val:7,unit:'yr'},{k:'dy',label:'how much rates move',min:-3,max:3,step:0.25,val:1,unit:'%',lo:'rates fall',hi:'rates rise'}],
+      viz:hbar('mv','var(--accent)','how much your bonds move'),
+      fgen:"\\dfrac{\\Delta\\text{price}}{\\text{price}} \\;\\approx\\; -\\,D \\times \\Delta r",
+      explain:'A duration of 7 means a 1% rate rise costs you about 7%. Longer-dated bonds carry more of this risk.',
+      update:function(v,root){var move=-v.d*v.dy;
+        q(root,'ans').textContent=(move>=0?'+':'')+move.toFixed(1)+'%'; var c=q(root,'chip'); c.className='chip '+(move>=0?'good':'lost'); c.textContent=move>=0?'your bonds gain':'your bonds lose';
+        q(root,'note').textContent='a '+v.dy+'% move in rates changes your bonds by about '+move.toFixed(1)+'%';
+        q(root,'mvval').textContent=move.toFixed(1)+'%'; q(root,'mvbar').style.width=Math.min(Math.abs(move)/20*100,100)+'%'; q(root,'mvbar').style.background=move>=0?'var(--good)':'var(--lost)';
+        K(q(root,'fnum'),'-'+v.d+' \\times '+v.dy+'\\% = '+move.toFixed(1)+'\\%');}},
+
+    ddm:{ch:'H1 · stocks',eyebrow:'value a stock from dividends',idea:'A stock is worth its next dividend, divided by return minus growth.',
+      usecase:"Valuing a steady dividend-paying stock. Given the return you require and how fast its dividend grows, this is a simple estimate of what a share is worth.",
+      fixed:"the stock pays a $2 dividend next year", src:'Berk-DeMarzo Ch.9 · test_epfl_exam2.py',
+      inputs:[{k:'r',label:'the yearly return you require',min:4,max:14,step:0.5,val:8,unit:'%'},{k:'g',label:'how fast the dividend grows each year',min:0,max:8,step:0.5,val:2,unit:'%'}],
+      viz:hbar('val','var(--accent)','what one share is worth'),
+      fgen:"\\text{price} \\;=\\; \\dfrac{\\text{next dividend}}{r - g}",
+      explain:'The closer growth gets to your required return, the more the price shoots up, because the dividends are expected to keep growing nearly as fast as you discount them.',
+      update:function(v,root){var spread=(v.r-v.g)/100;
+        if(spread<=0){q(root,'ans').textContent='∞'; var c0=q(root,'chip'); c0.className='chip lost'; c0.textContent='growth cannot beat your return'; q(root,'note').textContent='if growth matches or beats your required return, the simple formula breaks down'; q(root,'valval').textContent='∞'; q(root,'valbar').style.width='100%'; K(q(root,'fnum'),'2 / ('+v.r+'\\% - '+v.g+'\\%) \\to \\infty'); return;}
+        var price=2/spread;
+        q(root,'ans').textContent=money(price); var c=q(root,'chip'); c.className='chip info'; c.textContent='value of one share';
+        q(root,'note').textContent='a $2 dividend growing '+v.g+'% a year, at a '+v.r+'% required return, is worth '+money(price);
+        q(root,'valval').textContent=money(price); q(root,'valbar').style.width=Math.min(price/100*100,100)+'%';
+        K(q(root,'fnum'),'2 / ('+(v.r/100).toFixed(3)+' - '+(v.g/100).toFixed(3)+') = '+Math.round(price));}}
   };
 
   var CHAPTERS=[
     {id:'H1',title:'Discounting & valuation',sub:'what a future dollar is worth today',
      cards:[{id:'pv',t:'Present value',r:1},{id:'fv',t:'Future value',r:1},{id:'perpetuity',t:'Perpetuity',r:1},{id:'annuity',t:'Annuity',r:1},{id:'npv',t:'NPV: is it worth it?',r:1},
-            {id:'_',t:'Profitability index'},{id:'_',t:'EAR vs APR'},{id:'_',t:'Loan & amortization'},{id:'_',t:'Spot rates'},{id:'_',t:'Forward rates'},{id:'_',t:'Bond pricing'},{id:'_',t:'Yield to maturity'},{id:'_',t:'Duration'},{id:'_',t:'Dividend-discount'}]},
+            {id:'pi',t:'Profitability index',r:1},{id:'ear',t:'EAR vs APR',r:1},{id:'loan',t:'Loan & amortization',r:1},{id:'spot',t:'Spot rates',r:1},{id:'forward',t:'Forward rates',r:1},{id:'bond',t:'Bond pricing',r:1},{id:'ytm',t:'Yield to maturity',r:1},{id:'duration',t:'Duration',r:1},{id:'ddm',t:'Dividend-discount',r:1}]},
     {id:'H2',title:'Risk & return',sub:'how much you should be paid for risk',
      cards:[{id:'diversification',t:'Diversification',r:1},{id:'capm',t:'CAPM: return to ask for',r:1},
             {id:'_',t:'Expected return & volatility'},{id:'_',t:'Covariance & correlation'},{id:'_',t:'Portfolio variance'},{id:'_',t:'Risk contribution'},{id:'_',t:'Minimum-variance'},{id:'_',t:'Efficient frontier'},{id:'_',t:'Sharpe ratio'},{id:'_',t:'Beta'},{id:'_',t:'Systematic vs idiosyncratic'},{id:'_',t:'Alpha'}]},
