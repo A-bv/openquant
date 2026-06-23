@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>OpenQuant — finance, one card at a time</title>
+<title>OpenQuant · finance, one card at a time</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -56,9 +56,10 @@
   .usecase{background:var(--accent-soft); border-radius:12px; padding:11px 13px; margin:0 0 18px; font-size:13px; color:var(--accent-2); line-height:1.5;}
   .usecase b{font-weight:600;}
 
-  .hero{display:flex; align-items:flex-end; gap:10px; flex-wrap:wrap; margin-bottom:2px;}
-  .hero .big{font-size:38px; font-weight:700; letter-spacing:-.025em; line-height:1.04; color:var(--text);}
-  .chip{font-size:12px; font-weight:500; padding:4px 10px; border-radius:999px; margin-bottom:6px; white-space:nowrap;}
+  .hero{display:flex; flex-direction:column; align-items:flex-start; gap:9px; margin-bottom:6px;}
+  .hero .big{font-size:38px; font-weight:700; letter-spacing:-.025em; line-height:1.1; color:var(--text);}
+  .chip{font-size:12px; font-weight:500; padding:4px 11px; border-radius:999px; white-space:nowrap;}
+  .fbtn{font:inherit; font-size:13px; color:var(--accent); background:none; border:none; cursor:pointer; padding:0; margin-top:16px;}
   .chip.lost{color:var(--lost); background:var(--lost-soft);}
   .chip.good{color:var(--good); background:var(--good-soft);}
   .chip.info{color:var(--accent-2); background:var(--accent-soft);}
@@ -72,7 +73,7 @@
   .fixed{font-size:11.5px; color:var(--faint); margin-top:12px;}
   .fixed::before{content:"assumes "; color:var(--faint);}
 
-  .formula{background:var(--bg); border:1px solid var(--border); border-radius:14px; padding:16px 12px; margin-top:18px; text-align:center; overflow-x:auto;}
+  .formula{background:var(--bg); border:1px solid var(--border); border-radius:14px; padding:16px 12px; margin-top:10px; text-align:center; overflow-x:auto;}
   .formula .gen .katex{opacity:.78;}
   .formula .num{margin-top:10px;}
   .explain{font-size:13px; color:var(--muted); margin-top:12px; line-height:1.55;}
@@ -118,7 +119,7 @@
 
   var CARDS={
     pv:{ch:'H1 · discounting',eyebrow:'time value of money',idea:'Money later is worth less than money now.',
-      usecase:"Someone promises you money in the future — a payout, a refund, a bond, a settlement. This shows what it is really worth today, so a big future number does not fool you.",
+      usecase:"Someone promises you money later, like a payout, a refund, or a bond. This shows what it is really worth today, so a big future number does not fool you.",
       fixed:"for every $100 you would receive later", src:'Berk-DeMarzo Ch.4 · test_money.py',
       inputs:[{k:'n',label:'how many years until you get it',min:1,max:30,step:1,val:10,unit:'yr'},{k:'r',label:'your rate (what you could earn meanwhile)',min:1,max:12,step:0.5,val:5,unit:'%'}],
       viz:splitBarHTML(), fgen:"\\text{today} \\;=\\; \\dfrac{\\text{future amount}}{(1+r)^{\\,n}}",
@@ -131,11 +132,11 @@
         K(q(root,'fnum'),"\\dfrac{100}{(1+"+(v.r/100).toFixed(3)+")^{"+v.n+"}}="+Math.round(val));}},
 
     fv:{ch:'H1 · discounting',eyebrow:'compounding',idea:'Money you keep now grows over time.',
-      usecase:"You put money aside today — savings, an investment, a deposit. This shows what it grows into, and why starting early matters so much.",
+      usecase:"You put money aside today, like savings or a deposit. This shows what it grows into, and why starting early matters so much.",
       fixed:"starting from $100 today", src:'Berk-DeMarzo Ch.4',
       inputs:[{k:'n',label:'years it grows',min:1,max:30,step:1,val:10,unit:'yr'},{k:'r',label:'yearly return it earns',min:1,max:12,step:0.5,val:5,unit:'%'}],
       viz:twoBarHTML('today','in N years'), fgen:"\\text{future} \\;=\\; \\text{today}\\times(1+r)^{\\,n}",
-      explain:'The reverse of discounting: multiply by (1 + return) each year. Even small returns compound into a big gap over time.',
+      explain:'This is the opposite of bringing money back to today: each year you multiply by (1 + return). Even small returns add up into a big gap over time.',
       update:function(v,root){var pv=100,fv=pv*Math.pow(1+v.r/100,v.n),gain=fv-pv;
         q(root,'ans').textContent=money(fv); var c=q(root,'chip'); c.className='chip good'; c.textContent='+'+money(gain)+' earned';
         q(root,'note').textContent="$100 kept today grows into this in "+v.n+" years";
@@ -143,28 +144,28 @@
         q(root,'abar').style.height=(pv/fv*144)+'px'; q(root,'bbar').style.height='144px';
         K(q(root,'fnum'),"100\\times(1+"+(v.r/100).toFixed(3)+")^{"+v.n+"}="+Math.round(fv));}},
 
-    perpetuity:{ch:'H1 · discounting',eyebrow:'a forever stream',idea:'A payment that never stops still has a finite value today.',
-      usecase:"Something pays you a fixed amount every year, with no end — a rental property, an endowment, a perpetual bond. This is what that endless stream is worth right now.",
+    perpetuity:{ch:'H1 · discounting',eyebrow:'a forever stream',idea:'A payment that never stops is still worth a limited amount today.',
+      usecase:"Something pays you the same amount every year, with no end, like a rental or a fund that pays out forever. This shows what that never-ending stream is worth right now.",
       fixed:"$1,000 paid to you every year, forever", src:'Berk-DeMarzo Ch.4 · test_epfl_exam2.py',
       inputs:[{k:'r',label:'your rate',min:1,max:12,step:0.5,val:5,unit:'%'}],
       viz:'<div style="display:flex;align-items:flex-end;gap:6px;height:92px;justify-content:center;">'
         +[0,1,2,3,4,5,6,7].map(function(i){return '<div style="width:18px;height:'+(56-i*5)+'px;background:var(--accent);border-radius:4px;opacity:'+(1-i*0.11).toFixed(2)+';"></div>';}).join('')
         +'<div style="font-size:22px;color:var(--faint);align-self:center;margin:0 4px;">&hellip;&infin;</div></div>'
-        +'<div class="explain" style="text-align:center;">the same payment, every year, forever &mdash; worth a finite amount now</div>',
+        +'<div class="explain" style="text-align:center;">the same payment, every year, forever, yet worth a set amount now</div>',
       fgen:"\\text{value} \\;=\\; \\dfrac{C}{r}",
-      explain:'Far-future payments discount to almost nothing, so an endless stream still sums to a finite number: the payment divided by your rate.',
+      explain:'Payments far in the future are worth almost nothing today, so even an endless stream adds up to a set number: the payment divided by your rate.',
       update:function(v,root){var c0=1000,val=c0/(v.r/100);
         q(root,'ans').textContent=money(val); var c=q(root,'chip'); c.className='chip info'; c.textContent='$1,000 / year forever';
         q(root,'note').textContent="getting $1,000 every year forever is worth this much to you today";
         K(q(root,'fnum'),"\\dfrac{1000}{"+(v.r/100).toFixed(3)+"}="+Math.round(val));}},
 
     annuity:{ch:'H1 · discounting',eyebrow:'a stream of payments',idea:'Many fixed payments add up to a single lump sum today.',
-      usecase:"Fixed payments for a set number of years — a loan, a pension, a lease, a car plan, a lottery paid yearly. This is the one lump sum they are all worth.",
+      usecase:"The same payment for a set number of years, like a loan, a pension, a lease, or a lottery paid yearly. This shows the single lump sum they are all worth.",
       fixed:"$1,000 paid to you each year", src:'Berk-DeMarzo Ch.4 · test_epfl_exam2.py',
       inputs:[{k:'n',label:'number of years',min:1,max:25,step:1,val:10,unit:'yr'},{k:'r',label:'your rate',min:1,max:12,step:0.5,val:5,unit:'%'}],
       viz:'<div data-r="bars" style="display:flex;align-items:flex-end;gap:4px;height:104px;justify-content:center;"></div><div class="explain" style="text-align:center;" data-r="sumnote"></div>',
       fgen:"PV \\;=\\; \\dfrac{C}{r}\\left(1-\\dfrac{1}{(1+r)^{n}}\\right)",
-      explain:'Each bar is one payment discounted back to today (smaller the further out it is). Add them all up and that is what the whole stream is worth now.',
+      explain:'Each bar is one payment brought back to today (smaller the further out it is). Add them all up and that is what the whole stream is worth now.',
       update:function(v,root){var r=v.r/100, c0=1000, pv=c0/r*(1-1/Math.pow(1+r,v.n));
         q(root,'ans').textContent=money(pv); var c=q(root,'chip'); c.className='chip info'; c.textContent=money(c0*v.n)+' on paper';
         q(root,'note').textContent="$1,000 a year for "+v.n+" years is worth this much today";
@@ -174,7 +175,7 @@
         q(root,'sumnote').textContent='each yearly payment, shrunk to today, then summed';
         K(q(root,'fnum'),"\\dfrac{1000}{"+r.toFixed(3)+"}\\left(1-\\dfrac{1}{(1+"+r.toFixed(3)+")^{"+v.n+"}}\\right)="+Math.round(pv));}},
 
-    npv:{ch:'H1 · capital budgeting',eyebrow:'is it worth it?',idea:'Only do it if the future cash beats the cost, in today’s money.',
+    npv:{ch:'H1 · project decisions',eyebrow:'is it worth it?',idea:'Only do it if the future cash beats the cost, in today’s money.',
       usecase:"Deciding whether to buy equipment, a rental, solar panels, or take on any project that costs money now and pays back over years. Positive means do it; negative means walk away.",
       fixed:"it costs $20,000 today and runs for 6 years", src:'Berk-DeMarzo Ch.7 · test_epfl_exam1.py',
       inputs:[{k:'c',label:'cash it returns each year',min:1000,max:8000,step:250,val:5000,unit:'$'},{k:'r',label:'your rate',min:1,max:15,step:0.5,val:10,unit:'%'}],
@@ -189,12 +190,12 @@
         K(q(root,'fnum'),Math.round(pvB)+" - "+X+" = "+(npv>=0?'+':'')+Math.round(npv));}},
 
     diversification:{ch:'H2 · risk & return',eyebrow:'diversification',idea:'You may hold fewer real bets than you think.',
-      usecase:"You own several stocks and feel diversified. This reveals whether you truly are, or whether they all move together — secretly one big bet that could drop at once.",
+      usecase:"You own several stocks and feel safe because you have many. This shows whether you are really spread out, or whether they all move together as one big bet that could drop at once.",
       fixed:"each stock swings about 35% a year", src:'Berk-DeMarzo Ch.11 · test_portfolio.py',
       inputs:[{k:'n',label:'how many stocks you hold',min:1,max:20,step:1,val:8,unit:''},{k:'rho',label:'how much they move together',min:0,max:100,step:5,val:70,unit:'%'}],
       viz:hbar('real','var(--accent)','your real risk')+hbar('ind','var(--good)','if they were truly independent'),
       fgen:"\\text{real bets} \\;=\\; \\dfrac{n}{1+(n-1)\\,\\rho}",
-      explain:'When holdings move together (high correlation), diversification barely helps — many names collapse into a few real bets and your risk stays high.',
+      explain:'When your stocks move together a lot, owning more hardly helps. Many of them act like just a few real bets, so your risk stays high.',
       update:function(v,root){var rho=v.rho/100, sig=0.35, eff=v.n/(1+(v.n-1)*rho), pVol=sig*Math.sqrt((1+(v.n-1)*rho)/v.n), iVol=sig/Math.sqrt(v.n), mx=sig;
         q(root,'ans').textContent=v.n+' stocks = '+eff.toFixed(1)+' real bets'; var c=q(root,'chip'); c.className='chip info'; c.textContent='risk '+pct(pVol);
         q(root,'note').textContent="in risk terms your "+v.n+" stocks act like only "+eff.toFixed(1)+" independent bets";
@@ -202,16 +203,16 @@
         q(root,'realbar').style.width=(pVol/mx*100)+'%'; q(root,'indbar').style.width=(iVol/mx*100)+'%';
         K(q(root,'fnum'),"\\dfrac{"+v.n+"}{1+("+(v.n-1)+")\\times"+rho.toFixed(2)+"}="+eff.toFixed(1));}},
 
-    capm:{ch:'H2 · risk & return',eyebrow:'CAPM',idea:'The riskier a stock, the more return you should demand.',
-      usecase:"Before buying a stock, this is the minimum yearly return you should demand for its risk — your “is the reward worth it?” bar. Below it, you are not paid enough.",
+    capm:{ch:'H2 · risk & return',eyebrow:'CAPM',idea:'The riskier a stock, the more return you should ask for.',
+      usecase:"Before buying a stock, this is the lowest yearly return you should ask for, given its risk. If a stock offers less than this, you are not paid enough for the risk.",
       fixed:"a 4% safe rate and a 6% market premium", src:'Berk-DeMarzo Ch.12 · test_epfl_exam2.py',
-      inputs:[{k:'beta',label:'beta — how much it swings vs the market (1 = same)',min:0,max:2.5,step:0.05,val:1,unit:''}],
+      inputs:[{k:'beta',label:'how much it moves with the market (1 = the same)',min:0,max:2.5,step:0.05,val:1,unit:''}],
       viz:'<svg data-r="svg" viewBox="0 0 320 170" width="100%" style="max-width:340px;display:block;margin:0 auto;"></svg>',
-      fgen:"\\text{demand} \\;=\\; r_f + \\beta\\,(\\text{market premium})",
-      explain:'Only market risk (beta) earns a premium — risk you cannot diversify away. A beta of 2 swings twice as hard as the market, so you demand a bigger return.',
+      fgen:"\\text{fair return} \\;=\\; r_f + \\beta\\,(\\text{market premium})",
+      explain:'Only the risk you cannot spread away earns extra return. A stock that moves twice as hard as the market should pay you a bigger return.',
       update:function(v,root){var rf=4,mrp=6,req=rf+v.beta*mrp;
-        q(root,'ans').textContent=req.toFixed(1)+'%'; var c=q(root,'chip'); c.className='chip info'; c.textContent='minimum return to demand';
-        q(root,'note').textContent="for this much risk, demand at least "+req.toFixed(1)+"% a year before buying";
+        q(root,'ans').textContent=req.toFixed(1)+'%'; var c=q(root,'chip'); c.className='chip info'; c.textContent='lowest return to ask for';
+        q(root,'note').textContent="for this much risk, ask for at least "+req.toFixed(1)+"% a year before buying";
         var maxY=22, x0=42,x1=300,y0=148,y1=18, bx=function(b){return x0+(b/2.5)*(x1-x0);}, by=function(r){return y0-(r/maxY)*(y0-y1);};
         var s='<line x1="'+x0+'" y1="'+y0+'" x2="'+x1+'" y2="'+y0+'" stroke="var(--border)"/><line x1="'+x0+'" y1="'+y0+'" x2="'+x0+'" y2="'+y1+'" stroke="var(--border)"/>';
         s+='<line x1="'+bx(0)+'" y1="'+by(rf)+'" x2="'+bx(2.5)+'" y2="'+by(rf+2.5*mrp)+'" stroke="var(--accent)" stroke-width="2"/>';
@@ -223,15 +224,15 @@
         q(root,'svg').innerHTML=s;
         K(q(root,'fnum'),"4 + "+v.beta+"\\times 6 = "+req.toFixed(1)+"\\%");}},
 
-    wacc:{ch:'H3 · financing',eyebrow:'WACC',idea:'A company’s hurdle rate is a blend of what lenders and owners demand.',
-      usecase:"A company funds itself with debt and equity. This blends the two into one hurdle rate — the return its projects must beat to create value. Analysts use it to value the whole business.",
+    wacc:{ch:'H3 · financing',eyebrow:'WACC',idea:'A company must clear one blended rate set by its lenders and owners.',
+      usecase:"A company raises money from lenders (debt) and owners (equity). This blends the two into one rate the company must beat to be worth it. It is the standard rate used to value a whole business.",
       fixed:"owners want 11%, debt costs 5%, tax is 21%", src:'Berk-DeMarzo Ch.15 · test_epfl_exam1.py',
       inputs:[{k:'d',label:'how much of the company is funded by debt',min:0,max:80,step:5,val:40,unit:'%'}],
       viz:'<div class="hblab"><span>equity part + debt part (after tax break)</span><b data-r="waccval"></b></div><div class="hbar" style="height:26px;display:flex;"><div data-r="eqseg" style="background:var(--accent);height:100%;"></div><div data-r="dbseg" style="background:var(--good);height:100%;"></div></div><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--faint);margin-top:5px;"><span data-r="eqlab"></span><span data-r="dblab"></span></div>',
       fgen:"\\text{WACC} \\;=\\; \\tfrac{E}{V}\\,r_e \\;+\\; \\tfrac{D}{V}\\,r_d\\,(1-\\tau)",
-      explain:'Equity is dearer than debt, and debt gets a tax break — so adding some debt lowers the blend, up to a point. The business must out-earn this rate to be worth it.',
+      explain:'Owners want more than lenders, and debt gets a tax break, so adding some debt lowers the blended rate, up to a point. The company must earn more than this rate to create value.',
       update:function(v,root){var d=v.d/100, re=11, rd=5, tax=0.21, eqC=(1-d)*re, dbC=d*rd*(1-tax), wacc=eqC+dbC;
-        q(root,'ans').textContent=wacc.toFixed(1)+'%'; var c=q(root,'chip'); c.className='chip info'; c.textContent='hurdle rate to beat';
+        q(root,'ans').textContent=wacc.toFixed(1)+'%'; var c=q(root,'chip'); c.className='chip info'; c.textContent='rate it must beat';
         q(root,'note').textContent="the business must earn more than "+wacc.toFixed(1)+"% to create value";
         q(root,'waccval').textContent=wacc.toFixed(1)+'%';
         q(root,'eqseg').style.width=(wacc>0?eqC/wacc*100:50)+'%'; q(root,'dbseg').style.width=(wacc>0?dbC/wacc*100:50)+'%';
@@ -241,15 +242,15 @@
 
   var CHAPTERS=[
     {id:'H1',title:'Discounting & valuation',sub:'what a future dollar is worth today',
-     cards:[{id:'pv',t:'Present value',r:1},{id:'fv',t:'Future value',r:1},{id:'perpetuity',t:'Perpetuity',r:1},{id:'annuity',t:'Annuity',r:1},{id:'npv',t:'NPV — is it worth it?',r:1},
+     cards:[{id:'pv',t:'Present value',r:1},{id:'fv',t:'Future value',r:1},{id:'perpetuity',t:'Perpetuity',r:1},{id:'annuity',t:'Annuity',r:1},{id:'npv',t:'NPV: is it worth it?',r:1},
             {id:'_',t:'Profitability index'},{id:'_',t:'EAR vs APR'},{id:'_',t:'Loan & amortization'},{id:'_',t:'Spot rates'},{id:'_',t:'Forward rates'},{id:'_',t:'Bond pricing'},{id:'_',t:'Yield to maturity'},{id:'_',t:'Duration'},{id:'_',t:'Dividend-discount'}]},
     {id:'H2',title:'Risk & return',sub:'how much you should be paid for risk',
-     cards:[{id:'diversification',t:'Diversification',r:1},{id:'capm',t:'CAPM — required return',r:1},
+     cards:[{id:'diversification',t:'Diversification',r:1},{id:'capm',t:'CAPM: return to ask for',r:1},
             {id:'_',t:'Expected return & volatility'},{id:'_',t:'Covariance & correlation'},{id:'_',t:'Portfolio variance'},{id:'_',t:'Risk contribution'},{id:'_',t:'Minimum-variance'},{id:'_',t:'Efficient frontier'},{id:'_',t:'Sharpe ratio'},{id:'_',t:'Beta'},{id:'_',t:'Systematic vs idiosyncratic'},{id:'_',t:'Alpha'}]},
-    {id:'H3',title:'Capital budgeting & financing',sub:'evaluating firms and how they fund themselves',
+    {id:'H3',title:'Capital budgeting & financing',sub:'judging companies and how they pay for themselves',
      cards:[{id:'wacc',t:'WACC',r:1},
             {id:'_',t:'Free cash flow'},{id:'_',t:'Net working capital'},{id:'_',t:'NPV vs IRR'},{id:'_',t:'DCF / enterprise value'},{id:'_',t:'Terminal value'},{id:'_',t:'Unlever / relever beta'},{id:'_',t:'Modigliani-Miller'},{id:'_',t:'APV'},{id:'_',t:'Tax shield'},{id:'_',t:'Distress costs'}]},
-    {id:'H4',title:'Derivatives',sub:'transferring and pricing risk',
+    {id:'H4',title:'Derivatives',sub:'moving and pricing risk',
      cards:[{id:'_',t:'Forward vs futures'},{id:'_',t:'Forward pricing'},{id:'_',t:'Swaps'},{id:'_',t:'Option payoffs'},{id:'_',t:'Put-call parity'},{id:'_',t:'Binomial model'},{id:'_',t:'Black-Scholes'}]}
   ];
 
@@ -257,7 +258,7 @@
     var ready=0,total=0;
     CHAPTERS.forEach(function(c){c.cards.forEach(function(k){total++; if(k.r)ready++;});});
     var h='<div class="top"><span class="bname">OpenQuant</span><span class="pill">'+ready+' of '+total+' cards live</span></div>'
-      +'<p class="lede">Finance, one card at a time — the EPFL <i>Principles of Finance</i> course as a deck of cards. Each one: one idea, one picture, one formula, on numbers you can move. Tap any concept.</p>';
+      +'<p class="lede">Finance, one card at a time. The EPFL <i>Principles of Finance</i> course as a deck of cards. Each one has one idea, one picture, and one formula, on numbers you can move. Tap any concept.</p>';
     CHAPTERS.forEach(function(c){
       h+='<div class="chap"><h2>'+c.id+' · '+c.title+'</h2><div class="cs">'+c.sub+'</div><div class="grid">';
       c.cards.forEach(function(k){
@@ -279,10 +280,13 @@
       +'<div class="viz">'+c.viz+'</div>'
       +'<div class="ctrls">'+inp+'</div>'
       +(c.fixed?'<div class="fixed">'+c.fixed+'</div>':'')
-      +'<div class="formula"><div class="gen" data-r="fgen"></div><div class="num" data-r="fnum"></div></div>'
-      +'<p class="explain">'+c.explain+'</p><p class="src">'+c.src+'</p></div>';
+      +'<p class="explain">'+c.explain+'</p>'
+      +'<button class="fbtn" data-r="fbtn">show the formula ↓</button>'
+      +'<div class="formula" data-r="formula" style="display:none;"><div class="gen" data-r="fgen"></div><div class="num" data-r="fnum"></div><div class="src">'+c.src+'</div></div></div>';
     var root=app;
     K(q(root,'fgen'),c.fgen);
+    var fb=q(root,'fbtn'), fm=q(root,'formula');
+    fb.addEventListener('click',function(){var open=fm.style.display==='none'; fm.style.display=open?'block':'none'; fb.textContent=open?'hide the formula ↑':'show the formula ↓';});
     function recompute(){
       var v={}; c.inputs.forEach(function(i){var el=root.querySelector('[data-key="'+i.k+'"]'); v[i.k]=+el.value;
         var disp=i.unit==='$'?money(+el.value):i.unit==='%'?(+el.value)+'%':i.unit==='yr'?(+el.value)+(+el.value===1?' yr':' yrs'):(+el.value);
