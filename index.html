@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>OpenQuant — now or later?</title>
+<style>
+  :root{
+    --bg:#faf9f6; --surface:#ffffff; --text:#1a1a18; --muted:#6b6b66; --faint:#9b9b95;
+    --border:#e7e6e0; --track:#edece6; --accent:#2563a8; --accent-soft:#e7f0fb; --warn:#9a6a12;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#141418; --surface:#1c1c21; --text:#e9e9ec; --muted:#a2a2a8; --faint:#74747c;
+      --border:#2b2b32; --track:#27272d; --accent:#6ba6e8; --accent-soft:#1e3350; --warn:#d9a441;
+    }
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.5; -webkit-font-smoothing:antialiased; padding:24px 16px 48px;
+  }
+  .wrap{max-width:540px; margin:0 auto;}
+  .brand{display:flex; align-items:baseline; gap:8px; margin-bottom:2px;}
+  .brand b{font-size:18px; font-weight:600;}
+  .brand span{font-size:13px; color:var(--muted);}
+  h1{font-size:26px; font-weight:600; letter-spacing:-.01em; margin:14px 0 6px;}
+  .sub{font-size:14px; color:var(--muted); margin:0 0 18px;}
+  .card{background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:20px 18px;}
+  .chips{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;}
+  .chip{font-size:13px; padding:7px 13px; border-radius:10px; border:1px solid var(--border);
+        background:transparent; color:var(--muted); cursor:pointer; font-family:inherit;}
+  .chip.on{background:var(--accent-soft); color:var(--accent); border-color:var(--accent);}
+  .inputs{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:8px;}
+  .inputs label{font-size:11px; color:var(--muted);}
+  .inputs input{width:100%; margin-top:4px; padding:8px 9px; font-size:14px; font-family:inherit;
+    border-radius:9px; border:1px solid var(--border); background:var(--bg); color:var(--text);}
+  .piles{display:flex; justify-content:center; align-items:flex-end; gap:44px; height:268px; margin:22px 0 4px;}
+  .pile{display:flex; flex-direction:column; align-items:center; width:124px;}
+  .cap{text-align:center; margin-bottom:8px; min-height:48px;}
+  .cap .v{font-size:23px; font-weight:600;}
+  .cap .g{font-size:11px; color:var(--faint);}
+  .track{position:relative; width:88px; height:186px; border-bottom:2px solid var(--border);}
+  .fill{position:absolute; bottom:0; left:0; width:100%; border-radius:6px 6px 0 0;
+    transition:height .55s cubic-bezier(.34,.01,.2,1), background .3s; height:0;}
+  .ghost{background:var(--track);}
+  .solid{background:var(--accent);}
+  .badge{position:absolute; left:50%; transform:translateX(-50%); display:none; align-items:center; gap:3px;
+    font-size:11px; padding:2px 9px; border-radius:999px; background:var(--accent-soft); color:var(--accent);
+    white-space:nowrap; bottom:0;}
+  .lostlbl{position:absolute; left:50%; transform:translateX(-50%); width:120px; text-align:center;
+    font-size:10px; color:var(--faint);}
+  .name{font-size:14px; font-weight:600; margin-top:9px;}
+  .desc{font-size:11px; color:var(--faint);}
+  .verdict{text-align:center; font-size:16px; margin:20px auto 18px; max-width:430px;}
+  .verdict b{color:var(--accent); font-weight:600;}
+  .slabel{display:flex; justify-content:space-between; font-size:13px; color:var(--muted); margin-bottom:5px;}
+  .slabel b{color:var(--text); font-weight:600;}
+  input[type=range]{width:100%; accent-color:var(--accent);}
+  .sends{display:flex; justify-content:space-between; font-size:11px; color:var(--faint); margin-top:2px;}
+  details{margin-top:18px; font-size:13px; color:var(--muted);}
+  details summary{cursor:pointer; color:var(--accent); font-size:13px;}
+  details .body{margin-top:8px; line-height:1.6;}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace; background:var(--bg); padding:1px 5px; border-radius:5px;}
+  .foot{text-align:center; font-size:12px; color:var(--faint); margin-top:22px;}
+  @media (max-width:420px){ .piles{gap:30px; height:250px} .pile{width:104px} .track{width:78px} .inputs{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand"><b>OpenQuant</b><span>which money choice is actually better?</span></div>
+  <h1>Take it now, or spread it out?</h1>
+  <p class="sub">Money later is worth less than money today. The future pile looks bigger — but watch it shrink to what it's really worth to you now.</p>
+
+  <div class="card">
+    <div class="chips" id="chips"></div>
+
+    <div class="inputs">
+      <label>Amount offered now<input id="lump" type="number" /></label>
+      <label>Each yearly payment<input id="pay" type="number" /></label>
+      <label>Number of years<input id="years" type="number" /></label>
+    </div>
+
+    <div class="piles">
+      <div class="pile">
+        <div class="cap"><div class="v" id="aVal">—</div><div class="g">&nbsp;</div></div>
+        <div class="track">
+          <div class="fill solid" id="aSolid"></div>
+          <div class="badge" id="aBadge"><span>✓</span>better</div>
+        </div>
+        <div class="name">cash now</div>
+        <div class="desc" id="aDesc">take it today</div>
+      </div>
+      <div class="pile">
+        <div class="cap"><div class="v" id="bVal">—</div><div class="g" id="bGhost">&nbsp;</div></div>
+        <div class="track">
+          <div class="fill ghost" id="bGhostBar"></div>
+          <div class="lostlbl" id="bLost">lost to waiting</div>
+          <div class="fill solid" id="bSolid"></div>
+          <div class="badge" id="bBadge"><span>✓</span>better</div>
+        </div>
+        <div class="name" id="bName">the payments</div>
+        <div class="desc" id="bDesc">spread over time</div>
+      </div>
+    </div>
+
+    <div class="verdict" id="verdict">—</div>
+
+    <div class="slabel"><span>how patient are you with money?</span><b id="rOut">8%/yr</b></div>
+    <input id="rate" type="range" min="2" max="14" step="0.5" value="8" />
+    <div class="sends"><span>very patient · 2%</span><span>impatient · 14%</span></div>
+
+    <details>
+      <summary>show the finance behind it</summary>
+      <div class="body">
+        Each future payment is discounted to today: <code>PV = payment ÷ (1+rate)^years</code>.
+        Add them up and that's the "worth to you today" pile. The rate is how much a dollar now beats a
+        dollar later — your impatience, or what you'd otherwise earn on the cash.
+        This is the time value of money, the first idea in the EPFL <i>Principles of Finance</i> course.
+      </div>
+    </details>
+  </div>
+
+  <div class="foot">OpenQuant · a money decision, made on a fair basis · built from EPFL Principles of Finance</div>
+</div>
+
+<script>
+(function(){
+  var PRESETS=[
+    {k:'Lottery / settlement', lump:15000000, pay:1000000, years:30, rate:8, bname:'$1M a year', bdesc:'for 30 years'},
+    {k:'Pension buyout', lump:400000, pay:30000, years:25, rate:5, bname:'$30k a year', bdesc:'for 25 years'},
+    {k:'Prize payout', lump:250000, pay:18000, years:20, rate:6, bname:'$18k a year', bdesc:'for 20 years'},
+  ];
+  var $=function(id){return document.getElementById(id);};
+  var lump=$('lump'),pay=$('pay'),years=$('years'),rate=$('rate');
+
+  function fmt(v){var a=Math.abs(v),s=v<0?'-':'';
+    if(a>=1e9)return s+'$'+(a/1e9).toFixed(1)+'B';
+    if(a>=1e6)return s+'$'+(a/1e6).toFixed(1)+'M';
+    if(a>=1e3)return s+'$'+(a/1e3).toFixed(0)+'k';
+    return s+'$'+a.toFixed(0);}
+  function pv(C,r,n){var s=0;for(var t=0;t<n;t++)s+=C/Math.pow(1+r,t);return s;} // first payment today
+
+  function chips(){
+    var c=$('chips');
+    PRESETS.forEach(function(p,i){
+      var b=document.createElement('button'); b.className='chip'+(i===0?' on':''); b.textContent=p.k;
+      b.onclick=function(){ document.querySelectorAll('.chip').forEach(function(x){x.classList.remove('on')}); b.classList.add('on');
+        lump.value=p.lump; pay.value=p.pay; years.value=p.years; rate.value=p.rate;
+        $('bName').textContent=p.bname; $('bDesc').textContent=p.bdesc; upd(); };
+      c.appendChild(b);
+    });
+  }
+
+  function upd(){
+    var L=+lump.value||0, C=+pay.value||0, n=Math.max(1,Math.round(+years.value||1)), r=(+rate.value)/100;
+    var nominal=C*n, b=pv(C,r,n), MAX=Math.max(L,nominal)*1.04||1, TRACK=186;
+    var h=function(v){return Math.min(v/MAX*TRACK,TRACK);};
+    $('rOut').textContent=(+rate.value).toFixed(0)+'%/yr';
+    $('aVal').textContent=fmt(L);
+    $('bVal').textContent=fmt(b);
+    $('bGhost').textContent='looks like '+fmt(nominal);
+    $('aSolid').style.height=h(L)+'px';
+    $('bGhostBar').style.height=h(nominal)+'px';
+    $('bSolid').style.height=h(b)+'px';
+
+    var aWins=L>=b, diff=Math.abs(L-b);
+    $('aSolid').style.background=aWins?'var(--accent)':'var(--faint)';
+    $('bSolid').style.background=aWins?'var(--faint)':'var(--accent)';
+    $('aBadge').style.display=aWins?'flex':'none';
+    $('bBadge').style.display=aWins?'none':'flex';
+    var lost=h(nominal), real=h(b);
+    $('bLost').style.bottom=((lost+real)/2)+'px';
+    $('bLost').style.display=(nominal-b)/MAX*TRACK>14?'block':'none';
+    $('verdict').innerHTML=aWins
+      ? 'The cash is worth <b>'+fmt(diff)+' more</b> in today’s money. Take the cash now.'
+      : 'The payments are worth <b>'+fmt(diff)+' more</b> in today’s money. Take the payments.';
+  }
+
+  [lump,pay,years,rate].forEach(function(el){el.addEventListener('input',upd);});
+  chips();
+  var p=PRESETS[0]; lump.value=p.lump; pay.value=p.pay; years.value=p.years; rate.value=p.rate;
+  $('bName').textContent=p.bname; $('bDesc').textContent=p.bdesc;
+  $('bGhostBar').style.height='0px'; $('bSolid').style.height='0px'; $('aSolid').style.height='0px';
+  requestAnimationFrame(function(){requestAnimationFrame(upd);});
+})();
+</script>
+</body>
+</html>
