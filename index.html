@@ -366,6 +366,157 @@
         q(root,'note').textContent='a $2 dividend growing '+v.g+'% a year, at a '+v.r+'% required return, is worth '+money(price);
         q(root,'valval').textContent=money(price); q(root,'valbar').style.width=Math.min(price/100*100,100)+'%';
         K(q(root,'fnum'),'2 / ('+(v.r/100).toFixed(3)+' - '+(v.g/100).toFixed(3)+') = '+Math.round(price));}}
+,
+
+    expvar:{ch:'H2 · risk & return',eyebrow:'expected return & risk',idea:'An average return hides how wild the ride is.',
+      usecase:"Sizing up an investment. The average return is only half the story; this also shows the swing, so you know what a normal good or bad year looks like.",
+      fixed:"based on its past returns", src:'Berk-DeMarzo Ch.10',
+      inputs:[{k:'avg',label:'average yearly return',min:0,max:25,step:1,val:9,unit:'%'},{k:'vol',label:'how much it swings (volatility)',min:2,max:40,step:1,val:18,unit:'%',lo:'calm',hi:'wild'}],
+      viz:'<div style="margin:6px 0;"><div style="position:relative;height:30px;background:var(--track);border-radius:6px;"><div data-r="band" style="position:absolute;top:0;bottom:0;background:var(--accent-soft);border-radius:6px;"></div><div data-r="mark" style="position:absolute;top:-4px;width:2px;height:38px;background:var(--accent);"></div></div><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--faint);margin-top:5px;"><span data-r="lo"></span><span data-r="hi"></span></div></div>',
+      fgen:"\\text{a normal year} \\;\\approx\\; \\bar R \\;\\pm\\; \\text{volatility}",
+      explain:'Returns swing roughly one volatility above and below the average in a normal year. A higher swing means more very good and very bad years.',
+      update:function(v,root){var lo=v.avg-v.vol, hi=v.avg+v.vol, S=-50, E=50, px=function(x){return (x-S)/(E-S)*100;};
+        q(root,'ans').textContent=v.avg+'%'; var c=q(root,'chip'); c.className='chip info'; c.textContent='swings about ±'+v.vol+'%';
+        q(root,'note').textContent='a normal year runs from about '+lo+'% to '+hi+'%';
+        q(root,'band').style.left=px(lo)+'%'; q(root,'band').style.width=(px(hi)-px(lo))+'%'; q(root,'mark').style.left=px(v.avg)+'%';
+        q(root,'lo').textContent=lo+'%'; q(root,'hi').textContent='+'+hi+'%';
+        K(q(root,'fnum'),v.avg+'\\% \\pm '+v.vol+'\\% = ['+lo+'\\%,\\; '+hi+'\\%]');}},
+
+    covcorr:{ch:'H2 · risk & return',eyebrow:'correlation',idea:'Two stocks that move apart cancel each other’s risk.',
+      usecase:"Before adding a second stock, check how it moves with the first. The more they move oppositely, the more they smooth each other out and cut your overall risk.",
+      fixed:"two stocks, each swinging 20%, held half and half", src:'Berk-DeMarzo Ch.11 · test_epfl_exam2.py',
+      inputs:[{k:'rho',label:'how the two move together',min:-100,max:100,step:5,val:30,unit:'%',lo:'move opposite',hi:'move together'}],
+      viz:hbar('one','var(--track)','each stock on its own')+hbar('two','var(--accent)','the two combined'),
+      fgen:"\\sigma_p \\;=\\; \\sigma\\,\\sqrt{\\tfrac{1+\\rho}{2}}",
+      explain:'At perfect opposite (-100%) the two can cancel to almost no risk. At perfect together (+100%) you get no benefit at all.',
+      update:function(v,root){var sig=20, rho=v.rho/100, pv=sig*Math.sqrt((1+rho)/2), mx=sig;
+        q(root,'ans').textContent=pv.toFixed(1)+'%'; var c=q(root,'chip'); c.className='chip '+(pv<sig-1?'good':'info'); c.textContent=(pv<sig-1?'risk cut by combining':'no benefit');
+        q(root,'note').textContent='holding both cuts the swing from 20% to '+pv.toFixed(1)+'%';
+        q(root,'oneval').textContent='20%'; q(root,'twoval').textContent=pv.toFixed(1)+'%';
+        q(root,'onebar').style.width=(sig/mx*100)+'%'; q(root,'onebar').style.background='var(--faint)'; q(root,'twobar').style.width=(pv/mx*100)+'%';
+        K(q(root,'fnum'),'20\\sqrt{(1+'+rho.toFixed(2)+')/2} = '+pv.toFixed(1)+'\\%');}},
+
+    portvar:{ch:'H2 · risk & return',eyebrow:'combining assets',idea:'A mix is less risky than the average of its parts.',
+      usecase:"Splitting money between two investments. The blended return is just the average, but the blended risk comes out lower, because they do not crash at the exact same time.",
+      fixed:"stock A (12% return, 25% swing) and stock B (8%, 15%), correlation 0.3", src:'Berk-DeMarzo Ch.11',
+      inputs:[{k:'w',label:'share you put in stock A',min:0,max:100,step:5,val:50,unit:'%'}],
+      viz:hbar('avg','var(--track)','average of their two risks')+hbar('port','var(--accent)','your actual blended risk'),
+      fgen:"\\sigma_p^2 \\;=\\; w_A^2\\sigma_A^2 + w_B^2\\sigma_B^2 + 2w_Aw_B\\,\\rho\\,\\sigma_A\\sigma_B",
+      explain:'The blended risk dips below the simple average because the two assets partly offset each other. The return, though, is just the straight weighted average.',
+      update:function(v,root){var w=v.w/100, sa=25,sb=15,rho=0.3, ret=w*12+(1-w)*8,
+        pv=Math.sqrt(w*w*sa*sa+(1-w)*(1-w)*sb*sb+2*w*(1-w)*rho*sa*sb), avg=w*sa+(1-w)*sb, mx=Math.max(avg,sa);
+        q(root,'ans').textContent=pv.toFixed(1)+'%'; var c=q(root,'chip'); c.className='chip info'; c.textContent='blended return '+ret.toFixed(1)+'%';
+        q(root,'note').textContent='this mix earns '+ret.toFixed(1)+'% with a '+pv.toFixed(1)+'% swing';
+        q(root,'avgval').textContent=avg.toFixed(1)+'%'; q(root,'portval').textContent=pv.toFixed(1)+'%';
+        q(root,'avgbar').style.width=(avg/mx*100)+'%'; q(root,'avgbar').style.background='var(--faint)'; q(root,'portbar').style.width=(pv/mx*100)+'%';
+        K(q(root,'fnum'),'\\sigma_p = '+pv.toFixed(1)+'\\%,\\;\\; \\bar R = '+ret.toFixed(1)+'\\%');}},
+
+    riskcontrib:{ch:'H2 · risk & return',eyebrow:'who drives your risk',idea:'One volatile holding can drive most of your risk.',
+      usecase:"You hold a calm portfolio plus one jumpy stock. This shows how much of your total risk that one stock really drives, which is usually far more than its share of your money.",
+      fixed:"the rest of your portfolio swings 12%, correlation 0.3", src:'Berk-DeMarzo Ch.11 · test_portfolio.py',
+      inputs:[{k:'w',label:'share of your money in the jumpy stock',min:5,max:60,step:5,val:15,unit:'%'},{k:'rv',label:'how much that stock swings',min:20,max:70,step:5,val:45,unit:'%'}],
+      viz:hbar('cap','var(--track)','its share of your money')+hbar('rsk','var(--accent)','its share of your risk'),
+      fgen:"\\text{risk share}_i \\;=\\; \\dfrac{w_i\\,\\text{Cov}(i,\\text{portfolio})}{\\text{portfolio variance}}",
+      explain:'Because risk grows with the square of the swing, a small but jumpy holding can quietly dominate your total risk. That is the one to trim first.',
+      update:function(v,root){var w=v.w/100, rv=v.rv, ro=12, rho=0.3,
+        cov=w*rv*rv+(1-w)*rho*rv*ro, pVar=w*w*rv*rv+(1-w)*(1-w)*ro*ro+2*w*(1-w)*rho*rv*ro, share=w*cov/pVar;
+        q(root,'ans').textContent=Math.round(share*100)+'% of your risk'; var c=q(root,'chip'); c.className='chip lost'; c.textContent='but only '+v.w+'% of your money';
+        q(root,'note').textContent='this one stock is '+v.w+'% of your money but '+Math.round(share*100)+'% of your risk';
+        q(root,'capval').textContent=v.w+'%'; q(root,'rskval').textContent=Math.round(share*100)+'%';
+        q(root,'capbar').style.width=v.w+'%'; q(root,'capbar').style.background='var(--faint)'; q(root,'rskbar').style.width=(share*100)+'%';
+        K(q(root,'fnum'),'\\text{risk share} = '+Math.round(share*100)+'\\%');}},
+
+    minvar:{ch:'H2 · risk & return',eyebrow:'the calmest mix',idea:'There is one mix of two assets that swings the least.',
+      usecase:"You want the steadiest possible blend of two investments. This finds the exact split that gives the lowest swing, given how they move together.",
+      fixed:"stock A swings 24%, stock B swings 15%", src:'Berk-DeMarzo Ch.11 · test_epfl_exam2.py',
+      inputs:[{k:'rho',label:'how the two move together',min:-90,max:90,step:5,val:30,unit:'%',lo:'move opposite',hi:'move together'}],
+      viz:'<div class="hblab"><span>the calmest split</span><b data-r="sv"></b></div><div class="hbar" style="height:26px;display:flex;"><div data-r="aseg" style="background:var(--accent);height:100%;"></div><div data-r="bseg" style="background:var(--good);height:100%;"></div></div><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--faint);margin-top:5px;"><span data-r="alab"></span><span data-r="blab"></span></div>',
+      fgen:"w_A^* \\;=\\; \\dfrac{\\sigma_B^2 - \\rho\\,\\sigma_A\\sigma_B}{\\sigma_A^2 + \\sigma_B^2 - 2\\rho\\,\\sigma_A\\sigma_B}",
+      explain:'Put more in the calmer asset, and even more when the two move oppositely. This is the lowest-risk point you can reach with just these two.',
+      update:function(v,root){var sa=24,sb=15,rho=v.rho/100, denom=sa*sa+sb*sb-2*rho*sa*sb, wA=denom>0?(sb*sb-rho*sa*sb)/denom:0.5; wA=Math.max(0,Math.min(1,wA));
+        q(root,'ans').textContent=Math.round(wA*100)+'% in A'; var c=q(root,'chip'); c.className='chip info'; c.textContent=Math.round((1-wA)*100)+'% in B';
+        q(root,'note').textContent='the steadiest blend is '+Math.round(wA*100)+'% in A and '+Math.round((1-wA)*100)+'% in B';
+        q(root,'sv').textContent=Math.round(wA*100)+' / '+Math.round((1-wA)*100);
+        q(root,'aseg').style.width=(wA*100)+'%'; q(root,'bseg').style.width=((1-wA)*100)+'%';
+        q(root,'alab').textContent='stock A'; q(root,'blab').textContent='stock B';
+        K(q(root,'fnum'),'w_A^* = '+Math.round(wA*100)+'\\%');}},
+
+    frontier:{ch:'H2 · risk & return',eyebrow:'efficient frontier',idea:'Some mixes give more return for the same risk.',
+      usecase:"Choosing how to split between two investments. This draws every possible mix, so you can pick the ones that give the most return for the risk you accept.",
+      fixed:"stock A (12% return, 25% swing), stock B (8%, 15%)", src:'Berk-DeMarzo Ch.11',
+      inputs:[{k:'rho',label:'how the two move together',min:-90,max:90,step:5,val:20,unit:'%',lo:'move opposite',hi:'move together'}],
+      viz:'<svg data-r="svg" viewBox="0 0 320 180" width="100%" style="max-width:340px;display:block;margin:0 auto;"></svg>',
+      fgen:"\\text{return up, risk left} \\;=\\; \\text{better}",
+      explain:'The curve bends toward the left as the two assets move more oppositely, meaning you reach the same return for less risk. Only the upper part is worth holding.',
+      update:function(v,root){var sa=25,sb=15,ra=12,rb=8,rho=v.rho/100,
+        x0=42,x1=300,y0=156,y1=16, mxv=30,mnr=4,mxr=14, vx=function(s){return x0+(s/mxv)*(x1-x0);}, ry=function(r){return y0-((r-mnr)/(mxr-mnr))*(y0-y1);};
+        var pts=''; for(var i=0;i<=20;i++){var w=i/20, ret=w*ra+(1-w)*rb, vol=Math.sqrt(w*w*sa*sa+(1-w)*(1-w)*sb*sb+2*w*(1-w)*rho*sa*sb); pts+=vx(vol)+','+ry(ret)+' ';}
+        var g='<line x1="'+x0+'" y1="'+y0+'" x2="'+x1+'" y2="'+y0+'" stroke="var(--border)"/><line x1="'+x0+'" y1="'+y0+'" x2="'+x0+'" y2="'+y1+'" stroke="var(--border)"/>';
+        g+='<polyline points="'+pts+'" fill="none" stroke="var(--accent)" stroke-width="2"/>';
+        g+='<text x="6" y="'+y1+'" font-size="10" fill="var(--faint)">return</text><text x="'+(x1-26)+'" y="172" font-size="10" fill="var(--faint)">risk</text>';
+        q(root,'svg').innerHTML=g;
+        var minVol=Math.min.apply(null,[].map ? [0,5,10,15,20].map(function(i){var w=i/20;return Math.sqrt(w*w*sa*sa+(1-w)*(1-w)*sb*sb+2*w*(1-w)*rho*sa*sb);}):[15]);
+        q(root,'ans').textContent='lowest risk '+minVol.toFixed(1)+'%'; var c=q(root,'chip'); c.className='chip info'; c.textContent='across all mixes';
+        q(root,'note').textContent='the curve shows every mix of the two; pick the upper edge for the best return per risk';
+        K(q(root,'fnum'),'\\text{each point} = \\text{one mix of A and B}');}},
+
+    sharpe:{ch:'H2 · risk & return',eyebrow:'reward for risk',idea:'Are you paid enough for the risk you take?',
+      usecase:"Comparing two investments or funds. This measures return earned above a safe rate, per unit of risk, so a calm 8% can beat a wild 15%.",
+      fixed:"a safe rate of 4%", src:'Berk-DeMarzo Ch.11 · test_portfolio.py',
+      inputs:[{k:'ret',label:'its yearly return',min:2,max:30,step:1,val:12,unit:'%'},{k:'vol',label:'how much it swings',min:2,max:40,step:1,val:18,unit:'%',lo:'calm',hi:'wild'}],
+      viz:hbar('rew','var(--good)','reward above the safe rate')+hbar('rsk','var(--lost)','risk you take for it'),
+      fgen:"\\text{Sharpe} \\;=\\; \\dfrac{\\text{return} - \\text{safe rate}}{\\text{volatility}}",
+      explain:'Above about 1 is strong; below 0.5 you are taking a lot of risk for little extra reward. It lets you compare very different investments fairly.',
+      update:function(v,root){var rf=4, sh=(v.ret-rf)/v.vol, mx=Math.max(v.ret-rf,v.vol);
+        q(root,'ans').textContent=sh.toFixed(2); var c=q(root,'chip'); c.className='chip '+(sh>=0.5?'good':'lost'); c.textContent=sh>=1?'strong':sh>=0.5?'decent':'weak for the risk';
+        q(root,'note').textContent='you earn '+(v.ret-rf)+'% above safe for every '+v.vol+'% of swing';
+        q(root,'rewval').textContent=(v.ret-rf)+'%'; q(root,'rskval').textContent=v.vol+'%';
+        q(root,'rewbar').style.width=((v.ret-rf)/mx*100)+'%'; q(root,'rskbar').style.width=(v.vol/mx*100)+'%';
+        K(q(root,'fnum'),'('+v.ret+' - 4)/'+v.vol+' = '+sh.toFixed(2));}},
+
+    beta:{ch:'H2 · risk & return',eyebrow:'market sensitivity',idea:'Beta is how hard a stock swings versus the market.',
+      usecase:"Gauging how a stock will behave when the market moves. A beta of 2 means it tends to swing twice as hard, up and down, so you know what to brace for.",
+      fixed:"compared with the whole market", src:'Berk-DeMarzo Ch.12',
+      inputs:[{k:'beta',label:'how hard it swings vs the market',min:0,max:2.5,step:0.05,val:1.5,unit:'',lo:'steady',hi:'2.5x the market'},{k:'mkt',label:'the market moves',min:-15,max:15,step:1,val:-10,unit:'%',lo:'market drops',hi:'market rises'}],
+      viz:twoBarHTML('the market','this stock'),
+      fgen:"\\text{stock move} \\;\\approx\\; \\beta \\times \\text{market move}",
+      explain:'A high-beta stock amplifies the market, both ways. A beta below 1 is calmer than the market; above 1 is wilder.',
+      update:function(v,root){var sm=v.beta*v.mkt, mx=Math.max(Math.abs(v.mkt),Math.abs(sm),1);
+        q(root,'ans').textContent=(sm>=0?'+':'')+sm.toFixed(1)+'%'; var c=q(root,'chip'); c.className='chip '+(sm>=0?'good':'lost'); c.textContent='when the market does '+v.mkt+'%';
+        q(root,'note').textContent='a '+v.mkt+'% market move tends to move this stock about '+sm.toFixed(1)+'%';
+        q(root,'av').textContent=v.mkt+'%'; q(root,'bv').textContent=sm.toFixed(1)+'%';
+        q(root,'abar').style.height=(Math.abs(v.mkt)/mx*144)+'px'; q(root,'bbar').style.height=(Math.abs(sm)/mx*144)+'px';
+        q(root,'bbar').style.background=sm>=0?'var(--good)':'var(--lost)';
+        K(q(root,'fnum'),v.beta+' \\times '+v.mkt+'\\% = '+sm.toFixed(1)+'\\%');}},
+
+    sysidio:{ch:'H2 · risk & return',eyebrow:'risk you can remove',idea:'Part of a stock’s risk you can diversify away, part you cannot.',
+      usecase:"Deciding how much one stock really endangers a diversified portfolio. Only its market-linked part survives diversification; the company-specific part washes out.",
+      fixed:"the market swings 20%", src:'Berk-DeMarzo Ch.12 · test_epfl_exam2.py',
+      inputs:[{k:'beta',label:'how hard it swings vs the market',min:0.2,max:2.5,step:0.05,val:1,unit:'',lo:'steady',hi:'wild'},{k:'tot',label:'how much the stock swings in total',min:15,max:60,step:1,val:35,unit:'%',lo:'calm',hi:'wild'}],
+      viz:'<div class="hblab"><span>market part vs company-specific part</span><b data-r="sv"></b></div><div class="hbar" style="height:26px;display:flex;"><div data-r="mseg" style="background:var(--lost);height:100%;"></div><div data-r="fseg" style="background:var(--good);height:100%;"></div></div><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--faint);margin-top:5px;"><span data-r="mlab"></span><span data-r="flab"></span></div>',
+      fgen:"\\sigma_i^2 \\;=\\; \\underbrace{\\beta^2\\sigma_M^2}_{\\text{market}} + \\underbrace{\\sigma_\\varepsilon^2}_{\\text{company}}",
+      explain:'Only the market part earns a reward, because the company-specific part disappears once you hold many stocks. Diversifying removes it for free.',
+      update:function(v,root){var sm=20, sysVar=Math.pow(v.beta*sm,2), totVar=v.tot*v.tot, firmVar=Math.max(totVar-sysVar,0), firmPct=firmVar/totVar*100, mktPct=100-firmPct;
+        q(root,'ans').textContent=Math.round(firmPct)+'% removable'; var c=q(root,'chip'); c.className='chip good'; c.textContent='by holding many stocks';
+        q(root,'note').textContent=Math.round(firmPct)+'% of this stock’s risk is company-specific and diversifies away';
+        q(root,'sv').textContent=Math.round(mktPct)+' / '+Math.round(firmPct);
+        q(root,'mseg').style.width=mktPct+'%'; q(root,'fseg').style.width=firmPct+'%';
+        q(root,'mlab').textContent='market '+Math.round(mktPct)+'%'; q(root,'flab').textContent='company '+Math.round(firmPct)+'%';
+        K(q(root,'fnum'),'\\text{company-specific} = '+Math.round(firmPct)+'\\%');}},
+
+    alpha:{ch:'H2 · risk & return',eyebrow:'beat the benchmark?',idea:'Alpha is return beyond what the risk deserved.',
+      usecase:"Judging a stock or a fund. This compares what it actually returned with what its risk alone should have earned. Positive means real skill or luck; negative means it lagged.",
+      fixed:"a 4% safe rate and a 6% market premium", src:'Berk-DeMarzo Ch.12',
+      inputs:[{k:'act',label:'the return it actually made',min:-5,max:25,step:1,val:13,unit:'%'},{k:'beta',label:'how hard it swings vs the market',min:0,max:2.5,step:0.05,val:1.5,unit:'',lo:'steady',hi:'wild'}],
+      viz:hbar('act','var(--accent)','what it actually returned')+hbar('req','var(--track)','what its risk alone deserved'),
+      fgen:"\\alpha \\;=\\; \\text{actual} - \\big(r_f + \\beta\\times\\text{premium}\\big)",
+      explain:'A stock can post a big number just by taking more risk. Alpha strips that out and shows whether it truly beat its fair reward.',
+      update:function(v,root){var req=4+v.beta*6, a=v.act-req, mx=Math.max(v.act,req,1);
+        q(root,'ans').textContent=(a>=0?'+':'')+a.toFixed(1)+'%'; var c=q(root,'chip'); c.className='chip '+(a>=0?'good':'lost'); c.textContent=a>=0?'beat its risk':'lagged its risk';
+        q(root,'note').textContent='it made '+v.act+'% but its risk deserved '+req.toFixed(1)+'%';
+        q(root,'actval').textContent=v.act+'%'; q(root,'reqval').textContent=req.toFixed(1)+'%';
+        q(root,'actbar').style.width=(v.act/mx*100)+'%'; q(root,'reqbar').style.width=(req/mx*100)+'%'; q(root,'reqbar').style.background='var(--faint)';
+        K(q(root,'fnum'),v.act+' - (4 + '+v.beta+'\\times 6) = '+(a>=0?'+':'')+a.toFixed(1)+'\\%');}}
   };
 
   var CHAPTERS=[
@@ -374,7 +525,7 @@
             {id:'pi',t:'Profitability index',r:1},{id:'ear',t:'EAR vs APR',r:1},{id:'loan',t:'Loan & amortization',r:1},{id:'spot',t:'Spot rates',r:1},{id:'forward',t:'Forward rates',r:1},{id:'bond',t:'Bond pricing',r:1},{id:'ytm',t:'Yield to maturity',r:1},{id:'duration',t:'Duration',r:1},{id:'ddm',t:'Dividend-discount',r:1}]},
     {id:'H2',title:'Risk & return',sub:'how much you should be paid for risk',
      cards:[{id:'diversification',t:'Diversification',r:1},{id:'capm',t:'CAPM: return to ask for',r:1},
-            {id:'_',t:'Expected return & volatility'},{id:'_',t:'Covariance & correlation'},{id:'_',t:'Portfolio variance'},{id:'_',t:'Risk contribution'},{id:'_',t:'Minimum-variance'},{id:'_',t:'Efficient frontier'},{id:'_',t:'Sharpe ratio'},{id:'_',t:'Beta'},{id:'_',t:'Systematic vs idiosyncratic'},{id:'_',t:'Alpha'}]},
+            {id:'expvar',t:'Expected return & volatility',r:1},{id:'covcorr',t:'Covariance & correlation',r:1},{id:'portvar',t:'Portfolio variance',r:1},{id:'riskcontrib',t:'Risk contribution',r:1},{id:'minvar',t:'Minimum-variance',r:1},{id:'frontier',t:'Efficient frontier',r:1},{id:'sharpe',t:'Sharpe ratio',r:1},{id:'beta',t:'Beta',r:1},{id:'sysidio',t:'Systematic vs idiosyncratic',r:1},{id:'alpha',t:'Alpha',r:1}]},
     {id:'H3',title:'Capital budgeting & financing',sub:'judging companies and how they pay for themselves',
      cards:[{id:'wacc',t:'WACC',r:1},
             {id:'_',t:'Free cash flow'},{id:'_',t:'Net working capital'},{id:'_',t:'NPV vs IRR'},{id:'_',t:'DCF / enterprise value'},{id:'_',t:'Terminal value'},{id:'_',t:'Unlever / relever beta'},{id:'_',t:'Modigliani-Miller'},{id:'_',t:'APV'},{id:'_',t:'Tax shield'},{id:'_',t:'Distress costs'}]},
