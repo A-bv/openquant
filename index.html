@@ -160,6 +160,40 @@
         q(root,'note').textContent="getting $1,000 every year forever is worth this much to you today";
         K(q(root,'fnum'),"\\dfrac{1000}{"+(v.r/100).toFixed(3)+"}="+Math.round(val));}},
 
+    growperp:{ch:'H1 · discounting',eyebrow:'a growing forever stream',idea:'A forever payment that grows each year is still worth a set amount today.',
+      usecase:"Something pays you every year with no end, and the payment rises a little each year, like rent that tracks inflation or a steadily growing dividend. This shows what that ever-growing endless stream is worth right now.",
+      fixed:"$1,000 paid next year, growing every year, forever", src:'Berk-DeMarzo Ch.4',
+      inputs:[{k:'r',label:'your rate',min:2,max:12,step:0.5,val:6,unit:'%'},{k:'g',label:'how fast each payment grows',min:0,max:6,step:0.5,val:2,unit:'%'}],
+      viz:'<div style="display:flex;align-items:flex-end;gap:6px;height:92px;justify-content:center;">'
+        +[0,1,2,3,4,5,6,7].map(function(i){return '<div style="width:18px;height:'+(20+i*5)+'px;background:var(--accent);border-radius:4px;opacity:'+(1-i*0.045).toFixed(2)+';"></div>';}).join('')
+        +'<div style="font-size:22px;color:var(--faint);align-self:center;margin:0 4px;">&hellip;&infin;</div></div>'
+        +'<div class="explain" style="text-align:center;">a bigger payment every year, forever, yet still worth a set amount today</div>',
+      fgen:"\\text{value} \\;=\\; \\dfrac{C}{r - g}",
+      explain:'Like a plain perpetuity, but each payment is a little larger than the last. The closer growth gets to your rate, the more it is worth, and if growth reaches your rate the simple formula breaks down.',
+      update:function(v,root){var spread=(v.r-v.g)/100;
+        if(spread<=0){q(root,'ans').textContent='∞'; var c0=q(root,'chip'); c0.className='chip lost'; c0.textContent='growth cannot beat your rate'; q(root,'note').textContent='if growth matches or beats your rate, the value runs away to infinity'; K(q(root,'fnum'),'1000 / ('+v.r+'\\% - '+v.g+'\\%) \\to \\infty'); return;}
+        var val=1000/spread;
+        q(root,'ans').textContent=money(val); var c=q(root,'chip'); c.className='chip info'; c.textContent='$1,000/yr, +'+v.g+'% a year';
+        q(root,'note').textContent='a $1,000 payment growing '+v.g+'% a year forever is worth this much to you today';
+        K(q(root,'fnum'),"\\dfrac{1000}{"+spread.toFixed(3)+"}="+Math.round(val));}},
+
+    irr:{ch:'H1 · project decisions',eyebrow:'internal rate of return',idea:'The IRR is the single rate at which a project just breaks even.',
+      usecase:"A project costs money now and pays you back over several years. Its IRR is the one yearly return that makes it exactly break even. Compare it with the rate you could earn elsewhere: beat that, and the project adds value.",
+      fixed:"it costs $20,000 today; you compare it with a 10% hurdle", src:'Berk-DeMarzo Ch.7 · test_epfl_exam1.py',
+      inputs:[{k:'c',label:'cash it returns each year',min:3000,max:8000,step:250,val:5000,unit:'$'},{k:'n',label:'how many years it pays',min:4,max:15,step:1,val:6,unit:'yr'}],
+      viz:hbar('irr','var(--accent)','the yearly rate it earns (IRR)')+hbar('hur','var(--track)','the 10% hurdle to beat'),
+      fgen:"0 \\;=\\; -\\,\\text{cost} \\;+\\; \\textstyle\\sum \\dfrac{C}{(1+\\text{IRR})^{t}}",
+      explain:'The IRR is the rate that makes the discounted cash exactly equal the cost, so the project neither creates nor destroys value. Above your hurdle it is worth doing; below it, walk away.',
+      update:function(v,root){var X=20000,C=v.c,N=v.n,hurdle=10;
+        var f=function(r){var s=-X; for(var t=1;t<=N;t++){s+=C/Math.pow(1+r,t);} return s;};
+        var lo=-0.99,hi=3.0; for(var i=0;i<80;i++){var m=(lo+hi)/2; if(f(m)>0) lo=m; else hi=m;}
+        var irp=((lo+hi)/2)*100, mx=Math.max(irp,hurdle,1);
+        q(root,'ans').textContent=irp.toFixed(1)+'%'; var c=q(root,'chip'); c.className='chip '+(irp>=hurdle?'good':'lost'); c.textContent=irp>=hurdle?'beats the 10% hurdle':'below the 10% hurdle';
+        q(root,'note').textContent='paying $20,000 for '+money(C)+' a year over '+N+' years earns about '+irp.toFixed(1)+'% a year';
+        q(root,'irrval').textContent=irp.toFixed(1)+'%'; q(root,'hurval').textContent='10%';
+        q(root,'irrbar').style.width=(Math.max(irp,0)/mx*100)+'%'; q(root,'hurbar').style.width=(hurdle/mx*100)+'%'; q(root,'hurbar').style.background='var(--faint)';
+        K(q(root,'fnum'),'-20000 + '+C+'\\times AF(\\text{IRR},'+N+') = 0 \\;\\Rightarrow\\; '+irp.toFixed(1)+'\\%');}},
+
     annuity:{ch:'H1 · discounting',eyebrow:'a stream of payments',idea:'Many fixed payments add up to a single lump sum today.',
       usecase:"The same payment for a set number of years, like a loan, a pension, a lease, or a lottery paid yearly. This shows the single lump sum they are all worth.",
       fixed:"$1,000 paid to you each year", src:'Berk-DeMarzo Ch.4 · test_epfl_exam2.py',
@@ -848,7 +882,7 @@
 
   var CHAPTERS=[
     {id:'H1',title:'Discounting & valuation',sub:'what a future dollar is worth today',
-     cards:[{id:'pv',t:'Present value',r:1},{id:'fv',t:'Future value',r:1},{id:'perpetuity',t:'Perpetuity',r:1},{id:'annuity',t:'Annuity',r:1},{id:'growann',t:'Growing annuity',r:1},{id:'npv',t:'NPV: is it worth it?',r:1},
+     cards:[{id:'pv',t:'Present value',r:1},{id:'fv',t:'Future value',r:1},{id:'perpetuity',t:'Perpetuity',r:1},{id:'growperp',t:'Growing perpetuity',r:1},{id:'annuity',t:'Annuity',r:1},{id:'growann',t:'Growing annuity',r:1},{id:'npv',t:'NPV: is it worth it?',r:1},{id:'irr',t:'IRR: break-even rate',r:1},
             {id:'pi',t:'Profitability index',r:1},{id:'ear',t:'EAR vs APR',r:1},{id:'loan',t:'Loan & amortization',r:1},{id:'contcomp',t:'Continuous compounding',r:1},{id:'spot',t:'Spot rates',r:1},{id:'forward',t:'Forward rates',r:1},{id:'bond',t:'Bond pricing',r:1},{id:'ytm',t:'Yield to maturity',r:1},{id:'duration',t:'Duration',r:1},{id:'ddm',t:'Dividend-discount',r:1}]},
     {id:'H2',title:'Risk & return',sub:'how much you should be paid for risk',
      cards:[{id:'diversification',t:'Diversification',r:1},{id:'capm',t:'CAPM: return to ask for',r:1},
