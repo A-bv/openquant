@@ -662,6 +662,110 @@
         q(root,'benval').textContent=money(ben)+'M'; q(root,'costval').textContent=money(cost)+'M';
         q(root,'benbar').style.width=(ben/mx*100)+'%'; q(root,'costbar').style.width=(cost/mx*100)+'%';
         K(q(root,'fnum'),Math.round(ben)+' - '+Math.round(cost)+' = '+(net>=0?'+':'')+Math.round(net));}}
+,
+
+    fwdfut:{ch:'H4 · derivatives',eyebrow:'lock a price today',idea:'A forward locks the price of a future trade right now.',
+      usecase:"A farmer, an airline, or an importer who knows they will buy or sell later and wants no surprises. A forward fixes the price today; whatever the market does, the deal is set.",
+      fixed:"you agreed to buy at $100", src:'Berk-DeMarzo Ch.20',
+      inputs:[{k:'s',label:'the market price when the deal settles',min:60,max:140,step:2,val:115,unit:'$'}],
+      viz:twoBarHTML('your locked price','the market price'),
+      fgen:"\\text{gain} \\;=\\; \\text{market price} - \\text{locked price}",
+      explain:'Lock at $100 and you gain if the market ends higher, lose if it ends lower. A futures contract is the same idea, but traded on an exchange and settled daily.',
+      update:function(v,root){var pay=v.s-100, mx=Math.max(v.s,100);
+        q(root,'ans').textContent=(pay>=0?'+':'')+money(pay); var c=q(root,'chip'); c.className='chip '+(pay>=0?'good':'lost'); c.textContent=pay>=0?'the lock paid off':'you locked too high';
+        q(root,'note').textContent='locked at $100, the market at '+money(v.s)+', so you are '+(pay>=0?'ahead ':'behind ')+money(Math.abs(pay));
+        q(root,'av').textContent='$100'; q(root,'bv').textContent=money(v.s);
+        q(root,'abar').style.height=(100/mx*144)+'px'; q(root,'bbar').style.height=(v.s/mx*144)+'px'; q(root,'bbar').style.background=pay>=0?'var(--good)':'var(--lost)';
+        K(q(root,'fnum'),money(v.s).replace('$','')+' - 100 = '+(pay>=0?'+':'')+pay);}},
+
+    fwdprice:{ch:'H4 · derivatives',eyebrow:'the fair forward price',idea:'The fair price to lock in is today’s price plus the cost of waiting.',
+      usecase:"Setting the delivery price in a forward so neither side gets a free lunch. It is just today’s price grown at the interest rate over the wait.",
+      fixed:"delivery in 1 year", src:'Berk-DeMarzo Ch.20',
+      inputs:[{k:'s',label:'the price today',min:50,max:150,step:5,val:100,unit:'$'},{k:'r',label:'the interest rate',min:0,max:10,step:0.5,val:4,unit:'%'}],
+      viz:twoBarHTML('price today','fair forward price'),
+      fgen:"\\text{forward} \\;=\\; \\text{today} \\times (1+r)^{T}",
+      explain:'Buying now and holding costs you the interest you give up, so the fair future price is today’s price plus that carry. Any other price lets someone arbitrage you.',
+      update:function(v,root){var f=v.s*(1+v.r/100), mx=f;
+        q(root,'ans').textContent=money(f); var c=q(root,'chip'); c.className='chip info'; c.textContent='+'+money(f-v.s)+' of carry';
+        q(root,'note').textContent=money(v.s)+' today grows to a fair forward price of '+money(f);
+        q(root,'av').textContent=money(v.s); q(root,'bv').textContent=money(f);
+        q(root,'abar').style.height=(v.s/mx*144)+'px'; q(root,'bbar').style.height='144px';
+        K(q(root,'fnum'),v.s+'\\times(1+'+(v.r/100).toFixed(3)+') = '+f.toFixed(2));}},
+
+    swap:{ch:'H4 · derivatives',eyebrow:'trade floating for fixed',idea:'A swap turns an unpredictable rate into a fixed one.',
+      usecase:"A borrower with a variable-rate loan who wants to stop worrying about rate moves. A swap exchanges the floating rate for a fixed one, the price of sleeping at night.",
+      fixed:"you swapped to a fixed 3.2%", src:'Berk-DeMarzo Ch.20',
+      inputs:[{k:'fl',label:'where the floating rate ends up',min:1,max:7,step:0.25,val:4,unit:'%',lo:'rates fall',hi:'rates rise'}],
+      viz:hbar('flo','var(--track)','what you would have paid floating')+hbar('fix','var(--accent)','what you actually pay (fixed)'),
+      fgen:"\\text{you pay fixed} \\;\\text{instead of}\\; \\text{floating}",
+      explain:'You give up the chance of cheaper payments if rates fall, in exchange for certainty if they rise. The swap removes the surprise either way.',
+      update:function(v,root){var fix=3.2, save=v.fl-fix, mx=Math.max(v.fl,fix);
+        q(root,'ans').textContent='fixed at 3.2%'; var c=q(root,'chip'); c.className='chip '+(save>=0?'good':'lost'); c.textContent=save>=0?'the swap saved you '+save.toFixed(1)+'%':'you paid '+(-save).toFixed(1)+'% for certainty';
+        q(root,'note').textContent='floating would cost '+v.fl+'%, your fixed rate is 3.2%';
+        q(root,'floval').textContent=v.fl+'%'; q(root,'fixval').textContent='3.2%';
+        q(root,'flobar').style.width=(v.fl/mx*100)+'%'; q(root,'flobar').style.background='var(--faint)'; q(root,'fixbar').style.width=(fix/mx*100)+'%';
+        K(q(root,'fnum'),'\\text{floating }'+v.fl+'\\% \\to \\text{fixed }3.2\\%');}},
+
+    optpayoff:{ch:'H4 · derivatives',eyebrow:'options',idea:'An option is the right, not the duty, to trade at a set price.',
+      usecase:"Betting on a rise with limited downside, or protecting a holding from a fall. A call lets you buy at a set price; you only use it if it helps, and lose only what you paid.",
+      fixed:"a call to buy at $100, costing $5", src:'Berk-DeMarzo Ch.20',
+      inputs:[{k:'s',label:'the stock price at expiry',min:50,max:150,step:2,val:115,unit:'$'}],
+      viz:'<svg data-r="svg" viewBox="0 0 320 170" width="100%" style="max-width:340px;display:block;margin:0 auto;"></svg>',
+      fgen:"\\text{call profit} \\;=\\; \\max(\\text{stock}-100,\\,0) - 5",
+      explain:'Below $100 you simply let it expire and lose only the $5 you paid. Above $105 you are in profit, and the upside keeps climbing. Limited loss, open-ended gain.',
+      update:function(v,root){var prof=Math.max(v.s-100,0)-5;
+        q(root,'ans').textContent=(prof>=0?'+':'')+money(prof); var c=q(root,'chip'); c.className='chip '+(prof>=0?'good':'lost'); c.textContent=prof>=0?'in profit':'lost the premium';
+        q(root,'note').textContent='at a '+money(v.s)+' stock price, the call profits '+(prof>=0?'+':'')+money(prof);
+        var x0=40,x1=300,yz=110,k=100,prem=5, sx=function(s){return x0+((s-50)/100)*(x1-x0);}, py=function(p){return yz-p*2.2;};
+        var g='<line x1="'+x0+'" y1="'+yz+'" x2="'+x1+'" y2="'+yz+'" stroke="var(--border)"/>';
+        g+='<polyline points="'+sx(50)+','+py(-5)+' '+sx(100)+','+py(-5)+' '+sx(150)+','+py(45)+'" fill="none" stroke="var(--accent)" stroke-width="2"/>';
+        g+='<line x1="'+sx(105)+'" y1="14" x2="'+sx(105)+'" y2="160" stroke="var(--faint)" stroke-dasharray="2 3"/>';
+        g+='<circle cx="'+sx(v.s)+'" cy="'+py(prof)+'" r="5" fill="'+(prof>=0?'var(--good)':'var(--lost)')+'"/>';
+        g+='<text x="'+(sx(105)+4)+'" y="24" font-size="10" fill="var(--faint)">break even $105</text>';
+        g+='<text x="'+x0+'" y="135" font-size="10" fill="var(--faint)">$50</text><text x="'+(x1-20)+'" y="135" font-size="10" fill="var(--faint)">$150</text>';
+        q(root,'svg').innerHTML=g;
+        K(q(root,'fnum'),'\\max('+v.s+'-100,0) - 5 = '+(prof>=0?'+':'')+prof);}},
+
+    putcall:{ch:'H4 · derivatives',eyebrow:'put-call parity',idea:'A call, a put, the stock and a bond are tied by one equation.',
+      usecase:"Spotting a free lunch in option prices. If a call minus a put does not equal the stock minus the discounted strike, the prices are out of line and someone can arbitrage.",
+      fixed:"stock $100, strike $100, 5% rate, 1 year", src:'Berk-DeMarzo Ch.21',
+      inputs:[{k:'call',label:'price of the call',min:1,max:20,step:0.5,val:8,unit:'$'},{k:'put',label:'price of the put',min:1,max:20,step:0.5,val:6,unit:'$'}],
+      viz:hbar('lhs','var(--accent)','call minus put')+hbar('rhs','var(--good)','stock minus discounted strike'),
+      fgen:"C - P \\;=\\; S - \\dfrac{K}{(1+r)^{T}}",
+      explain:'The two sides must match. If call minus put is bigger, the call is dear: sell it, buy the put and the stock, and pocket the difference risk-free.',
+      update:function(v,root){var lhs=v.call-v.put, rhs=100-100/1.05, gap=lhs-rhs, mx=Math.max(Math.abs(lhs),Math.abs(rhs),1);
+        q(root,'ans').textContent=Math.abs(gap)<0.4?'in line':'mispriced by '+money(Math.abs(gap)); var c=q(root,'chip'); c.className='chip '+(Math.abs(gap)<0.4?'good':'lost'); c.textContent=Math.abs(gap)<0.4?'no free lunch':'arbitrage';
+        q(root,'note').textContent='call minus put is '+money(lhs)+', it should equal '+money(rhs);
+        q(root,'lhsval').textContent=money(lhs); q(root,'rhsval').textContent=money(rhs);
+        q(root,'lhsbar').style.width=(Math.abs(lhs)/mx*100)+'%'; q(root,'rhsbar').style.width=(Math.abs(rhs)/mx*100)+'%';
+        K(q(root,'fnum'),'('+v.call+'-'+v.put+') = '+lhs.toFixed(2)+' \\text{ vs } '+rhs.toFixed(2));}},
+
+    binomial:{ch:'H4 · derivatives',eyebrow:'binomial model',idea:'Price an option from its next up or down move.',
+      usecase:"Valuing an option step by step, by what it pays if the stock goes up versus down. It is the simplest engine behind modern option pricing.",
+      fixed:"stock $100, strike $100, 5% rate, one step", src:'Berk-DeMarzo Ch.21',
+      inputs:[{k:'up',label:'how far the stock could rise',min:5,max:50,step:5,val:20,unit:'%'},{k:'dn',label:'how far the stock could fall',min:5,max:40,step:5,val:15,unit:'%'}],
+      viz:'<div style="display:flex;align-items:center;justify-content:center;gap:30px;height:130px;font-size:13px;"><div style="text-align:center;"><div style="font-weight:600;font-size:16px;">$100</div><div class="explain" style="margin:2px 0 0;">today</div></div><div style="display:flex;flex-direction:column;gap:34px;"><div>up to <b data-r="su"></b> &middot; <span style="color:var(--good);">call <b data-r="cu"></b></span></div><div>down to <b data-r="sd"></b> &middot; <span style="color:var(--lost);">call <b data-r="cd"></b></span></div></div></div>',
+      fgen:"\\text{value} \\;=\\; \\dfrac{p\\,C_{up} + (1-p)\\,C_{down}}{1+r}",
+      explain:'Weigh the up and down payoffs by their risk-neutral chances, then discount. No guessing the real odds is needed, which is the clever part.',
+      update:function(v,root){var u=1+v.up/100, d=1-v.dn/100, Su=100*u, Sd=100*d, Cu=Math.max(Su-100,0), Cd=Math.max(Sd-100,0), r=0.05, p=(1+r-d)/(u-d), val=(p*Cu+(1-p)*Cd)/(1+r);
+        q(root,'ans').textContent=money(val); var c=q(root,'chip'); c.className='chip info'; c.textContent='value of the call';
+        q(root,'note').textContent='balancing a '+money(Su)+' up case and a '+money(Sd)+' down case, the call is worth '+money(val);
+        q(root,'su').textContent=money(Su); q(root,'sd').textContent=money(Sd); q(root,'cu').textContent=money(Cu); q(root,'cd').textContent=money(Cd);
+        K(q(root,'fnum'),'('+p.toFixed(2)+'\\times'+Cu.toFixed(0)+' + '+(1-p).toFixed(2)+'\\times'+Cd.toFixed(0)+')/1.05 = '+val.toFixed(2));}},
+
+    bs:{ch:'H4 · derivatives',eyebrow:'Black-Scholes',idea:'Price an option from volatility and time.',
+      usecase:"Putting a number on an option the way markets do. The value is driven mostly by how volatile the stock is and how long until expiry: more of either, more value.",
+      fixed:"stock $100, strike $100, 5% rate", src:'Berk-DeMarzo Ch.21',
+      inputs:[{k:'vol',label:'how volatile the stock is',min:10,max:60,step:5,val:30,unit:'%',lo:'calm',hi:'wild'},{k:'t',label:'years until it expires',min:0.25,max:3,step:0.25,val:1,unit:'yr'}],
+      viz:hbar('cv','var(--accent)','what the option is worth'),
+      fgen:"C \\;=\\; S\\,N(d_1) - K\\,e^{-rT}N(d_2)",
+      explain:'With no move expected on average, the option still has value because the stock might swing your way. The wilder the stock and the longer the wait, the more that chance is worth.',
+      update:function(v,root){function Ncdf(x){var t=1/(1+0.2316419*Math.abs(x)),d=0.3989423*Math.exp(-x*x/2),p=d*t*(0.3193815+t*(-0.3565638+t*(1.781478+t*(-1.821256+t*1.330274))));return x>0?1-p:p;}
+        var S=100,K=100,r=0.05,sig=v.vol/100,T=v.t, d1=((r+sig*sig/2)*T)/(sig*Math.sqrt(T)), d2=d1-sig*Math.sqrt(T), call=S*Ncdf(d1)-K*Math.exp(-r*T)*Ncdf(d2);
+        q(root,'ans').textContent=money(call); var c=q(root,'chip'); c.className='chip info'; c.textContent='fair value of the call';
+        q(root,'note').textContent='at '+v.vol+'% volatility over '+v.t+(v.t===1?' year':' years')+', the call is worth '+money(call);
+        q(root,'cvval').textContent=money(call); q(root,'cvbar').style.width=Math.min(call/40*100,100)+'%';
+        K(q(root,'fnum'),'C = 100\\,N('+d1.toFixed(2)+') - 100e^{-0.05\\cdot'+T+'}N('+d2.toFixed(2)+') = '+call.toFixed(2));}}
   };
 
   var CHAPTERS=[
@@ -675,7 +779,7 @@
      cards:[{id:'wacc',t:'WACC',r:1},
             {id:'fcf',t:'Free cash flow',r:1},{id:'nwc',t:'Net working capital',r:1},{id:'npvirr',t:'NPV vs IRR',r:1},{id:'dcf',t:'DCF / enterprise value',r:1},{id:'terminal',t:'Terminal value',r:1},{id:'hamada',t:'Unlever / relever beta',r:1},{id:'mm',t:'Modigliani-Miller',r:1},{id:'apv',t:'APV',r:1},{id:'taxshield',t:'Tax shield',r:1},{id:'distress',t:'Distress costs',r:1}]},
     {id:'H4',title:'Derivatives',sub:'moving and pricing risk',
-     cards:[{id:'_',t:'Forward vs futures'},{id:'_',t:'Forward pricing'},{id:'_',t:'Swaps'},{id:'_',t:'Option payoffs'},{id:'_',t:'Put-call parity'},{id:'_',t:'Binomial model'},{id:'_',t:'Black-Scholes'}]}
+     cards:[{id:'fwdfut',t:'Forward vs futures',r:1},{id:'fwdprice',t:'Forward pricing',r:1},{id:'swap',t:'Swaps',r:1},{id:'optpayoff',t:'Option payoffs',r:1},{id:'putcall',t:'Put-call parity',r:1},{id:'binomial',t:'Binomial model',r:1},{id:'bs',t:'Black-Scholes',r:1}]}
   ];
 
   function renderHome(){
