@@ -113,7 +113,7 @@
     +'<div style="display:flex;gap:9px;align-items:flex-start;"><span style="width:12px;height:12px;border-radius:3px;margin-top:3px;flex:none;background:var(--lost-soft);border:1px dashed var(--lost);"></span><span><span style="font-size:13px;font-weight:600;">lost to waiting</span><br><span class="explain" style="margin:0;" data-r="lostlab"></span></span></div>'
     +'<div style="display:flex;gap:9px;align-items:flex-start;"><span style="width:12px;height:12px;border-radius:3px;margin-top:3px;flex:none;background:var(--accent);"></span><span><span style="font-size:13px;font-weight:600;">worth today</span><br><span class="explain" style="margin:0;" data-r="keptlab"></span></span></div>'
     +'</div></div>';}
-  function twoBarHTML(la,lb){return '<div style="display:flex;align-items:flex-end;justify-content:center;gap:50px;height:178px;">'
+  function twoBarHTML(la,lb){return '<div style="display:flex;align-items:flex-end;justify-content:center;gap:50px;padding-top:8px;">'
     +'<div style="display:flex;flex-direction:column;align-items:center;width:74px;"><div style="font-size:13px;font-weight:600;margin-bottom:6px;" data-r="av"></div><div class="vbartrack" style="height:144px;"><div class="seg2" data-r="abar" style="bottom:0;background:var(--accent);border-radius:8px;"></div></div><div class="explain" style="margin-top:8px;">'+la+'</div></div>'
     +'<div style="display:flex;flex-direction:column;align-items:center;width:74px;"><div style="font-size:13px;font-weight:600;margin-bottom:6px;" data-r="bv"></div><div class="vbartrack" style="height:144px;"><div class="seg2" data-r="bbar" style="bottom:0;background:var(--good);border-radius:8px;"></div></div><div class="explain" style="margin-top:8px;">'+lb+'</div></div></div>';}
   function hbar(r,color,lab){return '<div class="hbrow"><div class="hblab"><span data-r="'+r+'lab">'+lab+'</span><b data-r="'+r+'val"></b></div><div class="hbar"><div data-r="'+r+'bar" style="background:'+color+';width:0%;"></div></div></div>';}
@@ -198,8 +198,8 @@
       fgen:"\\text{real bets} \\;=\\; \\dfrac{n}{1+(n-1)\\,\\rho}",
       explain:'When your stocks move together a lot, owning more hardly helps. Many of them act like just a few real bets, so your risk stays high.',
       update:function(v,root){var rho=v.rho/100, sig=0.35, eff=v.n/(1+(v.n-1)*rho), pVol=sig*Math.sqrt((1+(v.n-1)*rho)/v.n), iVol=sig/Math.sqrt(v.n), mx=sig;
-        q(root,'ans').textContent=v.n+' stocks = '+eff.toFixed(1)+' real bets'; var c=q(root,'chip'); c.className='chip info'; c.textContent='risk '+pct(pVol);
-        q(root,'note').textContent="in risk terms your "+v.n+" stocks act like only "+eff.toFixed(1)+" independent bets";
+        q(root,'ans').textContent=v.n+' → '+eff.toFixed(1)+' bets'; var c=q(root,'chip'); c.className='chip info'; c.textContent='risk '+pct(pVol);
+        q(root,'note').textContent="in risk terms your "+v.n+(v.n===1?" stock acts":" stocks act")+" like only "+eff.toFixed(1)+" independent bets";
         q(root,'realval').textContent=pct(pVol); q(root,'indval').textContent=pct(iVol);
         q(root,'realbar').style.width=(pVol/mx*100)+'%'; q(root,'indbar').style.width=(iVol/mx*100)+'%';
         K(q(root,'fnum'),"\\dfrac{"+v.n+"}{1+("+(v.n-1)+")\\times"+rho.toFixed(2)+"}="+eff.toFixed(1));}},
@@ -375,7 +375,7 @@
       viz:'<div style="margin:6px 0;"><div style="position:relative;height:30px;background:var(--track);border-radius:6px;"><div data-r="band" style="position:absolute;top:0;bottom:0;background:var(--accent-soft);border-radius:6px;"></div><div data-r="mark" style="position:absolute;top:-4px;width:2px;height:38px;background:var(--accent);"></div></div><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--faint);margin-top:5px;"><span data-r="lo"></span><span data-r="hi"></span></div></div>',
       fgen:"\\text{a normal year} \\;\\approx\\; \\bar R \\;\\pm\\; \\text{volatility}",
       explain:'Returns swing roughly one volatility above and below the average in a normal year. A higher swing means more very good and very bad years.',
-      update:function(v,root){var lo=v.avg-v.vol, hi=v.avg+v.vol, S=-50, E=50, px=function(x){return (x-S)/(E-S)*100;};
+      update:function(v,root){var lo=v.avg-v.vol, hi=v.avg+v.vol, S=-70, E=70, px=function(x){return (x-S)/(E-S)*100;};
         q(root,'ans').textContent=v.avg+'%'; var c=q(root,'chip'); c.className='chip info'; c.textContent='swings about ±'+v.vol+'%';
         q(root,'note').textContent='a normal year runs from about '+lo+'% to '+hi+'%';
         q(root,'band').style.left=px(lo)+'%'; q(root,'band').style.width=(px(hi)-px(lo))+'%'; q(root,'mark').style.left=px(v.avg)+'%';
@@ -585,7 +585,7 @@
       explain:'Even with a 10-year forecast, more than half the value can come from the years beyond it. That part is the least certain, so treat the assumptions with care.',
       update:function(v,root){var wacc=0.09,g=0.025,fcf=100, sum=0; for(var t=1;t<=v.n;t++){sum+=fcf*Math.pow(1+g,t-1)/Math.pow(1+wacc,t);}
         var tv=fcf*Math.pow(1+g,v.n)/(wacc-g), pvtv=tv/Math.pow(1+wacc,v.n), total=sum+pvtv, tpct=pvtv/total*100, fpct=100-tpct;
-        q(root,'ans').textContent=Math.round(tpct)+'% beyond year '+v.n; var c=q(root,'chip'); c.className='chip lost'; c.textContent='the least certain part';
+        q(root,'ans').textContent=Math.round(tpct)+'%'; var c=q(root,'chip'); c.className='chip lost'; c.textContent='beyond year '+v.n+', least certain';
         q(root,'note').textContent=Math.round(tpct)+'% of the value comes from after your '+v.n+'-year forecast';
         q(root,'sv').textContent=Math.round(fpct)+' / '+Math.round(tpct);
         q(root,'fseg').style.width=fpct+'%'; q(root,'tseg').style.width=tpct+'%';
