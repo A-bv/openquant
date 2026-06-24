@@ -245,14 +245,14 @@
       usecase:"You have a limited budget and several projects competing for it. This ranks them by value created per dollar spent, so you fund the most efficient ones first.",
       fixed:"the project pays back over 6 years at a 10% rate", src:'Berk-DeMarzo Ch.7',
       inputs:[{k:'x',label:'it costs you, today',min:1000,max:100000,step:1000,val:20000,unit:'$'},{k:'c',label:'cash it returns each year',min:1000,max:8000,step:250,val:5000,unit:'$'}],
-      viz:hbar('pi','var(--accent)','value you get back per $1 put in'),
-      fgen:"\\text{PI} \\;=\\; \\dfrac{\\text{value of the future cash, today}}{\\text{cost}}",
-      explain:'Above 1, each dollar you invest comes back as more than a dollar of value. Use it to pick winners when you cannot fund every project.',
-      update:function(v,root){var r=0.10,n=6,pvB=v.c/r*(1-1/Math.pow(1+r,n)),pi=pvB/v.x;
-        q(root,'ans').textContent=pi.toFixed(2)+'x'; var c=q(root,'chip'); c.className='chip '+(pi>=1?'good':'lost'); c.textContent=pi>=1?'worth funding':'destroys value';
-        q(root,'note').textContent='each $1 you put in comes back as '+pi.toFixed(2)+' of value today';
-        q(root,'pival').textContent=pi.toFixed(2)+'x'; q(root,'pibar').style.width=Math.min(pi/2*100,100)+'%';
-        K(q(root,'fnum'),Math.round(pvB)+' / '+v.x+' = '+pi.toFixed(2));}},
+      viz:hbar('pi','var(--accent)','net value created per $1 put in'),
+      fgen:"\\text{PI} \\;=\\; \\dfrac{\\text{NPV}}{\\text{cost}}",
+      explain:'Above 0 it creates value. The higher the index, the more net value per dollar, so fund the highest-index projects first when cash is limited.',
+      update:function(v,root){var r=0.10,n=6,pvB=v.c/r*(1-1/Math.pow(1+r,n)),npv=pvB-v.x,pi=npv/v.x;
+        q(root,'ans').textContent=pi.toFixed(2); var c=q(root,'chip'); c.className='chip '+(pi>=0?'good':'lost'); c.textContent=pi>=0?'worth funding':'destroys value';
+        q(root,'note').textContent='each $1 you put in creates '+pi.toFixed(2)+' of net value';
+        q(root,'pival').textContent=pi.toFixed(2); q(root,'pibar').style.width=Math.min(Math.max(pi,0)/0.6*100,100)+'%';
+        K(q(root,'fnum'),Math.round(npv)+' / '+v.x+' = '+pi.toFixed(2));}},
 
     ear:{ch:'H1 · rates',eyebrow:'real yearly rate',idea:'A rate quoted per month hides its true yearly cost.',
       usecase:"Comparing a credit card, a loan, or a savings account that compound at different speeds. This turns the headline rate into the true yearly rate so you compare fairly.",
@@ -766,18 +766,96 @@
         q(root,'note').textContent='at '+v.vol+'% volatility over '+v.t+(v.t===1?' year':' years')+', the call is worth '+money(call);
         q(root,'cvval').textContent=money(call); q(root,'cvbar').style.width=Math.min(call/40*100,100)+'%';
         K(q(root,'fnum'),'C = 100\\,N('+d1.toFixed(2)+') - 100e^{-0.05\\cdot'+T+'}N('+d2.toFixed(2)+') = '+call.toFixed(2));}}
+,
+
+    growann:{ch:'H1 · discounting',eyebrow:'growing payments',idea:'Payments that grow each year, for a set number of years.',
+      usecase:"Valuing a salary, a pension, or a savings plan where the amount rises each year, say with raises or inflation, but stops after a set number of years.",
+      fixed:"a $1,000 first payment, 5% rate", src:'Berk-DeMarzo Ch.4 · test_epfl_exam2.py',
+      inputs:[{k:'g',label:'how fast each payment grows',min:0,max:4,step:0.5,val:3,unit:'%'},{k:'n',label:'number of years',min:1,max:30,step:1,val:15,unit:'yr'}],
+      viz:'<div data-r="bars" style="display:flex;align-items:flex-end;gap:4px;height:104px;justify-content:center;"></div><div class="explain" style="text-align:center;" data-r="sumnote"></div>',
+      fgen:"PV \\;=\\; \\dfrac{C}{r-g}\\left(1-\\left(\\dfrac{1+g}{1+r}\\right)^{n}\\right)",
+      explain:'Each payment is bigger than the last but still discounted back to today. Growth lifts the value, and the closer growth gets to your rate, the more it climbs.',
+      update:function(v,root){var r=0.05,g=v.g/100,c0=1000, gaf=(1/(r-g))*(1-Math.pow((1+g)/(1+r),v.n)), pv=c0*gaf;
+        q(root,'ans').textContent=money(pv); var c=q(root,'chip'); c.className='chip info'; c.textContent='grows '+v.g+'% a year';
+        q(root,'note').textContent='a $1,000 payment growing '+v.g+'% a year for '+v.n+' years is worth '+money(pv)+' today';
+        var shown=Math.min(v.n,16), bars='';
+        for(var t=0;t<shown;t++){var pvt=c0*Math.pow(1+g,t)/Math.pow(1+r,t+1), h=Math.max(4,pvt/1000*84); bars+='<div style="width:'+(shown>12?9:13)+'px;height:'+h+'px;background:var(--accent);border-radius:3px;"></div>';}
+        q(root,'bars').innerHTML=bars;
+        q(root,'sumnote').textContent='each growing payment, discounted to today, then summed';
+        K(q(root,'fnum'),'\\dfrac{1000}{'+(r-g).toFixed(3)+'}(1-('+((1+g)/(1+r)).toFixed(3)+')^{'+v.n+'}) = '+Math.round(pv));}},
+
+    contcomp:{ch:'H1 · rates',eyebrow:'continuous compounding',idea:'Compounded every instant, money grows a little faster still.',
+      usecase:"Comparing a rate that compounds continuously, common in finance and option pricing, with a plain once-a-year rate. The gap is small but real.",
+      fixed:"starting from $100", src:'Berk-DeMarzo Ch.5',
+      inputs:[{k:'r',label:'the yearly rate',min:1,max:12,step:0.5,val:5,unit:'%'},{k:'t',label:'years it grows',min:1,max:20,step:1,val:10,unit:'yr'}],
+      viz:twoBarHTML('compounded yearly','compounded continuously'),
+      fgen:"\\text{future} \\;=\\; \\text{today}\\times e^{\\,r\\,t}",
+      explain:'Adding interest more and more often nudges the total up. Doing it every instant is the limit, using the number e, and gives the most growth for the same rate.',
+      update:function(v,root){var yr=100*Math.pow(1+v.r/100,v.t), cont=100*Math.exp(v.r/100*v.t), mx=cont;
+        q(root,'ans').textContent=money(cont); var c=q(root,'chip'); c.className='chip good'; c.textContent='+'+money(cont-yr)+' vs yearly';
+        q(root,'note').textContent='$100 at '+v.r+'% over '+v.t+(v.t===1?' year':' years')+' grows to '+money(cont)+' compounded continuously';
+        q(root,'av').textContent=money(yr); q(root,'bv').textContent=money(cont);
+        q(root,'abar').style.height=(yr/mx*144)+'px'; q(root,'bbar').style.height='144px';
+        K(q(root,'fnum'),'100\\times e^{'+(v.r/100).toFixed(3)+'\\cdot'+v.t+'} = '+cont.toFixed(2));}},
+
+    cml:{ch:'H2 · risk & return',eyebrow:'capital market line',idea:'Mixing the market with cash gives the best deals available.',
+      usecase:"Deciding how much to hold in a broad market fund versus safe cash. Every blend sits on one straight line, and that line is the best return for each level of risk.",
+      fixed:"market: 8% return, 16% swing; safe rate 3%", src:'Berk-DeMarzo Ch.11',
+      inputs:[{k:'x',label:'share you put in the market',min:0,max:150,step:5,val:60,unit:'%',lo:'all safe',hi:'borrow to buy more'}],
+      viz:'<svg data-r="svg" viewBox="0 0 320 170" width="100%" style="max-width:340px;display:block;margin:0 auto;"></svg>',
+      fgen:"\\text{return} \\;=\\; r_f + \\text{share}\\times(r_M - r_f)",
+      explain:'Hold some cash to sit safely below the market; borrow to push past it for more return and more risk. Either way you stay on the same straight line.',
+      update:function(v,root){var rf=3,rm=8,vm=16,x=v.x/100, ret=rf+x*(rm-rf), vol=x*vm;
+        q(root,'ans').textContent=ret.toFixed(1)+'%'; var c=q(root,'chip'); c.className='chip info'; c.textContent='at '+vol.toFixed(1)+'% risk';
+        q(root,'note').textContent=v.x+'% in the market gives a '+ret.toFixed(1)+'% return at a '+vol.toFixed(1)+'% swing';
+        var x0=42,x1=300,y0=148,y1=16, vx=function(s){return x0+(s/26)*(x1-x0);}, ry=function(r){return y0-(r/14)*(y0-y1);};
+        var g='<line x1="'+x0+'" y1="'+y0+'" x2="'+x1+'" y2="'+y0+'" stroke="var(--border)"/><line x1="'+x0+'" y1="'+y0+'" x2="'+x0+'" y2="'+y1+'" stroke="var(--border)"/>';
+        g+='<line x1="'+vx(0)+'" y1="'+ry(rf)+'" x2="'+vx(24)+'" y2="'+ry(rf+(24/vm)*(rm-rf))+'" stroke="var(--accent)" stroke-width="2"/>';
+        g+='<circle cx="'+vx(16)+'" cy="'+ry(rm)+'" r="3" fill="var(--faint)"/>';
+        g+='<circle cx="'+vx(Math.min(vol,26))+'" cy="'+ry(Math.min(ret,14))+'" r="5" fill="var(--accent)"/>';
+        g+='<text x="6" y="'+y1+'" font-size="10" fill="var(--faint)">return</text><text x="'+x1+'" y="164" font-size="10" fill="var(--faint)" text-anchor="end">risk</text>';
+        g+='<text x="'+vx(16)+'" y="'+(ry(rm)-8)+'" font-size="9" fill="var(--faint)" text-anchor="middle">market</text>';
+        q(root,'svg').innerHTML=g;
+        K(q(root,'fnum'),'3 + '+x.toFixed(2)+'\\times(8-3) = '+ret.toFixed(1)+'\\%');}},
+
+    portbeta:{ch:'H2 · risk & return',eyebrow:'portfolio beta',idea:'A portfolio’s beta is the average of its parts.',
+      usecase:"Gauging how your whole portfolio will move with the market by blending the betas of what you hold, weighted by how much of each you own.",
+      fixed:"a calm stock (beta 0.5) and a wild one (beta 1.25)", src:'Berk-DeMarzo Ch.12 · test_epfl_exam2.py',
+      inputs:[{k:'w',label:'share in the calm stock',min:0,max:100,step:5,val:50,unit:'%'}],
+      viz:hbar('pb','var(--accent)','how your whole portfolio moves with the market'),
+      fgen:"\\beta_{\\text{portfolio}} \\;=\\; \\textstyle\\sum w_i\\,\\beta_i",
+      explain:'No need for anything fancy: weight each holding beta by its share and add them up. More in the calm stock pulls the whole portfolio steadier.',
+      update:function(v,root){var w=v.w/100, pb=w*0.5+(1-w)*1.25;
+        q(root,'ans').textContent=pb.toFixed(2); var c=q(root,'chip'); c.className='chip info'; c.textContent=pb<0.97?'calmer than the market':pb>1.03?'wilder than the market':'moves with the market';
+        q(root,'note').textContent='your portfolio swings about '+pb.toFixed(2)+' times as hard as the market';
+        q(root,'pbval').textContent=pb.toFixed(2); q(root,'pbbar').style.width=Math.min(pb/2.5*100,100)+'%';
+        K(q(root,'fnum'),w.toFixed(2)+'\\times 0.5 + '+(1-w).toFixed(2)+'\\times 1.25 = '+pb.toFixed(2));}},
+
+    mm2:{ch:'H3 · financing',eyebrow:'MM II',idea:'More debt makes shareholders demand a higher return.',
+      usecase:"Understanding why a company cost of equity rises as it borrows more. The shrinking slice of equity bears more of the swings, so owners ask for more.",
+      fixed:"the business earns 9%, debt costs 5%", src:'Berk-DeMarzo Ch.14',
+      inputs:[{k:'dv',label:'share funded by debt',min:0,max:75,step:5,val:40,unit:'%'}],
+      viz:twoBarHTML('the business return','what equity now demands'),
+      fgen:"r_E \\;=\\; r_A + \\tfrac{D}{E}\\,(r_A - r_D)",
+      explain:'Total value does not change, but the risk is squeezed onto a smaller equity base, so the return shareholders require climbs with every bit of debt.',
+      update:function(v,root){var dv=v.dv/100, de=dv/(1-dv), rE=9+de*(9-5), mx=Math.max(9,rE);
+        q(root,'ans').textContent=rE.toFixed(1)+'%'; var c=q(root,'chip'); c.className='chip info'; c.textContent='cost of equity';
+        q(root,'note').textContent='at '+v.dv+'% debt, equity holders now demand '+rE.toFixed(1)+'% instead of 9%';
+        q(root,'av').textContent='9.0%'; q(root,'bv').textContent=rE.toFixed(1)+'%';
+        q(root,'abar').style.height=(9/mx*144)+'px'; q(root,'bbar').style.height='144px';
+        K(q(root,'fnum'),'9 + '+de.toFixed(2)+'\\times(9-5) = '+rE.toFixed(1)+'\\%');}}
   };
 
   var CHAPTERS=[
     {id:'H1',title:'Discounting & valuation',sub:'what a future dollar is worth today',
-     cards:[{id:'pv',t:'Present value',r:1},{id:'fv',t:'Future value',r:1},{id:'perpetuity',t:'Perpetuity',r:1},{id:'annuity',t:'Annuity',r:1},{id:'npv',t:'NPV: is it worth it?',r:1},
-            {id:'pi',t:'Profitability index',r:1},{id:'ear',t:'EAR vs APR',r:1},{id:'loan',t:'Loan & amortization',r:1},{id:'spot',t:'Spot rates',r:1},{id:'forward',t:'Forward rates',r:1},{id:'bond',t:'Bond pricing',r:1},{id:'ytm',t:'Yield to maturity',r:1},{id:'duration',t:'Duration',r:1},{id:'ddm',t:'Dividend-discount',r:1}]},
+     cards:[{id:'pv',t:'Present value',r:1},{id:'fv',t:'Future value',r:1},{id:'perpetuity',t:'Perpetuity',r:1},{id:'annuity',t:'Annuity',r:1},{id:'growann',t:'Growing annuity',r:1},{id:'npv',t:'NPV: is it worth it?',r:1},
+            {id:'pi',t:'Profitability index',r:1},{id:'ear',t:'EAR vs APR',r:1},{id:'loan',t:'Loan & amortization',r:1},{id:'contcomp',t:'Continuous compounding',r:1},{id:'spot',t:'Spot rates',r:1},{id:'forward',t:'Forward rates',r:1},{id:'bond',t:'Bond pricing',r:1},{id:'ytm',t:'Yield to maturity',r:1},{id:'duration',t:'Duration',r:1},{id:'ddm',t:'Dividend-discount',r:1}]},
     {id:'H2',title:'Risk & return',sub:'how much you should be paid for risk',
      cards:[{id:'diversification',t:'Diversification',r:1},{id:'capm',t:'CAPM: return to ask for',r:1},
-            {id:'expvar',t:'Expected return & volatility',r:1},{id:'covcorr',t:'Covariance & correlation',r:1},{id:'portvar',t:'Portfolio variance',r:1},{id:'riskcontrib',t:'Risk contribution',r:1},{id:'minvar',t:'Minimum-variance',r:1},{id:'frontier',t:'Efficient frontier',r:1},{id:'sharpe',t:'Sharpe ratio',r:1},{id:'beta',t:'Beta',r:1},{id:'sysidio',t:'Systematic vs idiosyncratic',r:1},{id:'alpha',t:'Alpha',r:1}]},
+            {id:'expvar',t:'Expected return & volatility',r:1},{id:'covcorr',t:'Covariance & correlation',r:1},{id:'portvar',t:'Portfolio variance',r:1},{id:'riskcontrib',t:'Risk contribution',r:1},{id:'minvar',t:'Minimum-variance',r:1},{id:'frontier',t:'Efficient frontier',r:1},{id:'cml',t:'Capital market line',r:1},{id:'sharpe',t:'Sharpe ratio',r:1},{id:'beta',t:'Beta',r:1},{id:'portbeta',t:'Portfolio beta',r:1},{id:'sysidio',t:'Systematic vs idiosyncratic',r:1},{id:'alpha',t:'Alpha',r:1}]},
     {id:'H3',title:'Capital budgeting & financing',sub:'judging companies and how they pay for themselves',
      cards:[{id:'wacc',t:'WACC',r:1},
-            {id:'fcf',t:'Free cash flow',r:1},{id:'nwc',t:'Net working capital',r:1},{id:'npvirr',t:'NPV vs IRR',r:1},{id:'dcf',t:'DCF / enterprise value',r:1},{id:'terminal',t:'Terminal value',r:1},{id:'hamada',t:'Unlever / relever beta',r:1},{id:'mm',t:'Modigliani-Miller',r:1},{id:'apv',t:'APV',r:1},{id:'taxshield',t:'Tax shield',r:1},{id:'distress',t:'Distress costs',r:1}]},
+            {id:'fcf',t:'Free cash flow',r:1},{id:'nwc',t:'Net working capital',r:1},{id:'npvirr',t:'NPV vs IRR',r:1},{id:'dcf',t:'DCF / enterprise value',r:1},{id:'terminal',t:'Terminal value',r:1},{id:'hamada',t:'Unlever / relever beta',r:1},{id:'mm',t:'Modigliani-Miller',r:1},{id:'mm2',t:'MM II: cost of equity',r:1},{id:'apv',t:'APV',r:1},{id:'taxshield',t:'Tax shield',r:1},{id:'distress',t:'Distress costs',r:1}]},
     {id:'H4',title:'Derivatives',sub:'moving and pricing risk',
      cards:[{id:'fwdfut',t:'Forward vs futures',r:1},{id:'fwdprice',t:'Forward pricing',r:1},{id:'swap',t:'Swaps',r:1},{id:'optpayoff',t:'Option payoffs',r:1},{id:'putcall',t:'Put-call parity',r:1},{id:'binomial',t:'Binomial model',r:1},{id:'bs',t:'Black-Scholes',r:1}]}
   ];
