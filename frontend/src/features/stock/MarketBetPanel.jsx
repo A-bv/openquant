@@ -5,8 +5,8 @@
  * "the market's bet." Comes second on the page, right after the hero.
  */
 
-import EPFLCitation from './EPFLCitation'
-import LearnMore from './LearnMore'
+import EPFLCitation from '../../shared/EPFLCitation'
+import LearnMore from '../../shared/LearnMore'
 
 const pct = (v, d = 1) => v == null || !Number.isFinite(v) ? '—' : `${(v * 100).toFixed(d)}%`
 

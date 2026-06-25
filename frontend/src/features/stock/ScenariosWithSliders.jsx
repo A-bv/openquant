@@ -7,10 +7,10 @@
  */
 
 import { useState, useMemo } from 'react'
-import EPFLCitation from './EPFLCitation'
-import Term from './Term'
-import { DEFS } from './defs'
-import LearnMore from './LearnMore'
+import EPFLCitation from '../../shared/EPFLCitation'
+import Term from '../../shared/Term'
+import { DEFS } from '../../shared/defs'
+import LearnMore from '../../shared/LearnMore'
 
 const fmt$ = (v) => v == null || !Number.isFinite(v) ? '—' : `$${v.toFixed(2)}`
 const pct = (v, d = 1) => v == null || !Number.isFinite(v) ? '—' : `${(v * 100).toFixed(d)}%`

@@ -1,4 +1,4 @@
-import { useIsMobile } from './useIsMobile'
+import { useIsMobile } from '../../shared/useIsMobile'
 
 const pct = (v, sign = true) => {
   if (v == null) return '—'

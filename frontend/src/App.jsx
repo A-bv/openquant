@@ -2,25 +2,27 @@ import { useCallback, useEffect, useState } from 'react'
 import axios from 'axios'
 
 // v3 flow components
-import HeroVerdict from './components/HeroVerdict'
-import MarketBetPanel from './components/MarketBetPanel'
-import ScenariosWithSliders from './components/ScenariosWithSliders'
-import WhatYouNeedToBelieve from './components/WhatYouNeedToBelieve'
-import MultiplesCheck from './components/MultiplesCheck'
-import CalibrationPanel from './components/CalibrationPanel'
-import ModelQualityPanel from './components/ModelQualityPanel'
-import Conclusion from './components/Conclusion'
-import Glossary from './components/Glossary'
-import LearnMore from './components/LearnMore'
-import DisclosureSection from './components/DisclosureSection'
+import HeroVerdict from './features/stock/HeroVerdict'
+import MarketBetPanel from './features/stock/MarketBetPanel'
+import ScenariosWithSliders from './features/stock/ScenariosWithSliders'
+import WhatYouNeedToBelieve from './features/stock/WhatYouNeedToBelieve'
+import MultiplesCheck from './features/stock/MultiplesCheck'
+import CalibrationPanel from './features/stock/CalibrationPanel'
+import ModelQualityPanel from './features/stock/ModelQualityPanel'
+import Conclusion from './features/stock/Conclusion'
+import Glossary from './shared/Glossary'
+import LearnMore from './shared/LearnMore'
+import DisclosureSection from './shared/DisclosureSection'
 
 // retained components (well-tested)
-import SearchBar from './components/SearchBar'
-import LoadingState from './components/LoadingState'
-import FCFHistoryChart from './components/FCFHistoryChart'
-import SensitivityTable from './components/SensitivityTable'
-import WACCBreakdown from './components/WACCBreakdown'
-import EPFLCitation from './components/EPFLCitation'
+import SearchBar from './shared/SearchBar'
+import LoadingState from './shared/LoadingState'
+import FCFHistoryChart from './features/stock/FCFHistoryChart'
+import SensitivityTable from './features/stock/SensitivityTable'
+import WACCBreakdown from './features/stock/WACCBreakdown'
+import EPFLCitation from './shared/EPFLCitation'
+import DiversificationLab from './features/portfolio/DiversificationLab'
+import NowOrLaterLab from './features/money/NowOrLaterLab'
 
 const API = import.meta.env.VITE_API_URL || (
   typeof window !== 'undefined'
@@ -61,6 +63,7 @@ export default function App() {
   const [data, setData]           = useState(null)
   const [activeTicker, setActive] = useState(initialTicker)
   const [glossaryOpen, setGlossaryOpen] = useState(false)
+  const [view, setView] = useState('money')
 
   const analyse = useCallback(async (ticker, { syncUrl = true } = {}) => {
     const normalizedTicker = ticker.trim().toUpperCase()
@@ -115,6 +118,29 @@ export default function App() {
           <div className="topbar-subtitle">
             EPFL finance applied to live US market data.
           </div>
+          <div style={{ display: 'flex', gap: 4, marginLeft: 16 }}>
+            <button
+              onClick={() => setView('money')}
+              className="topbar-action"
+              style={{ fontWeight: view === 'money' ? 700 : 400, opacity: view === 'money' ? 1 : 0.55 }}
+            >
+              Money
+            </button>
+            <button
+              onClick={() => setView('stock')}
+              className="topbar-action"
+              style={{ fontWeight: view === 'stock' ? 700 : 400, opacity: view === 'stock' ? 1 : 0.55 }}
+            >
+              Stock
+            </button>
+            <button
+              onClick={() => setView('portfolio')}
+              className="topbar-action"
+              style={{ fontWeight: view === 'portfolio' ? 700 : 400, opacity: view === 'portfolio' ? 1 : 0.55 }}
+            >
+              Portfolio
+            </button>
+          </div>
           <button
             onClick={() => setGlossaryOpen(true)}
             aria-label="Open glossary"
@@ -133,6 +159,13 @@ export default function App() {
       <Glossary open={glossaryOpen} onClose={() => setGlossaryOpen(false)} />
 
       <main className="page">
+
+        {view === 'money' && <NowOrLaterLab API={API} />}
+
+        {view === 'portfolio' && <DiversificationLab API={API} />}
+
+        {view === 'stock' && (
+        <>
 
         {/* Search */}
         <section className={`card ${d ? 'analysis-toolbar' : 'intro-card'}`}>
@@ -339,6 +372,9 @@ export default function App() {
               <strong style={{ color: '#6B7280' }}>OpenQuant</strong> · Theory. Reality. You decide.
             </div>
           </>
+        )}
+
+        </>
         )}
       </main>
     </div>
