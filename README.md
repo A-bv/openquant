@@ -41,6 +41,10 @@ This is only for working on the project; the cards are already live at the link 
 
 ## Deploying
 
-Push to `main` and everything goes out on its own: the app to Vercel, the API to Render, and the card deck to GitHub Pages. There are no manual steps.
+Push to `main` and everything ships on its own, no manual steps:
+
+- the **app** redeploys to **Vercel**,
+- the **API** redeploys to **Render**,
+- the **card deck** republishes to **GitHub Pages** via a GitHub Action (`.github/workflows/deploy-deck.yml`) whenever `companion.html` changes.
 
 MIT licensed. The finance follows Berk and DeMarzo, *Corporate Finance*.
