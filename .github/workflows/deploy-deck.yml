@@ -1,0 +1,19 @@
+name: Deploy teaching deck
+on:
+  push:
+    branches: [main]
+    paths: ['frontend/public/companion.html']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: mkdir -p _site && cp frontend/public/companion.html _site/index.html
+      - uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./_site
+          publish_branch: gh-pages
