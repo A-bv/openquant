@@ -20,19 +20,19 @@ The app (top nav) is three tabs, each one course block applied to real data:
 
 Alongside the app lives the **teaching deck** (`frontend/public/companion.html`): the whole course as **51 interactive cards** (one idea, one picture, one live formula each). It's standalone — no backend, no build.
 
-```mermaid
-flowchart TD
-    U["You"] --> APP["OpenQuant app"]
-    APP --> M["Money tab (H1)"]
-    APP --> S["Stock tab (H3)"]
-    APP --> P["Portfolio tab (H2)"]
-    M --> ME["/now-or-later<br/>core/money.py"]
-    S --> SE["/analyse<br/>reverse-DCF engine"]
-    P --> PE["/diversification<br/>core/portfolio.py"]
-    ME --> ANS["Plain-English answer + its honest limit<br/>(Layer 1 result · Layer 2 depth)"]
-    SE --> ANS
-    PE --> ANS
-    DECK["Teaching deck — companion.html<br/>51 cards, standalone"]
+```text
+ You ─▶ OpenQuant app   (3 tabs, opens on Money)
+          │
+          ├─ Money     (H1) ─▶ /now-or-later     ─▶ core/money
+          ├─ Stock     (H3) ─▶ /analyse          ─▶ core/valuation (reverse-DCF)
+          └─ Portfolio (H2) ─▶ /diversification  ─▶ core/portfolio
+                                    │
+                                    ▼
+            each returns ONE plain-English answer + its honest limit
+            (Layer 1 = the result · Layer 2 = the depth, on demand)
+
+ Teaching deck = frontend/public/companion.html
+   └─ 51 interactive cards, fully standalone (no API, no backend)
 ```
 
 ---
@@ -52,39 +52,19 @@ So a beginner gets *"8 holdings = 1.4 independent bets — you carry more risk t
 
 Three clean layers. `core/` holds all the finance math with **zero web dependencies**, so every Lab can be unit-tested against real EPFL exam answers. `api/` exposes it; `frontend/` renders it. The deck sits off to the side.
 
-```mermaid
-flowchart LR
-    subgraph SRC["External data (free)"]
-        E["SEC EDGAR<br/>financial statements"]
-        Y["yfinance<br/>prices & returns"]
-    end
+```text
+ SEC EDGAR ─┐
+            ├─▶ core/data ─┬─▶ core/valuation (H3) ─▶ routers/stock      ─┐
+ yfinance ──┘              └─▶ core/portfolio (H2) ─▶ routers/portfolio  ─┼─▶ React app
+                              core/money     (H1) ─▶ routers/money       ─┘   (3 tabs)
 
-    subgraph CORE["core/ — finance engine (pure Python, EPFL-exam-tested)"]
-        DATA["core/data<br/>fetch & clean"]
-        MO["core/money — H1"]
-        PO["core/portfolio — H2"]
-        VA["core/valuation — H3<br/>fcf · wacc · dcf · reverse_dcf<br/>sensitivity · multiples · suitability"]
-    end
-
-    subgraph API["api/ — FastAPI (thin main + routers/)"]
-        NL["routers/money<br/>/now-or-later"]
-        DV["routers/portfolio<br/>/diversification"]
-        AN["routers/stock<br/>/analyse · /calibration"]
-    end
-
-    subgraph FE["frontend/src/"]
-        RA["features/money · stock · portfolio<br/>+ shared/ — React tabs"]
-        DK["public/companion.html<br/>51-card teaching deck (standalone)"]
-    end
-
-    E --> DATA
-    Y --> DATA
-    DATA --> PO
-    DATA --> VA
-    MO --> NL --> RA
-    PO --> DV --> RA
-    VA --> AN --> RA
+ flow:   data sources → core/ engine (pure Python, EPFL-tested)
+                      → api/ (thin main.py + routers/) → frontend/ (React, 3 tabs)
+ plus:   core/common = shared helpers · companion.html deck is standalone (no API)
 ```
+
+Read it left to right: data → engine → endpoint → screen. The Money lab needs no
+market data; the deck plugs into nothing.
 
 ---
 
@@ -92,18 +72,22 @@ flowchart LR
 
 `POST /analyse {"ticker":"AAPL"}` runs the reverse-DCF pipeline. The heart is **step 8**: instead of guessing a value, it solves for the FCF growth the *current price* already assumes — then the app asks if that's believable.
 
-```mermaid
-flowchart TD
-    T["Ticker"] --> D["1-2 · Validate + fetch data (EDGAR + yfinance)"]
-    D --> F["3 · Free cash flow history"]
-    F --> W["4 · Beta to CAPM to WACC"]
-    W --> S["5 · Suitability — is a DCF even fair here?"]
-    S --> FD["6-7 · Net debt, shares, forward DCF"]
-    FD --> RD["8 · Reverse DCF — the growth the price demands"]
-    RD --> DIAG["8b · Diagnostic, red flags, audit trail"]
-    DIAG --> SENS["9 · Sensitivity grid (growth x WACC)"]
-    SENS --> M["10 · Market multiples cross-check"]
-    M --> R["Verdict + backtest reliability (/calibration)"]
+```text
+ Ticker (e.g. AAPL)
+   │
+   ├─ 1-2  validate + fetch data (SEC EDGAR + yfinance)
+   ├─ 3    free cash flow history
+   ├─ 4    beta → CAPM → WACC
+   ├─ 5    suitability — is a DCF even fair for this company?
+   ├─ 6-7  net debt, shares, forward DCF
+   ├─ 8    REVERSE DCF → the growth today's price assumes     ◀ the key step
+   ├─ 8b   diagnostic · red flags · audit trail
+   ├─ 9    sensitivity grid (growth × WACC)
+   └─ 10   market multiples cross-check
+   │
+   ▼
+ Verdict: "to justify this price you must believe X"
+          + how reliable the model has been in the past (/calibration)
 ```
 
 ---
@@ -141,13 +125,13 @@ openquant/
 
 ## Deployment (3 independent targets)
 
-```mermaid
-flowchart LR
-    REPO["GitHub — A-bv/openquant"]
-    REPO -->|"push → auto"| VERCEL["Vercel<br/>React app"]
-    REPO -->|"push → auto"| RENDER["Render<br/>FastAPI · openquant-api.onrender.com"]
-    REPO -->|"manual copy → gh-pages"| PAGES["GitHub Pages<br/>teaching deck · a-bv.github.io/openquant"]
-    VERCEL -->|"/api/* proxied to"| RENDER
+```text
+ git push ─┬─▶ Vercel  — React app     (auto)  ── proxies /api/* ─▶ Render
+           └─▶ Render  — FastAPI API    (auto)
+
+ Teaching deck only — MANUAL, no CI:
+   copy frontend/public/companion.html ─▶ gh-pages branch (as index.html)
+                                       ─▶ https://a-bv.github.io/openquant
 ```
 
 - **React app → Vercel** (`frontend/vercel.json`) — auto-deploys on push; proxies `/api/*` to the Render API.
