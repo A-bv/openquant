@@ -346,7 +346,7 @@ class SuitabilityChecker:
                     "for cyclicality check."
                 ),
             )
-        from core.utils import winsorize_series
+        from core.common import winsorize_series
         if len(yoy) >= 4:
             yoy = winsorize_series(yoy, GROWTH_WINSOR_LOW, GROWTH_WINSOR_HIGH)
         median_g = float(yoy.median())

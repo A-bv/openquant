@@ -21,10 +21,10 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Optional
 
-from core.assumption_diagnostic import AssumptionDiagnostic, DiagnosticRating
-from core.dcf import DCFResult
-from core.reverse_dcf import ReverseDCFResult
-from core.suitability import SuitabilityReport
+from core.valuation.assumption_diagnostic import AssumptionDiagnostic, DiagnosticRating
+from core.valuation.dcf import DCFResult
+from core.valuation.reverse_dcf import ReverseDCFResult
+from core.valuation.suitability import SuitabilityReport
 
 
 @dataclass

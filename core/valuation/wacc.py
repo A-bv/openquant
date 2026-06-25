@@ -35,7 +35,7 @@ from config import (
     BETA_CONFIDENCE_LEVEL,
 )
 from core.data import FinancialStatements, PriceData
-from core.utils import log_returns, annualise_return, annualise_vol, bootstrap_ci
+from core.common import log_returns, annualise_return, annualise_vol, bootstrap_ci
 
 
 # ── EPFL formula sheet primitives ─────────────────────────────────────────────

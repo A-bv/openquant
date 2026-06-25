@@ -62,9 +62,9 @@ from config import (
     REVENUE_SWING_MILD,
 )
 from core.data import FinancialStatements
-from core.dcf import DCFResult
-from core.reverse_dcf import ReverseDCFResult
-from core.wacc import BetaResult
+from core.valuation.dcf import DCFResult
+from core.valuation.reverse_dcf import ReverseDCFResult
+from core.valuation.wacc import BetaResult
 
 
 class DiagnosticRating(str, Enum):

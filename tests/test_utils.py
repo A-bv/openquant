@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from core.utils import (
+from core.common import (
     log_returns,
     simple_returns,
     annualise_return,

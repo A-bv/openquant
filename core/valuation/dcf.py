@@ -45,8 +45,8 @@ from config import (
     SCENARIO_CONSERVATIVE_WACC_ADD,
     SCENARIO_OPTIMISTIC_WACC_SUB,
 )
-from core.fcf import FCFAnalysis, FCFProjection
-from core.wacc import WACCResult
+from core.valuation.fcf import FCFAnalysis, FCFProjection
+from core.valuation.wacc import WACCResult
 
 
 # ── Data structures ───────────────────────────────────────────────────────────
@@ -347,7 +347,7 @@ class DCFEngine:
         Returns:
             DCFScenario with full valuation.
         """
-        from core.fcf import FCFAnalyser
+        from core.valuation.fcf import FCFAnalyser
         analyser = FCFAnalyser()
         projection = analyser.project(
             fcf_analysis,

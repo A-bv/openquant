@@ -16,9 +16,9 @@ import pytest
 from datetime import datetime
 
 from core.data import FinancialStatements
-from core.dcf import DCFEngine
-from core.fcf import FCFAnalyser
-from core.wacc import WACCResult
+from core.valuation.dcf import DCFEngine
+from core.valuation.fcf import FCFAnalyser
+from core.valuation.wacc import WACCResult
 
 
 # ── Helpers ────────────────────────────────────────────────────────────────────

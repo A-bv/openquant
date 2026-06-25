@@ -20,9 +20,9 @@ from __future__ import annotations
 
 import pytest
 
-from core.dcf import DCFEngine
-from core.fcf import fcf_from_ebit_components
-from core.wacc import unlever_beta_hamada, capm_cost_of_equity
+from core.valuation.dcf import DCFEngine
+from core.valuation.fcf import fcf_from_ebit_components
+from core.valuation.wacc import unlever_beta_hamada, capm_cost_of_equity
 
 
 ENGINE = DCFEngine()

@@ -14,6 +14,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import logging
 import math
 import os
+import re
 import uuid
 import json
 from pathlib import Path
@@ -122,6 +123,54 @@ class AnalyseRequest(BaseModel):
         return v
 
 
+_TICKER_RE = re.compile(r"^[A-Za-z][A-Za-z0-9.\-^]{0,9}$")
+
+
+class DiversificationRequest(BaseModel):
+    tickers: list[str] = Field(min_length=2, max_length=15)
+    years: int = Field(default=3, ge=1, le=10)
+    risk_free_rate: float = Field(default=0.045, ge=0.0, le=0.20)
+
+    @field_validator("tickers")
+    @classmethod
+    def _valid_tickers(cls, v: list[str]) -> list[str]:
+        cleaned: list[str] = []
+        for raw in v:
+            t = raw.upper().strip()
+            if not _TICKER_RE.match(t):
+                raise ValueError(f"invalid ticker: {raw!r}")
+            if t not in cleaned:
+                cleaned.append(t)
+        if len(cleaned) < 2:
+            raise ValueError("need at least 2 distinct tickers")
+        return cleaned
+
+
+class NowOrLaterRequest(BaseModel):
+    lump_sum: float = Field(ge=0)
+    payment: float = Field(ge=0)
+    n_payments: int = Field(ge=1, le=600)
+    rate: float = Field(gt=-1.0, le=2.0)   # per-period discount rate
+    growth: float = Field(default=0.0, ge=-0.5, le=1.0)
+    first_payment_today: bool = True
+    kind: str = Field(default="receive")
+    currency: str = Field(default="$", max_length=3)
+
+    @field_validator("kind")
+    @classmethod
+    def _valid_kind(cls, v: str) -> str:
+        if v not in ("receive", "pay"):
+            raise ValueError("kind must be 'receive' or 'pay'")
+        return v
+
+    @field_validator("lump_sum", "payment", "rate", "growth")
+    @classmethod
+    def _finite(cls, v: float) -> float:
+        if not math.isfinite(v):
+            raise ValueError("must be a finite number")
+        return v
+
+
 # ── Health ────────────────────────────────────────────────────────────────────
 
 @app.get("/health")
@@ -178,11 +227,11 @@ def analyse(req: AnalyseRequest):
         current_price = float(current_price)
 
         # 3 — FCF analysis
-        from core.fcf import FCFAnalyser
+        from core.valuation.fcf import FCFAnalyser
         fcf_a = FCFAnalyser().analyse(statements)
 
         # 4 — Beta + WACC
-        from core.wacc import BetaEstimator, WACCBuilder
+        from core.valuation.wacc import BetaEstimator, WACCBuilder
         beta_r = BetaEstimator().estimate(price_data, statements)
         wacc_r = WACCBuilder().compute_wacc(
             statements, price_data, current_price,
@@ -191,7 +240,7 @@ def analyse(req: AnalyseRequest):
         )
 
         # 5 — Suitability (with WACC)
-        from core.suitability import SuitabilityChecker
+        from core.valuation.suitability import SuitabilityChecker
         suit = SuitabilityChecker().check(
             statements,
             trading_days=len(price_data.prices),
@@ -267,7 +316,7 @@ def analyse(req: AnalyseRequest):
             })
 
         # 7 — Forward DCF
-        from core.dcf import DCFEngine
+        from core.valuation.dcf import DCFEngine
         dcf_r = DCFEngine().value(
             fcf_analysis=fcf_a,
             wacc_result=wacc_r,
@@ -278,7 +327,7 @@ def analyse(req: AnalyseRequest):
         )
 
         # 8 — Reverse DCF
-        from core.reverse_dcf import ReverseDCFSolver, ReverseDCFResult
+        from core.valuation.reverse_dcf import ReverseDCFSolver, ReverseDCFResult
         rev_r = ReverseDCFSolver().solve(
             fcf_analysis=fcf_a,
             wacc_result=wacc_r,
@@ -291,9 +340,9 @@ def analyse(req: AnalyseRequest):
         rev_failed = not isinstance(rev_r, ReverseDCFResult)
 
         # 8b — Assumption diagnostic, red flags, and audit trail.
-        from core.assumption_diagnostic import DiagnosticBuilder
-        from core.red_flags import RedFlagBuilder
-        from core.audit_trail import AuditTrailBuilder
+        from core.valuation.assumption_diagnostic import DiagnosticBuilder
+        from core.valuation.red_flags import RedFlagBuilder
+        from core.valuation.audit_trail import AuditTrailBuilder
 
         rev_for_context = rev_r if not rev_failed else None
         diagnostic = DiagnosticBuilder().build(
@@ -321,7 +370,7 @@ def analyse(req: AnalyseRequest):
         )
 
         # 9 — Sensitivity
-        from core.sensitivity import SensitivityAnalyser
+        from core.valuation.sensitivity import SensitivityAnalyser
         sa = SensitivityAnalyser()
         gt = sa.build_growth_wacc_table(fcf_a, wacc_r, current_price, shares, net_debt, tg)
 
@@ -350,7 +399,7 @@ def analyse(req: AnalyseRequest):
         sens_cols = [_fmt_pct(c) for c in gt.table.columns]
 
         # 10 — Multiples
-        from core.multiples import MultiplesAnalyser
+        from core.valuation.multiples import MultiplesAnalyser
         mult = MultiplesAnalyser().compute(statements, current_price, total_debt, cash, dcf_r)
 
         # Build response
@@ -479,3 +528,103 @@ def analyse(req: AnalyseRequest):
                 "request_id": request_id,
             },
         )
+
+
+# ── Diversification (Risk & Portfolio block) ────────────────────────────────────
+
+@app.post("/diversification")
+def diversification(req: DiversificationRequest):
+    """
+    Turn the EPFL Risk & Return block into a concrete, real-data deliverable:
+    "you hold N positions — in risk terms, X independent bets."
+
+    Equal-weighted. Pure orchestration here; the maths lives in core.portfolio
+    (pinned against EPFL Sample Exam 2 P4 in tests/test_portfolio.py).
+    """
+    import pandas as pd
+    from core.data import DataFetcher, DataFetchError
+    from core.common import log_returns
+    from core.portfolio import analyse_diversification
+
+    tickers = req.tickers  # already cleaned/validated/deduped
+    fetcher = DataFetcher()
+
+    price_map: dict[str, Any] = {}
+    failed: list[str] = []
+    for t in tickers:
+        try:
+            series = fetcher.price_fetcher.fetch(t, years=req.years)
+            if series is not None and len(series) > 0:
+                price_map[t] = series
+            else:
+                failed.append(t)
+        except DataFetchError:
+            failed.append(t)
+        except Exception:
+            failed.append(t)
+
+    if len(price_map) < 2:
+        raise HTTPException(status_code=400, detail={
+            "error": "Need at least 2 tickers with valid price data.",
+            "failed": failed,
+        })
+
+    prices = pd.DataFrame(price_map).dropna(how="any")
+    if len(prices) < 60:
+        raise HTTPException(status_code=422, detail={
+            "error": "Not enough overlapping trading days for these tickers.",
+            "overlapping_days": int(len(prices)),
+        })
+
+    returns = pd.DataFrame(
+        {col: log_returns(prices[col]) for col in prices.columns}
+    ).dropna()
+
+    try:
+        report = analyse_diversification(returns, risk_free_rate=req.risk_free_rate)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail={"error": str(e)})
+
+    payload = report.to_dict()
+    payload.update({
+        "summary_lines": report.summary_lines(),
+        "detail_lines": report.detail_lines(),
+        "years": req.years,
+        "trading_days": int(len(returns)),
+        "failed_tickers": failed,
+    })
+    return _sanitize(payload)
+
+
+# ── Now or later? (everyday-money / time value of money) ─────────────────────────
+
+@app.post("/now-or-later")
+def now_or_later(req: NowOrLaterRequest):
+    """
+    The everyday-money front door: "take the money now, or spread over time?"
+
+    No market data, cannot fail on a ticker. Pure orchestration; the maths
+    lives in core.money (pinned against the PFEM lottery in tests/test_money.py).
+    """
+    from core.money import compare_now_vs_later
+
+    try:
+        result = compare_now_vs_later(
+            lump_sum=req.lump_sum,
+            payment=req.payment,
+            n_payments=req.n_payments,
+            rate=req.rate,
+            growth=req.growth,
+            first_payment_today=req.first_payment_today,
+            kind=req.kind,
+            currency=req.currency,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail={"error": str(e)})
+
+    payload = result.to_dict()
+    payload.update({
+        "summary_lines": result.summary_lines(),
+        "detail_lines": result.detail_lines(),
+    })
+    return _sanitize(payload)

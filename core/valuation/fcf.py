@@ -34,7 +34,7 @@ from config import (
     MAX_TERMINAL_GROWTH_RATE,
 )
 from core.data import FinancialStatements
-from core.utils import median_growth_rate, winsorize_series, format_currency
+from core.common import median_growth_rate, winsorize_series, format_currency
 
 
 # ── EPFL formula sheet primitive ──────────────────────────────────────────────
@@ -280,7 +280,7 @@ class FCFAnalyser:
         # Revenue CAGR as alternative anchor
         rev_clean = revenue.dropna()
         if len(rev_clean) >= 3:
-            from core.utils import cagr
+            from core.common import cagr
             try:
                 rev_cagr = cagr(
                     float(rev_clean.iloc[0]),

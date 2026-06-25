@@ -19,9 +19,9 @@ import numpy as np
 import pandas as pd
 
 from config import DEFAULT_TERMINAL_GROWTH_RATE, MAX_TERMINAL_GROWTH_RATE
-from core.dcf import DCFEngine
-from core.fcf import FCFAnalysis
-from core.wacc import WACCResult
+from core.valuation.dcf import DCFEngine
+from core.valuation.fcf import FCFAnalysis
+from core.valuation.wacc import WACCResult
 
 
 @dataclass

@@ -24,12 +24,12 @@ from typing import Optional
 
 from config import DEFAULT_TERMINAL_GROWTH_RATE
 from core.data import FinancialStatements
-from core.fcf import FCFAnalysis
-from core.wacc import WACCResult
-from core.dcf import DCFResult
-from core.reverse_dcf import ReverseDCFResult
-from core.assumption_diagnostic import AssumptionDiagnostic
-from core.suitability import SuitabilityReport
+from core.valuation.fcf import FCFAnalysis
+from core.valuation.wacc import WACCResult
+from core.valuation.dcf import DCFResult
+from core.valuation.reverse_dcf import ReverseDCFResult
+from core.valuation.assumption_diagnostic import AssumptionDiagnostic
+from core.valuation.suitability import SuitabilityReport
 
 
 @dataclass

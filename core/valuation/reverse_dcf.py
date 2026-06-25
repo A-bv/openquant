@@ -50,8 +50,8 @@ from config import (
     MAX_TERMINAL_GROWTH_RATE,
     DEFAULT_RISK_FREE_RATE,
 )
-from core.fcf import FCFAnalysis
-from core.wacc import WACCResult
+from core.valuation.fcf import FCFAnalysis
+from core.valuation.wacc import WACCResult
 
 
 # ── Data structures ───────────────────────────────────────────────────────────
@@ -520,7 +520,7 @@ class ReverseDCFSolver:
         Returns:
             True if round-trip check passes.
         """
-        from core.dcf import DCFEngine
+        from core.valuation.dcf import DCFEngine
         engine = DCFEngine()
 
         forward = engine.value(
