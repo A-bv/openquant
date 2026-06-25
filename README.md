@@ -1,129 +1,69 @@
 # OpenQuant
 
-**Does the EPFL *Principles of Finance* course actually help in real life? OpenQuant proves it — one course block at a time — on live US market data.**
+**The EPFL *Principles of Finance* course, made usable on real company data.**
 
-Each part of the course becomes a small **Lab** that takes real numbers and returns a concrete answer a normal person can act on. It never hands you a formula, and it never claims a false truth.
-
-> **The rule every Lab follows:** never say *"this is worth $X."* Say *"at today's price you are betting on X — do you believe it?"* Every number comes with its honest limit, and is pinned to a worked EPFL exam answer in the test suite.
+The whole idea is honesty over false precision. OpenQuant never tells you *"this stock is worth $X."* It shows you *"at today's price you're betting on X — do you believe it?"*
 
 ---
 
-## What it actually is: 3 Labs + a teaching deck
+## What works today
 
-The app (top nav) is three tabs, each one course block applied to real data:
+- **🃏 The teaching deck** — the entire course (H1–H4) as **51 interactive cards**: one idea, one picture, one live formula you can drag. It's a single standalone HTML file — no backend, no build. *This is the most complete part of the project.*
+  → open `frontend/public/companion.html`, or live at **https://a-bv.github.io/openquant**
+- **📊 The real-data layer** — pulls live company numbers from **SEC EDGAR** (financials) and **yfinance** (prices), and is pinned to worked EPFL exam answers in the test suite.
 
-| Tab | Course block | The real-life question it answers | Data |
+---
+
+## Where it's heading — the live-data "labs"
+
+The goal is to apply each course block to that real data, one tab per block. The engine and tests exist; wiring them into a finished app is the current work.
+
+| Lab | Course block | The question it answers | State |
 |---|---|---|---|
-| 💵 **Money** *(default)* | H1 · time value of money | "Take the lump sum now, or payments over time?" | none — pure math |
-| 📈 **Stock** | H3 · valuation | "What cash-flow growth is today's price already assuming?" | SEC EDGAR + yfinance |
-| 🧺 **Portfolio** | H2 · risk & return | "I hold N stocks — how many *independent bets* is that really?" | yfinance |
+| **Money** | H1 · time value of money | Take a lump sum now, or payments over time? | in progress |
+| **Portfolio** | H2 · risk & return | N stocks — how many *independent bets*, really? | in progress |
+| **Stock** | H3 · valuation | What growth is today's price assuming? (reverse-DCF) | in progress |
+| *(none yet)* | **H4 · derivatives** | forwards, options, Black-Scholes | **deck only** |
 
-Alongside the app lives the **teaching deck** (`frontend/public/companion.html`): the whole course as **51 interactive cards** (one idea, one picture, one live formula each). It's standalone — no backend, no build.
-
-![OpenQuant's three labs: each tab calls one endpoint backed by one core module and returns one plain-English answer; the teaching deck is standalone.](docs/openquant-labs.svg)
-
----
-
-## The two-layer idea (shared by every Lab)
-
-Each endpoint returns the same shape: a **Layer 1** plain-English result and a **Layer 2** for the depth.
-
-- **`summary_lines`** — the simple answer + a one-line honest caveat (the default view).
-- **`detail_lines`** — the theory, the formula, the live computation, the EPFL source.
-
-So a beginner gets *"8 holdings = 1.4 independent bets — you carry more risk than you think,"* and a curious user can open the covariance math behind it.
+Every lab follows one pattern: a plain-English result up front, with the depth (formula, live numbers, the EPFL source) one click away.
 
 ---
 
-## Architecture
+## How it fits together
 
-Three clean layers. `core/` holds all the finance math with **zero web dependencies**, so every Lab can be unit-tested against real EPFL exam answers. `api/` exposes it; `frontend/` renders it. The deck sits off to the side.
+![OpenQuant architecture: external data feeds a pure-Python core engine, exposed by a thin FastAPI layer, rendered by the React app; the teaching deck is standalone.](docs/openquant-architecture.svg)
 
-![OpenQuant architecture: external data → pure-Python core engine → FastAPI routers → React app, read left to right. The Money lab needs no market data; the teaching deck plugs into nothing.](docs/openquant-architecture.svg)
-
----
-
-## Inside the Stock lab (the deepest one)
-
-`POST /analyse {"ticker":"AAPL"}` runs the reverse-DCF pipeline. The heart is **step 8**: instead of guessing a value, it solves for the FCF growth the *current price* already assumes — then the app asks if that's believable.
-
-![The Stock lab pipeline: a ticker runs through ten steps; step 8 is the reverse DCF that solves for the growth the current price assumes, ending in a verdict plus a backtest reliability check.](docs/openquant-pipeline.svg)
-
----
-
-## Repository layout
-
-Each lab is self-contained end-to-end — engine → route → UI → test — over thin shared layers.
+`core/` holds the finance math (pure Python, no web dependencies, tested against EPFL exams) · `api/` is a thin FastAPI wrapper · `frontend/` is the React app **plus** the standalone deck. Data comes in from SEC EDGAR + yfinance.
 
 ```text
-openquant/
-├── core/                   Finance engine — pure Python, no web dependencies
-│   ├── common/                 Shared helpers (utils)
-│   ├── data/                   Real-data layer: SEC EDGAR + yfinance
-│   ├── money/             H1 · time-value-of-money            → /now-or-later
-│   ├── portfolio/         H2 · diversification & risk         → /diversification
-│   └── valuation/         H3 · reverse-DCF engine             → /analyse
-│                              fcf · wacc · dcf · reverse_dcf · sensitivity ·
-│                              multiples · suitability · red_flags · audit_trail
-├── api/
-│   ├── main.py                 Thin app: CORS, /health, mounts routers
-│   ├── models.py               Request schemas
-│   ├── sanitize.py             JSON-safety helper
-│   └── routers/                money.py · portfolio.py · stock.py  (one per lab)
-├── frontend/
-│   ├── src/App.jsx             Shell + Money/Stock/Portfolio tab routing
-│   ├── src/features/           money/ · stock/ · portfolio/  (each lab's UI)
-│   ├── src/shared/             SearchBar, Glossary, primitives, hooks
-│   └── public/companion.html   51-card EPFL teaching deck — standalone
-├── backtest/              "Was the Stock lab right in the past?" — as-of validation
-├── tests/                pytest, incl. EPFL exam answer oracles (money/portfolio/exam1/exam2)
-└── docs/                 Scope table & course-coverage tracking (openquant_scope_table.xlsx)
+core/         money/ · portfolio/ · valuation/   (one folder per course block)
+              + data/ (EDGAR + yfinance) + common/ (shared helpers)
+api/          thin main.py + routers/{money,portfolio,stock}.py
+frontend/     src/features/{money,stock,portfolio} + src/shared/
+              public/companion.html   ← the 51-card deck
+tests/        pinned to real EPFL sample-exam answers
 ```
 
 ---
 
-## Deployment (3 independent targets)
-
-![OpenQuant deployment: pushing to GitHub auto-deploys the React app to Vercel and the API to Render (Vercel proxies /api/* to Render); the teaching deck is published manually to GitHub Pages.](docs/openquant-deploy.svg)
-
-- **React app → Vercel** (`frontend/vercel.json`) — auto-deploys on push; proxies `/api/*` to the Render API.
-- **API → Render** (`render.yaml`, `Procfile`) — auto-deploys on push.
-- **Teaching deck → GitHub Pages** (`gh-pages` branch = `companion.html` copied as `index.html`) — **manual**, no CI:
-  ```bash
-  git worktree add -B gh-pages /tmp/ghp origin/gh-pages
-  cp frontend/public/companion.html /tmp/ghp/index.html
-  git -C /tmp/ghp commit -am "update deck" && git -C /tmp/ghp push origin gh-pages
-  git worktree remove /tmp/ghp
-  ```
-
----
-
-## Run locally
-
-One-time setup, then a single command runs everything:
+## Run it
 
 ```bash
-git clone https://github.com/A-bv/openquant && cd openquant
-make install     # Python + frontend deps
-make dev         # API on :8000  +  app on :5173   (Ctrl-C stops both)
+make install     # one-time: Python + frontend deps
+make dev         # API on :8000 + app on :5173 together (Ctrl-C stops both)
 ```
 
-Open **http://localhost:5173** — it opens on the **Money** lab; switch tabs for **Stock** and **Portfolio**. The teaching deck is at `http://localhost:5173/companion.html`.
-
-> `make test` runs the suite · `make api` / `make web` start a single side · interactive API docs at `http://localhost:8000/docs`.
+Then open **http://localhost:5173** (the app) — the deck is at **/companion.html**.
+`make test` runs the suite.
 
 ---
 
-## Tests & correctness
+## Deploying
 
-```bash
-make test
-```
+![OpenQuant deployment: pushing to GitHub auto-deploys the app to Vercel and the API to Render; the teaching deck is published manually to GitHub Pages.](docs/openquant-deploy.svg)
 
-The course itself is the correctness oracle: `test_money.py`, `test_portfolio.py`, `test_epfl_exam1.py`, and `test_epfl_exam2.py` pin `core/` against **worked answers from real EPFL exams**. Live EDGAR tests are separate because they need network access.
+The app (Vercel) and API (Render) **auto-deploy on push**. The teaching deck is the only manual step — copy `companion.html` onto the `gh-pages` branch as `index.html`.
 
-Data: **SEC EDGAR** (financial statements) and **yfinance** (market prices & historical returns).
+---
 
-## License
-
-MIT.
+MIT licensed. Built from the EPFL *Principles of Finance* course (ref. Berk & DeMarzo, *Corporate Finance*).
