@@ -116,7 +116,7 @@ export default function App() {
             <span className="brand-dot" />
           </div>
           <div className="topbar-subtitle">
-            EPFL finance applied to live US market data.
+            Finance theory applied to live US market data.
           </div>
           <div style={{ display: 'flex', gap: 4, marginLeft: 16 }}>
             <button

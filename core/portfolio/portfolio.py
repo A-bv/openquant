@@ -219,15 +219,15 @@ class DiversificationReport:
         """Layer 1 — the plain-language verdict for the general public."""
         ti = self.top_risk_idx
         return [
-            f"You hold {self.n_holdings} positions — in risk terms, "
-            f"{self.effective_bets:.1f} independent bet(s).",
+            f"You hold {self.n_holdings} positions. In risk terms, that is "
+            f"{self.effective_bets:.1f} independent bets.",
             f"Real volatility: {self.portfolio_vol * 100:.1f}%/yr.",
-            f"If they were uncorrelated: {self.independent_vol * 100:.1f}% — "
-            f"you carry {self.risk_multiple:.1f}x the risk you'd think.",
+            f"If they were uncorrelated: {self.independent_vol * 100:.1f}%. "
+            f"You carry {self.risk_multiple:.1f}x the risk you'd think.",
             f"Risk is driven by {self.tickers[ti]}: "
             f"{self.weights[ti] * 100:.0f}% of capital but "
             f"{self.risk_contributions[ti] * 100:.0f}% of the risk.",
-            "Honest limit: in a crisis correlations rise toward 1 — your real "
+            "Honest limit: in a crisis, holdings tend to move together, so your real "
             "diversification is even weaker than this calm-times snapshot.",
         ]
 
@@ -253,11 +253,11 @@ class DiversificationReport:
             f"({self.expected_return * 100:.1f}% − {self.risk_free_rate * 100:.1f}%)"
             f"/{self.portfolio_vol * 100:.1f}% = {self.sharpe:.2f}",
             "",
-            "Formulas — Berk-DeMarzo Ch. 11.3-11.5 · EPFL formula sheet p.2-3",
+            "Formulas: Berk-DeMarzo Ch. 11.3-11.5 · formula sheet p.2-3",
             "  Var(R_p) = wᵀ Σ w        (portfolio variance)",
             "  σ_indep  = sqrt(Σ w_i² σ_i²)   (if holdings were independent)",
-            "Pinned by tests/test_portfolio.py against EPFL Sample Exam 2 P4 "
-            "(σ_p = 0.07 at ρ = −1; min-variance ω_Y = 0.20).",
+            "Pinned by tests/test_portfolio.py against the Sample Exam 2 portfolio "
+            "problem (σ_p = 0.07 at ρ = −1; min-variance ω_Y = 0.20).",
         ]
 
     def to_dict(self) -> dict:
