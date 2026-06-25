@@ -1,6 +1,6 @@
 # OpenQuant
 
-OpenQuant is a hands-on way into the core ideas of finance: what a future dollar is worth today, how risk trades off against return, and what a company is actually worth.
+OpenQuant is a hands-on way into the decisions at the heart of corporate finance: what something is worth, how much return to demand for its risk, which projects to back, how to finance them, and how derivatives shift risk around.
 
 Today it is a deck of **53 cards**. Each card explains one idea with a picture, then lets you drag the numbers in its formula and watch the result change.
 
