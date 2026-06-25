@@ -288,6 +288,20 @@
         q(root,'pival').textContent=pi.toFixed(2); q(root,'pibar').style.width=Math.min(Math.max(pi,0)/0.6*100,100)+'%';
         K(q(root,'fnum'),Math.round(npv)+' / '+v.x+' = '+pi.toFixed(2));}},
 
+    payback:{ch:'H1 · project decisions',eyebrow:'payback period',idea:'How fast does a project return what you put in?',
+      usecase:"A project costs money now and returns cash each year. The payback period is how long until those returns add back up to the cost. It is quick and intuitive, but it ignores the time value of money, so use it to screen, not to decide.",
+      fixed:"it costs $20,000 today", src:'Berk-DeMarzo Ch.7',
+      inputs:[{k:'c',label:'cash it returns each year',min:2000,max:8000,step:250,val:5000,unit:'$'},{k:'cut',label:'longest payback you would accept',min:2,max:12,step:1,val:5,unit:'yr'}],
+      viz:hbar('pb','var(--accent)','years to pay the cost back')+hbar('cut','var(--track)','the longest you would accept'),
+      fgen:"\\text{payback} \\;=\\; \\dfrac{\\text{cost}}{\\text{annual cash}}",
+      explain:'Payback is easy to grasp but blind to two things: the time value of money, and any cash that arrives after the cutoff. Use it as a rough screen, then let NPV make the real call.',
+      update:function(v,root){var X=20000, pb=X/v.c, mx=Math.max(pb,v.cut,1);
+        q(root,'ans').textContent=pb.toFixed(1)+' yrs'; var c=q(root,'chip'); c.className='chip '+(pb<=v.cut?'good':'lost'); c.textContent=pb<=v.cut?'within your cutoff':'too slow for you';
+        q(root,'note').textContent='at '+money(v.c)+' a year, $20,000 is paid back in '+pb.toFixed(1)+' years';
+        q(root,'pbval').textContent=pb.toFixed(1)+' yr'; q(root,'cutval').textContent=v.cut+' yr';
+        q(root,'pbbar').style.width=(pb/mx*100)+'%'; q(root,'cutbar').style.width=(v.cut/mx*100)+'%'; q(root,'cutbar').style.background='var(--faint)';
+        K(q(root,'fnum'),'20000 / '+v.c+' = '+pb.toFixed(1)+' \\text{ yrs}');}},
+
     ear:{ch:'H1 · rates',eyebrow:'real yearly rate',idea:'A rate quoted per month hides its true yearly cost.',
       usecase:"Comparing a credit card, a loan, or a savings account that compound at different speeds. This turns the headline rate into the true yearly rate so you compare fairly.",
       fixed:"the same headline rate, compounded the chosen number of times", src:'Berk-DeMarzo Ch.5',
@@ -322,7 +336,7 @@
       inputs:[{k:'price',label:'price you pay today (for $100 at the end)',min:50,max:99,step:1,val:90,unit:'$'},{k:'n',label:'years until it pays out',min:1,max:15,step:1,val:3,unit:'yr'}],
       viz:twoBarHTML('you pay now','you get at the end'),
       fgen:"r_n \\;=\\; \\left(\\dfrac{100}{\\text{price}}\\right)^{1/n} - 1",
-      explain:'A lower price for the same $100 means a higher rate. The rate is usually different for each maturity, which traces out the yield curve.',
+      explain:'A lower price for the same $100 means a higher rate. The rate is usually different for each maturity, which traces out the yield curve. Prices line up across maturities by the law of one price: the same $100 payoff cannot trade at two prices.',
       update:function(v,root){var rate=Math.pow(100/v.price,1/v.n)-1, rp=rate*100;
         q(root,'ans').textContent=rp.toFixed(2)+'%'; var c=q(root,'chip'); c.className='chip info'; c.textContent='locked for '+v.n+(v.n===1?' year':' years');
         q(root,'note').textContent='paying '+money(v.price)+' now for $100 in '+v.n+' years earns '+rp.toFixed(2)+'% a year';
@@ -336,13 +350,32 @@
       inputs:[{k:'r1',label:'rate to lock money for 1 year',min:1,max:10,step:0.25,val:3,unit:'%'},{k:'r2',label:'rate to lock money for 2 years',min:1,max:10,step:0.25,val:4,unit:'%'}],
       viz:hbar('a','var(--accent)','rate for year 1')+hbar('b','var(--good)','rate the market implies for year 2'),
       fgen:"(1+r_2)^2 \\;=\\; (1+r_1)\\,(1+f)",
-      explain:'If two years pays more than one, the gap is the rate the market expects for the second year. That implied rate is the forward rate.',
+      explain:'If two years pays more than one, the gap is the rate the market expects for the second year. That implied rate is the forward rate. This is the law of one price at work: locking money for two years must equal one year then rolling into the forward, or there is a free lunch.',
       update:function(v,root){var f=(Math.pow(1+v.r2/100,2)/(1+v.r1/100))-1, fp=f*100, mx=Math.max(v.r1,fp,v.r2);
         q(root,'ans').textContent=fp.toFixed(2)+'%'; var c=q(root,'chip'); c.className='chip info'; c.textContent='implied year-2 rate';
         q(root,'note').textContent='the market is already pricing '+fp.toFixed(2)+'% for the second year';
         q(root,'aval').textContent=v.r1+'%'; q(root,'bval').textContent=fp.toFixed(2)+'%';
         q(root,'abar').style.width=(v.r1/mx*100)+'%'; q(root,'bbar').style.width=(fp/mx*100)+'%';
         K(q(root,'fnum'),'(1+'+(v.r2/100).toFixed(3)+')^2 / (1+'+(v.r1/100).toFixed(3)+') - 1 = '+fp.toFixed(2)+'\\%');}},
+
+    yieldcurve:{ch:'H1 · bonds & rates',eyebrow:'the term structure',idea:'Every maturity has its own rate; together they trace the yield curve.',
+      usecase:"The rate you can lock in depends on how long you tie up your money. Plot the rate for each maturity, from 1 year out to 10, and you get the yield curve. Its shape, rising, flat, or inverted, is the market’s read on where rates are headed.",
+      fixed:"rates shown from 1 to 10 years", src:'Berk-DeMarzo Ch.8',
+      inputs:[{k:'r1',label:'the 1-year rate (the short end)',min:0.5,max:8,step:0.25,val:2,unit:'%'},{k:'slope',label:'how the rate changes per extra year',min:-0.6,max:0.6,step:0.05,val:0.3,unit:'%',lo:'inverted',hi:'steep'}],
+      viz:'<svg data-r="svg" viewBox="0 0 320 170" width="100%" style="max-width:340px;display:block;margin:0 auto;"></svg>',
+      fgen:"r_n \\;=\\; r_1 + \\text{slope}\\times(n-1)",
+      explain:'A rising curve (the usual case) means longer money costs more. A flat curve means maturity barely matters. An inverted curve, where long rates sit below short ones, often signals that markets expect rates, and growth, to fall.',
+      update:function(v,root){var r10=Math.max(0,v.r1+v.slope*9), shape=v.slope > 0.03 ? 'rising' : (v.slope < -0.03 ? 'inverted' : 'flat');
+        q(root,'ans').textContent=r10.toFixed(2)+'%'; var c=q(root,'chip'); c.className='chip '+(shape==='inverted'?'lost':'info'); c.textContent=shape+' curve';
+        q(root,'note').textContent='1-year locks in '+v.r1+'%, 10-year '+r10.toFixed(2)+'%: a '+shape+' curve';
+        var x0=42,x1=300,y0=148,y1=18,maxY=14, MX=function(n){return x0+((n-1)/9)*(x1-x0);}, MY=function(r){return y0-(Math.max(0,Math.min(r,maxY))/maxY)*(y0-y1);};
+        var s='<line x1="'+x0+'" y1="'+y0+'" x2="'+x1+'" y2="'+y0+'" stroke="var(--border)"/><line x1="'+x0+'" y1="'+y0+'" x2="'+x0+'" y2="'+y1+'" stroke="var(--border)"/>';
+        var pts=''; for(var n=1;n<=10;n++){var rn=Math.max(0,v.r1+v.slope*(n-1)); pts+=MX(n).toFixed(1)+','+MY(rn).toFixed(1)+' ';}
+        s+='<polyline points="'+pts+'" fill="none" stroke="var(--accent)" stroke-width="2"/>';
+        s+='<circle cx="'+MX(1).toFixed(1)+'" cy="'+MY(v.r1).toFixed(1)+'" r="3.5" fill="var(--accent)"/><circle cx="'+MX(10).toFixed(1)+'" cy="'+MY(r10).toFixed(1)+'" r="3.5" fill="var(--accent)"/>';
+        s+='<text x="'+x0+'" y="165" font-size="10" fill="var(--faint)">1 yr</text><text x="'+x1+'" y="165" font-size="10" fill="var(--faint)" text-anchor="end">10 yr</text><text x="6" y="'+y1+'" font-size="10" fill="var(--faint)">rate</text>';
+        q(root,'svg').innerHTML=s;
+        K(q(root,'fnum'),'r_{10} = '+v.r1+' + '+v.slope.toFixed(2)+'\\times 9 = '+r10.toFixed(2)+'\\%');}},
 
     bond:{ch:'H1 · bonds & rates',eyebrow:'price a bond',idea:'A bond is worth more when its coupon beats today’s rate.',
       usecase:"A bond pays a fixed coupon each year plus $100 at the end. Given the rate you require today, this is what it should be worth, and whether it is cheap or dear.",
@@ -883,7 +916,7 @@
   var CHAPTERS=[
     {id:'H1',title:'Discounting & valuation',sub:'what a future dollar is worth today',
      cards:[{id:'pv',t:'Present value',r:1},{id:'fv',t:'Future value',r:1},{id:'perpetuity',t:'Perpetuity',r:1},{id:'growperp',t:'Growing perpetuity',r:1},{id:'annuity',t:'Annuity',r:1},{id:'growann',t:'Growing annuity',r:1},{id:'npv',t:'NPV: is it worth it?',r:1},{id:'irr',t:'IRR: break-even rate',r:1},
-            {id:'pi',t:'Profitability index',r:1},{id:'ear',t:'EAR vs APR',r:1},{id:'loan',t:'Loan & amortization',r:1},{id:'contcomp',t:'Continuous compounding',r:1},{id:'spot',t:'Spot rates',r:1},{id:'forward',t:'Forward rates',r:1},{id:'bond',t:'Bond pricing',r:1},{id:'ytm',t:'Yield to maturity',r:1},{id:'duration',t:'Duration',r:1},{id:'ddm',t:'Dividend-discount',r:1}]},
+            {id:'pi',t:'Profitability index',r:1},{id:'payback',t:'Payback period',r:1},{id:'ear',t:'EAR vs APR',r:1},{id:'loan',t:'Loan & amortization',r:1},{id:'contcomp',t:'Continuous compounding',r:1},{id:'spot',t:'Spot rates',r:1},{id:'forward',t:'Forward rates',r:1},{id:'yieldcurve',t:'The yield curve',r:1},{id:'bond',t:'Bond pricing',r:1},{id:'ytm',t:'Yield to maturity',r:1},{id:'duration',t:'Duration',r:1},{id:'ddm',t:'Dividend-discount',r:1}]},
     {id:'H2',title:'Risk & return',sub:'how much you should be paid for risk',
      cards:[{id:'diversification',t:'Diversification',r:1},{id:'capm',t:'CAPM: return to ask for',r:1},
             {id:'expvar',t:'Expected return & volatility',r:1},{id:'covcorr',t:'Covariance & correlation',r:1},{id:'portvar',t:'Portfolio variance',r:1},{id:'riskcontrib',t:'Risk contribution',r:1},{id:'minvar',t:'Minimum-variance',r:1},{id:'frontier',t:'Efficient frontier',r:1},{id:'cml',t:'Capital market line',r:1},{id:'sharpe',t:'Sharpe ratio',r:1},{id:'beta',t:'Beta',r:1},{id:'portbeta',t:'Portfolio beta',r:1},{id:'sysidio',t:'Systematic vs idiosyncratic',r:1},{id:'alpha',t:'Alpha',r:1}]},

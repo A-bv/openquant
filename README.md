@@ -2,7 +2,7 @@
 
 OpenQuant is a hands-on way into the core ideas of finance: what a future dollar is worth today, how risk trades off against return, and what a company is actually worth.
 
-Today it is a deck of **51 cards**. Each card explains one idea with a picture, then lets you drag the numbers in its formula and watch the result change.
+Today it is a deck of **53 cards**. Each card explains one idea with a picture, then lets you drag the numbers in its formula and watch the result change.
 
 Try it live at **https://a-bv.github.io/openquant**, or open `frontend/public/companion.html`.
 
