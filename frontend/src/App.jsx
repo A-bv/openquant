@@ -1,128 +1,212 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import axios from 'axios'
-import { useIsMobile } from './components/useIsMobile'
 
 // v3 flow components
-import HeroVerdict from './components/HeroVerdict'
-import MarketBetPanel from './components/MarketBetPanel'
-import ScenariosWithSliders from './components/ScenariosWithSliders'
-import WhatYouNeedToBelieve from './components/WhatYouNeedToBelieve'
-import MultiplesCheck from './components/MultiplesCheck'
-import CalibrationPanel from './components/CalibrationPanel'
-import Conclusion from './components/Conclusion'
-import Glossary from './components/Glossary'
-import LearnMore from './components/LearnMore'
+import HeroVerdict from './features/stock/HeroVerdict'
+import MarketBetPanel from './features/stock/MarketBetPanel'
+import ScenariosWithSliders from './features/stock/ScenariosWithSliders'
+import WhatYouNeedToBelieve from './features/stock/WhatYouNeedToBelieve'
+import MultiplesCheck from './features/stock/MultiplesCheck'
+import CalibrationPanel from './features/stock/CalibrationPanel'
+import ModelQualityPanel from './features/stock/ModelQualityPanel'
+import Conclusion from './features/stock/Conclusion'
+import Glossary from './shared/Glossary'
+import LearnMore from './shared/LearnMore'
+import DisclosureSection from './shared/DisclosureSection'
 
 // retained components (well-tested)
-import SearchBar from './components/SearchBar'
-import LoadingState from './components/LoadingState'
-import FCFHistoryChart from './components/FCFHistoryChart'
-import SensitivityTable from './components/SensitivityTable'
-import WACCBreakdown from './components/WACCBreakdown'
-import EPFLCitation from './components/EPFLCitation'
+import SearchBar from './shared/SearchBar'
+import LoadingState from './shared/LoadingState'
+import FCFHistoryChart from './features/stock/FCFHistoryChart'
+import SensitivityTable from './features/stock/SensitivityTable'
+import WACCBreakdown from './features/stock/WACCBreakdown'
+import EPFLCitation from './shared/EPFLCitation'
+import DiversificationLab from './features/portfolio/DiversificationLab'
+import NowOrLaterLab from './features/money/NowOrLaterLab'
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const API = import.meta.env.VITE_API_URL || (
+  typeof window !== 'undefined'
+    ? `${window.location.protocol}//${window.location.hostname}:8000`
+    : 'http://127.0.0.1:8000'
+)
+
+function getInitialTicker() {
+  if (typeof window === 'undefined') return ''
+  return new URLSearchParams(window.location.search).get('ticker')?.trim().toUpperCase() || ''
+}
+
+function getAnalysisError(e) {
+  const detail = e.response?.data?.detail
+  const apiMessage = (typeof detail === 'object' ? detail?.error : detail)
+    || e.response?.data?.error
+
+  if (apiMessage) return apiMessage
+
+  if (e.code === 'ERR_NETWORK') {
+    return [
+      'The analysis API is not reachable.',
+      `Start the backend on ${API} or check the frontend API URL.`,
+    ].join(' ')
+  }
+
+  if (e.response?.status >= 500) {
+    return 'The analysis API returned a server error. Retry once, then check backend logs.'
+  }
+
+  return 'Analysis failed. Please try again.'
+}
 
 export default function App() {
+  const initialTicker = getInitialTicker()
   const [loading, setLoading]     = useState(false)
   const [error, setError]         = useState(null)
   const [data, setData]           = useState(null)
-  const [activeTicker, setActive] = useState('')
+  const [activeTicker, setActive] = useState(initialTicker)
   const [glossaryOpen, setGlossaryOpen] = useState(false)
-  const isMobile = useIsMobile()
+  const [view, setView] = useState('money')
 
-  const analyse = async (ticker) => {
+  const analyse = useCallback(async (ticker, { syncUrl = true } = {}) => {
+    const normalizedTicker = ticker.trim().toUpperCase()
+    if (!normalizedTicker) return
+
+    if (syncUrl) {
+      const url = new URL(window.location.href)
+      url.searchParams.set('ticker', normalizedTicker)
+      window.history.replaceState({}, '', url)
+    }
+
     setLoading(true)
     setError(null)
     setData(null)
-    setActive(ticker)
+    setActive(normalizedTicker)
     try {
       const res = await axios.post(`${API}/analyse`, {
-        ticker,
+        ticker: normalizedTicker,
         risk_free_rate: 0.045,
         market_risk_premium: 0.055,
         terminal_growth: 0.025,
       })
       setData(res.data)
     } catch (e) {
-      const detail = e.response?.data?.detail
-      const msg = (typeof detail === 'object' ? detail?.error : detail)
-        || e.response?.data?.error
-        || 'Analysis failed. Please try again.'
-      setError(msg)
+      setError(getAnalysisError(e))
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    if (!initialTicker) return undefined
+
+    const id = window.setTimeout(() => {
+      analyse(initialTicker, { syncUrl: false })
+    }, 0)
+
+    return () => window.clearTimeout(id)
+  }, [analyse, initialTicker])
 
   const d = data
 
   return (
-    <div style={{ minHeight: '100vh', background: '#F9FAFB' }}>
+    <div className="app-shell">
       {/* Topbar */}
-      <header style={{
-        background: '#FFFFFF',
-        borderBottom: '0.5px solid #E5E7EB',
-        padding: isMobile ? '0 16px' : '0 48px',
-        display: 'flex',
-        alignItems: 'center',
-        height: 56,
-        gap: 20,
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ fontSize: 16, fontWeight: 800, color: '#111827', letterSpacing: '-0.02em' }}>
-            OpenQuant
-          </span>
-          <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#185FA5' }} />
+      <header className="topbar">
+        <div className="topbar-inner">
+          <div className="brand-mark">
+            <span>OpenQuant</span>
+            <span className="brand-dot" />
+          </div>
+          <div className="topbar-subtitle">
+            EPFL finance applied to live US market data.
+          </div>
+          <div style={{ display: 'flex', gap: 4, marginLeft: 16 }}>
+            <button
+              onClick={() => setView('money')}
+              className="topbar-action"
+              style={{ fontWeight: view === 'money' ? 700 : 400, opacity: view === 'money' ? 1 : 0.55 }}
+            >
+              Money
+            </button>
+            <button
+              onClick={() => setView('stock')}
+              className="topbar-action"
+              style={{ fontWeight: view === 'stock' ? 700 : 400, opacity: view === 'stock' ? 1 : 0.55 }}
+            >
+              Stock
+            </button>
+            <button
+              onClick={() => setView('portfolio')}
+              className="topbar-action"
+              style={{ fontWeight: view === 'portfolio' ? 700 : 400, opacity: view === 'portfolio' ? 1 : 0.55 }}
+            >
+              Portfolio
+            </button>
+          </div>
+          <button
+            onClick={() => setGlossaryOpen(true)}
+            aria-label="Open glossary"
+            className="topbar-action"
+          >
+            📖 Glossary
+          </button>
+          <a href="https://github.com/A-bv/openquant" target="_blank" rel="noreferrer"
+            className="topbar-link">
+            GitHub ↗
+          </a>
         </div>
-        <div style={{ flex: 1, fontSize: 12, color: '#9CA3AF', display: isMobile ? 'none' : undefined }}>
-          The corporate finance textbook, made interactive — and tested against reality.
-        </div>
-        <button
-          onClick={() => setGlossaryOpen(true)}
-          aria-label="Open glossary"
-          style={{
-            fontSize: 12, fontWeight: 600,
-            color: '#374151', background: '#F3F4F6',
-            border: '0.5px solid #E5E7EB', borderRadius: 999,
-            padding: '4px 10px', cursor: 'pointer',
-            fontFamily: 'inherit',
-          }}
-        >
-          📖 Glossary
-        </button>
-        <a href="https://github.com/A-bv/openquant" target="_blank" rel="noreferrer"
-          style={{ fontSize: 12, color: '#6B7280' }}>
-          GitHub ↗
-        </a>
       </header>
 
       {/* Glossary drawer */}
       <Glossary open={glossaryOpen} onClose={() => setGlossaryOpen(false)} />
 
-      <main style={{
-        maxWidth: 940, margin: '0 auto',
-        padding: isMobile ? '16px 12px' : '28px 24px',
-        display: 'flex', flexDirection: 'column', gap: 18,
-      }}>
+      <main className="page">
+
+        {view === 'money' && <NowOrLaterLab API={API} />}
+
+        {view === 'portfolio' && <DiversificationLab API={API} />}
+
+        {view === 'stock' && (
+        <>
 
         {/* Search */}
-        <section style={{
-          background: '#FFFFFF',
-          border: '0.5px solid #E5E7EB',
-          borderRadius: 12,
-          padding: isMobile ? '20px 16px' : '24px 28px',
-        }}>
-          <h1 style={{ fontSize: 24, fontWeight: 800, color: '#111827', marginBottom: 10, lineHeight: 1.15 }}>
-            The corporate finance textbook, made interactive — and tested against reality.
-          </h1>
-          <p style={{ fontSize: 14, color: '#6B7280', marginBottom: 18, lineHeight: 1.6, maxWidth: 660 }}>
-            Type a US ticker. We apply the valuation method from Berk-DeMarzo's
-            <em> Corporate Finance</em> textbook step by step — every formula traceable to
-            its chapter, every assumption you can change live. Then we show our 10-year
-            track record so you can see where the method works and where it doesn't.
-          </p>
-          <SearchBar onAnalyse={analyse} loading={loading} data={d} />
+        <section className={`card ${d ? 'analysis-toolbar' : 'intro-card'}`}>
+          {!d && (
+            <>
+              <div className="eyebrow">
+                Live Corporate Finance Lab
+              </div>
+              <h1 className="page-title">
+                What Does a Stock Price Tell You?
+              </h1>
+              <p className="page-copy">
+                OpenQuant uses real market data and EPFL finance formulas to
+                estimate the cash-flow growth required to justify today's price,
+                then backtests whether similar past conclusions were informative.
+              </p>
+              <p className="intro-proof">
+                Real US market data · EPFL course formulas · Historical backtests
+              </p>
+            </>
+          )}
+          <div className={d ? 'toolbar-grid' : undefined}>
+            {d && (
+              <div>
+                <div className="eyebrow">
+                  EPFL Finance Lab
+                </div>
+                <div className="toolbar-title">
+                  Ticker converted into a finance case
+                </div>
+              </div>
+            )}
+            <SearchBar
+              key={activeTicker || 'empty-search'}
+              onAnalyse={analyse}
+              loading={loading}
+              data={d}
+              value={activeTicker}
+              showSummary={false}
+            />
+          </div>
         </section>
 
         {/* Error */}
@@ -145,7 +229,7 @@ export default function App() {
 
         {loading && <LoadingState ticker={activeTicker} />}
 
-        {/* Not-suitable verdict */}
+        {/* Not-suitable analysis */}
         {d && !d.is_suitable && (
           <section style={{
             background: '#FCEBEB', border: '0.5px solid #F5B5B5',
@@ -173,19 +257,42 @@ export default function App() {
           <>
             <HeroVerdict d={d} />
 
-            {/* Trust signal — visible BEFORE the user dives deep */}
-            <CalibrationPanel placement="hero" />
-
-            <MarketBetPanel d={d} />
-            <ScenariosWithSliders d={d} />
+            <ScenariosWithSliders key={d.ticker} d={d} />
             <WhatYouNeedToBelieve d={d} />
-            <MultiplesCheck d={d} />
+
+            <DisclosureSection
+              eyebrow="Reverse DCF detail"
+              title="Compare implied growth with the company's history"
+              summary="Open this to see the full reverse DCF comparison against historical median, mean, revenue CAGR, and GDP."
+            >
+              <MarketBetPanel d={d} />
+            </DisclosureSection>
+
+            <DisclosureSection
+              eyebrow="Model reliability"
+              title="How much should you trust this analysis?"
+              summary="The formula can be correct while the stock-return signal remains weak. Open this before treating any model value as a forecast."
+            >
+              <CalibrationPanel placement="hero" />
+              <div style={{ marginTop: 12 }}>
+                <ModelQualityPanel d={d} />
+              </div>
+            </DisclosureSection>
+
+            <DisclosureSection
+              eyebrow="Cross-check"
+              title="Check the model output against market multiples"
+              summary="P/E, EV/EBITDA, and FCF yield provide a quick sanity check, separate from the DCF."
+            >
+              <MultiplesCheck d={d} />
+            </DisclosureSection>
 
             {/* FCF history — kept as a focused section */}
-            <section style={{
-              background: '#FFFFFF', border: '0.5px solid #E5E7EB',
-              borderRadius: 12, padding: '20px 24px',
-            }}>
+            <DisclosureSection
+              eyebrow="Cash-flow evidence"
+              title="Inspect free cash flow history"
+              summary="Use this to judge whether the growth assumption is grounded in what the business has actually produced."
+            >
               <h3 style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: 0, marginBottom: 4 }}>
                 Free cash flow history
                 <EPFLCitation source="Berk-DeMarzo Ch.7 · FCF formula" test="test_epfl_exam1.py::TestExam1Problem2_FCF" />
@@ -195,13 +302,14 @@ export default function App() {
                 What the business actually generated. Red bars = negative FCF.
               </p>
               <FCFHistoryChart history={d.fcf.history} companyName={d.company_name} />
-            </section>
+            </DisclosureSection>
 
             {/* Sensitivity */}
-            <section style={{
-              background: '#FFFFFF', border: '0.5px solid #E5E7EB',
-              borderRadius: 12, padding: '20px 24px',
-            }}>
+            <DisclosureSection
+              eyebrow="Sensitivity"
+              title="Open the valuation heatmap"
+              summary="See how quickly the conclusion changes when growth and discount rate move together."
+            >
               <h3 style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: 0, marginBottom: 4 }}>
                 Sensitivity heatmap
                 <LearnMore section="sensitivity" />
@@ -212,13 +320,14 @@ export default function App() {
                 <strong>Read this:</strong> <span style={{ color: '#3B6D11' }}>green = above today's price</span> · <span style={{ color: '#A32D2D' }}>red = below today's price</span> · amber border = closest match to today's price.
               </p>
               <SensitivityTable sensitivity={d.sensitivity} currentPrice={d.current_price} />
-            </section>
+            </DisclosureSection>
 
             {/* WACC breakdown — the math */}
-            <section style={{
-              background: '#FFFFFF', border: '0.5px solid #E5E7EB',
-              borderRadius: 12, padding: '20px 24px',
-            }}>
+            <DisclosureSection
+              eyebrow="Course formula"
+              title="Show the WACC calculation"
+              summary="Open the CAPM and WACC machinery when you want to audit the discount rate."
+            >
               <h3 style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: 0, marginBottom: 4 }}>
                 Show your work — discount rate (WACC)
                 <EPFLCitation source="Berk-DeMarzo Ch.12 (CAPM), Ch.15 (WACC)" />
@@ -228,29 +337,32 @@ export default function App() {
                 Every component of the discount rate, sourced and explained.
               </p>
               <WACCBreakdown wacc={d.wacc} />
-            </section>
+            </DisclosureSection>
 
             {/* Per-stock conclusion + take-aways + next actions */}
             <Conclusion d={d} onAnalyse={analyse} />
 
             {/* Buffett footer */}
-            <section style={{
-              background: '#F9FAFB',
-              borderRadius: 12,
-              padding: '16px 20px',
-              fontSize: 11,
-              color: '#6B7280',
-              lineHeight: 1.6,
-              maxWidth: 720,
-            }}>
-              <strong style={{ color: '#374151' }}>Note on methodology.</strong>{' '}
-              Buffett doesn't use WACC — he discounts at the long-bond yield (~5%), uses
-              "owner's earnings" instead of FCF, and demands a 30%+ margin of safety. His
-              method gives different (often higher) IVs but he'd refuse to apply it to many
-              of these companies. We use the textbook method (Berk-DeMarzo) because every
-              step is traceable to a chapter and verifiable against the textbook's worked
-              problems. Both philosophies are legitimate.
-            </section>
+            <DisclosureSection
+              eyebrow="Methodology note"
+              title="Why this uses textbook DCF rather than Buffett owner earnings"
+              summary="Different valuation philosophies can produce different answers. This app uses Berk-DeMarzo because the formulas are traceable and testable."
+            >
+              <div style={{
+                fontSize: 12,
+                color: '#6B7280',
+                lineHeight: 1.65,
+                maxWidth: 760,
+              }}>
+                <strong style={{ color: '#374151' }}>Note on methodology.</strong>{' '}
+                Buffett doesn't use WACC — he discounts at the long-bond yield (~5%), uses
+                "owner's earnings" instead of FCF, and demands a 30%+ margin of safety. His
+                method gives different (often higher) IVs but he'd refuse to apply it to many
+                of these companies. We use the textbook method (Berk-DeMarzo) because every
+                step is traceable to a chapter and verifiable against the textbook's worked
+                problems. Both philosophies are legitimate.
+              </div>
+            </DisclosureSection>
 
             {/* Brand footer */}
             <div style={{
@@ -260,6 +372,9 @@ export default function App() {
               <strong style={{ color: '#6B7280' }}>OpenQuant</strong> · Theory. Reality. You decide.
             </div>
           </>
+        )}
+
+        </>
         )}
       </main>
     </div>

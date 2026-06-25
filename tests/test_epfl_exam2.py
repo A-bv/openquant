@@ -22,13 +22,13 @@ from __future__ import annotations
 import math
 import pytest
 
-from core.dcf import DCFEngine
-from core.utils import (
+from core.valuation.dcf import DCFEngine
+from core.common import (
     capital_gain_rate,
     min_variance_two_asset_weight,
     sharpe_from_stats,
 )
-from core.wacc import (
+from core.valuation.wacc import (
     capm_cost_of_equity,
     beta_from_correlation,
     idiosyncratic_variance,

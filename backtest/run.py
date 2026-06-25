@@ -27,11 +27,11 @@ from backtest.edgar_historical import (
     cumulative_split_ratio_after,
 )
 from backtest.macro import get_macro
-from core.dcf import DCFEngine
-from core.fcf import FCFAnalyser
-from core.reverse_dcf import ReverseDCFSolver, ReverseDCFResult
-from core.suitability import SuitabilityChecker, SuitabilityRating
-from core.wacc import WACCBuilder
+from core.valuation.dcf import DCFEngine
+from core.valuation.fcf import FCFAnalyser
+from core.valuation.reverse_dcf import ReverseDCFSolver, ReverseDCFResult
+from core.valuation.suitability import SuitabilityChecker, SuitabilityRating
+from core.valuation.wacc import WACCBuilder
 
 
 @dataclass

@@ -38,7 +38,7 @@ The work is meaningful but bounded — ~3-5 focused days. Below is the design.
 - REITs (different cash-flow definition)
 - Companies that IPO'd after 2010 (insufficient pre-period history)
 
-The 50 names get checked into `docs/backtest_universe.json`.
+The 50 names are implemented in `backtest/universe.py`.
 
 ---
 
@@ -110,7 +110,7 @@ pipeline and record:
 | `survived` | bool | did the company still exist as a public stock in 2024 |
 | `failure_mode` | string | acquisition / bankruptcy / delisting / merger |
 
-**Output:** `docs/backtest_results.csv` — single row per ticker.
+**Output:** `backtest/results/backtest_2014_2024.csv` — single row per ticker.
 
 ---
 
@@ -144,31 +144,18 @@ pipeline and record:
 
 ---
 
-## 6. What the report looks like when it lands
+## 6. Product output
 
-`docs/backtest_2014_2024.md`:
+The backtest should produce implemented artifacts, not a long interpretive
+Markdown report:
 
-```
-# OpenQuant — 10-year backtest, Jan 2014 → Jan 2024
+- raw historical results in `backtest/results/backtest_2014_2024.csv`
+- machine-readable summary in `backtest/results/calibration_summary.json`
+- automated tests locking the main metrics
+- a concise reliability panel in the app
 
-## Headline
-
-When OpenQuant said "overvalued by 30%+" (Jan 2014):
-   Average realized 10-yr TSR:  3.2%/yr  (vs S&P 500: 12.1%/yr)
-   Hit rate (underperformed S&P):  74%  (35 of 47 stocks)
-
-When OpenQuant said "undervalued by 30%+":
-   Average realized 10-yr TSR:  11.8%/yr  (vs S&P 500: 12.1%/yr)
-   Hit rate (outperformed S&P):  52%  (15 of 29 stocks)
-
-When OpenQuant said "fairly priced":
-   Average realized 10-yr TSR:  10.4%/yr  (matched S&P closely)
-
-[then per-sector tables, calibration scatter plot, failure-mode analysis]
-```
-
-These three lines, if positive, are **the trust story** that goes in §9
-of every per-ticker report.
+The product should show only the main result. If the result is weak, it still
+appears in the product because hiding failure is worse than showing it.
 
 ---
 
@@ -217,9 +204,9 @@ is reproducible from raw data.
 |---|---|
 | 1 | Universe selection + data pipeline (EDGAR `as_of` filtering, yfinance historical, macro snapshots) |
 | 2 | Run pipeline on all 50 tickers, save raw data, hand-spot-check 3 stocks for correctness |
-| 3 | Compute metrics, write `backtest_results.csv`, produce calibration plot |
-| 4 | Write `docs/backtest_2014_2024.md` interpretive report |
-| 5 | Wire the headline into §9 of the per-ticker page (replace "PENDING" with real numbers) |
+| 3 | Compute metrics, write `backtest/results/backtest_2014_2024.csv`, produce `calibration_summary.json` |
+| 4 | Add automated tests for the headline metrics |
+| 5 | Wire the headline into the per-ticker reliability panel |
 
 Total: **5 focused days**.
 

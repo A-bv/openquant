@@ -170,7 +170,7 @@ a coin flip, and I can tell you exactly why.
 
 ## Part 7 — What I'd do next (if I were going to)
 
-The next moves are clear from the backtest report itself:
+The next moves are clear from the implemented backtest metrics:
 
 1. **Lower the FCF growth cap from 35% to 20%** (no large-cap sustains 35%
    over a decade in practice)
@@ -218,12 +218,12 @@ For the post version:
 
 ## If you want to look
 
-Code, tests, and backtest report:
+Code, tests, and implemented backtest results:
 **[github.com/A-bv/openquant](https://github.com/A-bv/openquant)**
 
-The full backtest analysis (with sector breakdown and failure-mode
-discussion):
-[docs/backtest_2014_2024.md](https://github.com/A-bv/openquant/blob/main/docs/backtest_2014_2024.md)
+The main backtest result appears in the OpenQuant reliability panel. Raw
+results live in `backtest/results/` and the headline metrics are locked by
+tests.
 
 If you spot a math bug — particularly any case where my output disagrees
 with an EPFL Sample Exam answer key — open an issue. That's the

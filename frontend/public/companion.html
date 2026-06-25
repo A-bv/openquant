@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>OpenQuant · finance, one card at a time</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css" crossorigin="anonymous" />
+<style>
+  :root{
+    --bg:#f4f4f0; --surface:#ffffff; --text:#1b1a17; --muted:#6c6a63; --faint:#a4a299;
+    --border:#e9e7e0; --track:#efeee8; --accent:#2f6fe0; --accent-2:#1b4fb0; --accent-soft:#ebf2fd;
+    --good:#1f9d6b; --good-soft:#e4f5ee; --lost:#d98a2b; --lost-soft:#f6e6cf;
+    --shadow:0 1px 2px rgba(20,20,15,.04), 0 10px 30px rgba(20,20,15,.07);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#0f0f12; --surface:#17171c; --text:#ededf0; --muted:#9b9ba2; --faint:#65656d;
+      --border:#27272e; --track:#222228; --accent:#6f9bf0; --accent-2:#9bbcf6; --accent-soft:#19233c;
+      --good:#4cc796; --good-soft:#143329; --lost:#d49a4e; --lost-soft:#3a2f1d;
+      --shadow:0 1px 2px rgba(0,0,0,.3), 0 12px 32px rgba(0,0,0,.4); }
+  }
+  *{box-sizing:border-box} html,body{margin:0}
+  body{background:var(--bg); color:var(--text); padding:24px 16px 56px;
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif; line-height:1.5; -webkit-font-smoothing:antialiased;}
+  .wrap{max-width:560px; margin:0 auto;}
+  a{color:inherit; text-decoration:none;}
+
+  .top{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:8px;}
+  .bname{font-size:19px; font-weight:700; letter-spacing:-.01em;}
+  .pill{font-size:11px; font-weight:500; color:var(--accent-2); background:var(--accent-soft); padding:5px 11px; border-radius:999px; white-space:nowrap; flex:none;}
+  .lede{font-size:14px; color:var(--muted); margin:0 0 22px;}
+
+  .chap{margin-bottom:26px;}
+  .chap h2{font-size:13px; font-weight:600; letter-spacing:.04em; text-transform:uppercase; color:var(--accent); margin:0 0 2px;}
+  .chap .cs{font-size:13px; color:var(--faint); margin:0 0 12px;}
+  .grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:10px;}
+  .tile{background:var(--surface); border:1px solid var(--border); border-radius:13px; padding:13px 14px; cursor:pointer;
+    transition:border-color .15s, transform .12s; display:flex; flex-direction:column; gap:7px; min-height:62px;}
+  .tile:hover{border-color:var(--accent); transform:translateY(-1px);}
+  .tile .tt{font-size:13.5px; font-weight:600; line-height:1.3;}
+  .tile .ts{display:flex; align-items:center; gap:5px; font-size:11px; color:var(--good);}
+  .tile.soon{cursor:default; opacity:.6;}
+  .tile.soon:hover{border-color:var(--border); transform:none;}
+  .tile.soon .ts{color:var(--faint);}
+  .ddot{width:6px; height:6px; border-radius:50%; background:var(--good);}
+  .ddot.s{background:var(--faint);}
+
+  .card{background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:24px 20px; box-shadow:var(--shadow);}
+  .crumb{display:flex; align-items:center; gap:10px; margin-bottom:16px; flex-wrap:wrap;}
+  .back{font-size:13px; color:var(--accent); cursor:pointer;}
+  .crumb .ch{font-size:11px; font-weight:600; letter-spacing:.04em; text-transform:uppercase; color:var(--faint);}
+  .eyebrow{font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--accent); margin-bottom:8px;}
+  h1{font-size:20px; font-weight:600; letter-spacing:-.01em; margin:0 0 14px; line-height:1.35;}
+  .usecase{background:var(--accent-soft); border-radius:12px; padding:11px 13px; margin:0 0 18px; font-size:13px; color:var(--accent-2); line-height:1.5;}
+  .usecase b{font-weight:600;}
+
+  .hero{display:flex; flex-direction:column; align-items:flex-start; gap:9px; margin-bottom:6px;}
+  .hero .big{font-size:38px; font-weight:700; letter-spacing:-.025em; line-height:1.1; color:var(--text);}
+  .chip{font-size:12px; font-weight:500; padding:4px 11px; border-radius:999px; white-space:nowrap;}
+  .fbtn{font:inherit; font-size:13px; color:var(--accent); background:none; border:none; cursor:pointer; padding:0; margin-top:16px;}
+  .chip.lost{color:var(--lost); background:var(--lost-soft);}
+  .chip.good{color:var(--good); background:var(--good-soft);}
+  .chip.info{color:var(--accent-2); background:var(--accent-soft);}
+  .heronote{font-size:12.5px; color:var(--faint); margin:8px 0 16px;}
+
+  .viz{margin:8px 0 4px;}
+  .ctrls{margin-top:16px; display:flex; flex-direction:column; gap:15px;}
+  .ctrl .row{display:flex; justify-content:space-between; gap:10px; font-size:13px; color:var(--muted); margin-bottom:6px;}
+  .ctrl .row b{color:var(--text); font-weight:600; white-space:nowrap;}
+  input[type=range]{width:100%; accent-color:var(--accent); height:4px;}
+  .sanchor{display:flex; justify-content:space-between; gap:10px; font-size:11px; color:var(--faint); margin-top:4px;}
+  .fixed{font-size:11.5px; color:var(--faint); margin-top:12px;}
+  .fixed::before{content:"assumes "; color:var(--faint);}
+
+  .formula{background:var(--bg); border:1px solid var(--border); border-radius:14px; padding:16px 12px; margin-top:10px; text-align:center; overflow-x:auto;}
+  .formula .gen .katex{opacity:.78;}
+  .formula .num{margin-top:10px;}
+  .explain{font-size:13px; color:var(--muted); margin-top:12px; line-height:1.55;}
+  .src{font-size:11px; color:var(--faint); margin-top:10px;}
+
+  .vbartrack{position:relative; width:58px; height:166px; flex:none;}
+  .seg2{position:absolute; left:0; width:100%; transition:height .5s cubic-bezier(.33,.02,.18,1);}
+  .hbar{height:18px; background:var(--track); border-radius:5px; overflow:hidden;}
+  .hbar > div{height:100%; transition:width .5s cubic-bezier(.33,.02,.18,1);}
+  .hbrow{margin:9px 0;}
+  .hblab{display:flex; justify-content:space-between; gap:10px; font-size:12.5px; margin-bottom:4px;}
+  .foot{text-align:center; font-size:11px; color:var(--faint); margin-top:24px;}
+  svg text{font-family:'Inter',sans-serif;}
+  @media (max-width:430px){ body{padding:20px 12px 48px;} .card{padding:20px 16px;} .hero .big{font-size:34px;} }
+</style>
+</head>
+<body>
+<div class="wrap"><div id="app"></div>
+  <div class="foot">OpenQuant · the EPFL <i>Principles of Finance</i> course, one card at a time</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js" crossorigin="anonymous"></script>
+<script>
+(function(){
+  var app=document.getElementById('app');
+  function money(v){return '$'+Math.round(v).toLocaleString('en-US');}
+  function pct(v){return Math.round(v*100)+'%';}
+  function K(el,tex){ if(window.katex&&el) katex.render(tex,el,{throwOnError:false,displayMode:true}); }
+  function q(root,r){return root.querySelector('[data-r="'+r+'"]');}
+  var TH=166;
+
+  function splitBarHTML(){return '<div style="display:flex;align-items:center;gap:16px;padding:4px 0;">'
+    +'<div class="vbartrack"><div class="seg2" data-r="lost" style="top:0;background:var(--lost-soft);border:1px dashed var(--lost);border-bottom:none;border-radius:8px 8px 0 0;"></div>'
+    +'<div class="seg2" data-r="kept" style="bottom:0;background:var(--accent);border-radius:8px;"></div></div>'
+    +'<div style="display:flex;flex-direction:column;gap:14px;">'
+    +'<div style="display:flex;gap:9px;align-items:flex-start;"><span style="width:12px;height:12px;border-radius:3px;margin-top:3px;flex:none;background:var(--lost-soft);border:1px dashed var(--lost);"></span><span><span style="font-size:13px;font-weight:600;">lost to waiting</span><br><span class="explain" style="margin:0;" data-r="lostlab"></span></span></div>'
+    +'<div style="display:flex;gap:9px;align-items:flex-start;"><span style="width:12px;height:12px;border-radius:3px;margin-top:3px;flex:none;background:var(--accent);"></span><span><span style="font-size:13px;font-weight:600;">worth today</span><br><span class="explain" style="margin:0;" data-r="keptlab"></span></span></div>'
+    +'</div></div>';}
+  function twoBarHTML(la,lb){return '<div style="display:flex;align-items:flex-end;justify-content:center;gap:50px;padding-top:8px;">'
+    +'<div style="display:flex;flex-direction:column;align-items:center;width:74px;"><div style="font-size:13px;font-weight:600;margin-bottom:6px;" data-r="av"></div><div class="vbartrack" style="height:144px;"><div class="seg2" data-r="abar" style="bottom:0;background:var(--accent);border-radius:8px;"></div></div><div class="explain" style="margin-top:8px;">'+la+'</div></div>'
+    +'<div style="display:flex;flex-direction:column;align-items:center;width:74px;"><div style="font-size:13px;font-weight:600;margin-bottom:6px;" data-r="bv"></div><div class="vbartrack" style="height:144px;"><div class="seg2" data-r="bbar" style="bottom:0;background:var(--good);border-radius:8px;"></div></div><div class="explain" style="margin-top:8px;">'+lb+'</div></div></div>';}
+  function hbar(r,color,lab){return '<div class="hbrow"><div class="hblab"><span data-r="'+r+'lab">'+lab+'</span><b data-r="'+r+'val"></b></div><div class="hbar"><div data-r="'+r+'bar" style="background:'+color+';width:0%;"></div></div></div>';}
+
+  var CARDS={
+    pv:{ch:'H1 · discounting',eyebrow:'time value of money',idea:'Money later is worth less than money now.',
+      usecase:"Someone promises you money later, like a payout, a refund, or a bond. This shows what it is really worth today, so a big future number does not fool you.",
+      fixed:"for every $100 you would receive later", src:'Berk-DeMarzo Ch.4 · test_money.py',
+      inputs:[{k:'n',label:'how many years until you get it',min:1,max:30,step:1,val:10,unit:'yr'},{k:'r',label:'your rate (what you could earn meanwhile)',min:1,max:12,step:0.5,val:5,unit:'%'}],
+      viz:splitBarHTML(), fgen:"\\text{today} \\;=\\; \\dfrac{\\text{future amount}}{(1+r)^{\\,n}}",
+      explain:'Each year of waiting divides the value by (1 + your rate). Wait longer, or earn more elsewhere, and the future promise is worth less today.',
+      update:function(v,root){var fv=100,val=fv/Math.pow(1+v.r/100,v.n),loss=fv-val,f=val/fv;
+        q(root,'ans').textContent=money(val); var c=q(root,'chip'); c.className='chip lost'; c.textContent=money(loss)+' lost to waiting';
+        q(root,'note').textContent="$100 paid to you in "+v.n+" years is really worth this much now";
+        q(root,'kept').style.height=(f*TH)+'px'; q(root,'lost').style.height=((1-f)*TH)+'px';
+        q(root,'keptlab').textContent=money(val); q(root,'lostlab').textContent=money(loss);
+        K(q(root,'fnum'),"\\dfrac{100}{(1+"+(v.r/100).toFixed(3)+")^{"+v.n+"}}="+Math.round(val));}},
+
+    fv:{ch:'H1 · discounting',eyebrow:'compounding',idea:'Money you keep now grows over time.',
+      usecase:"You put money aside today, like savings or a deposit. This shows what it grows into, and why starting early matters so much.",
+      fixed:"starting from $100 today", src:'Berk-DeMarzo Ch.4',
+      inputs:[{k:'n',label:'years it grows',min:1,max:30,step:1,val:10,unit:'yr'},{k:'r',label:'yearly return it earns',min:1,max:12,step:0.5,val:5,unit:'%'}],
+      viz:twoBarHTML('today','in N years'), fgen:"\\text{future} \\;=\\; \\text{today}\\times(1+r)^{\\,n}",
+      explain:'This is the opposite of bringing money back to today: each year you multiply by (1 + return). Even small returns add up into a big gap over time.',
+      update:function(v,root){var pv=100,fv=pv*Math.pow(1+v.r/100,v.n),gain=fv-pv;
+        q(root,'ans').textContent=money(fv); var c=q(root,'chip'); c.className='chip good'; c.textContent='+'+money(gain)+' earned';
+        q(root,'note').textContent="$100 kept today grows into this in "+v.n+" years";
+        q(root,'av').textContent=money(pv); q(root,'bv').textContent=money(fv);
+        q(root,'abar').style.height=(pv/fv*144)+'px'; q(root,'bbar').style.height='144px';
+        K(q(root,'fnum'),"100\\times(1+"+(v.r/100).toFixed(3)+")^{"+v.n+"}="+Math.round(fv));}},
+
+    perpetuity:{ch:'H1 · discounting',eyebrow:'a forever stream',idea:'A payment that never stops is still worth a limited amount today.',
+      usecase:"Something pays you the same amount every year, with no end, like a rental or a fund that pays out forever. This shows what that never-ending stream is worth right now.",
+      fixed:"$1,000 paid to you every year, forever", src:'Berk-DeMarzo Ch.4 · test_epfl_exam2.py',
+      inputs:[{k:'r',label:'your rate',min:1,max:12,step:0.5,val:5,unit:'%'}],
+      viz:'<div style="display:flex;align-items:flex-end;gap:6px;height:92px;justify-content:center;">'
+        +[0,1,2,3,4,5,6,7].map(function(i){return '<div style="width:18px;height:'+(56-i*5)+'px;background:var(--accent);border-radius:4px;opacity:'+(1-i*0.11).toFixed(2)+';"></div>';}).join('')
+        +'<div style="font-size:22px;color:var(--faint);align-self:center;margin:0 4px;">&hellip;&infin;</div></div>'
+        +'<div class="explain" style="text-align:center;">the same payment, every year, forever, yet worth a set amount now</div>',
+      fgen:"\\text{value} \\;=\\; \\dfrac{C}{r}",
+      explain:'Payments far in the future are worth almost nothing today, so even an endless stream adds up to a set number: the payment divided by your rate.',
+      update:function(v,root){var c0=1000,val=c0/(v.r/100);
+        q(root,'ans').textContent=money(val); var c=q(root,'chip'); c.className='chip info'; c.textContent='$1,000 / year forever';
+        q(root,'note').textContent="getting $1,000 every year forever is worth this much to you today";
+        K(q(root,'fnum'),"\\dfrac{1000}{"+(v.r/100).toFixed(3)+"}="+Math.round(val));}},
+
+    growperp:{ch:'H1 · discounting',eyebrow:'a growing forever stream',idea:'A forever payment that grows each year is still worth a set amount today.',
+      usecase:"Something pays you every year with no end, and the payment rises a little each year, like rent that tracks inflation or a steadily growing dividend. This shows what that ever-growing endless stream is worth right now.",
+      fixed:"$1,000 paid next year, growing every year, forever", src:'Berk-DeMarzo Ch.4',
+      inputs:[{k:'r',label:'your rate',min:2,max:12,step:0.5,val:6,unit:'%'},{k:'g',label:'how fast each payment grows',min:0,max:6,step:0.5,val:2,unit:'%'}],
+      viz:'<div style="display:flex;align-items:flex-end;gap:6px;height:92px;justify-content:center;">'
+        +[0,1,2,3,4,5,6,7].map(function(i){return '<div style="width:18px;height:'+(20+i*5)+'px;background:var(--accent);border-radius:4px;opacity:'+(1-i*0.045).toFixed(2)+';"></div>';}).join('')
+        +'<div style="font-size:22px;color:var(--faint);align-self:center;margin:0 4px;">&hellip;&infin;</div></div>'
+        +'<div class="explain" style="text-align:center;">a bigger payment every year, forever, yet still worth a set amount today</div>',
+      fgen:"\\text{value} \\;=\\; \\dfrac{C}{r - g}",
+      explain:'Like a plain perpetuity, but each payment is a little larger than the last. The closer growth gets to your rate, the more it is worth, and if growth reaches your rate the simple formula breaks down.',
+      update:function(v,root){var spread=(v.r-v.g)/100;
+        if(spread<=0){q(root,'ans').textContent='∞'; var c0=q(root,'chip'); c0.className='chip lost'; c0.textContent='growth cannot beat your rate'; q(root,'note').textContent='if growth matches or beats your rate, the value runs away to infinity'; K(q(root,'fnum'),'1000 / ('+v.r+'\\% - '+v.g+'\\%) \\to \\infty'); return;}
+        var val=1000/spread;
+        q(root,'ans').textContent=money(val); var c=q(root,'chip'); c.className='chip info'; c.textContent='$1,000/yr, +'+v.g+'% a year';
+        q(root,'note').textContent='a $1,000 payment growing '+v.g+'% a year forever is worth this much to you today';
+        K(q(root,'fnum'),"\\dfrac{1000}{"+spread.toFixed(3)+"}="+Math.round(val));}},
+
+    irr:{ch:'H1 · project decisions',eyebrow:'internal rate of return',idea:'The IRR is the single rate at which a project just breaks even.',
+      usecase:"A project costs money now and pays you back over several years. Its IRR is the one yearly return that makes it exactly break even. Compare it with the rate you could earn elsewhere: beat that, and the project adds value.",
+      fixed:"it costs $20,000 today; you compare it with a 10% hurdle", src:'Berk-DeMarzo Ch.7 · test_epfl_exam1.py',
+      inputs:[{k:'c',label:'cash it returns each year',min:3000,max:8000,step:250,val:5000,unit:'$'},{k:'n',label:'how many years it pays',min:4,max:15,step:1,val:6,unit:'yr'}],
+      viz:hbar('irr','var(--accent)','the yearly rate it earns (IRR)')+hbar('hur','var(--track)','the 10% hurdle to beat'),
+      fgen:"0 \\;=\\; -\\,\\text{cost} \\;+\\; \\textstyle\\sum \\dfrac{C}{(1+\\text{IRR})^{t}}",
+      explain:'The IRR is the rate that makes the discounted cash exactly equal the cost, so the project neither creates nor destroys value. Above your hurdle it is worth doing; below it, walk away.',
+      update:function(v,root){var X=20000,C=v.c,N=v.n,hurdle=10;
+        var f=function(r){var s=-X; for(var t=1;t<=N;t++){s+=C/Math.pow(1+r,t);} return s;};
+        var lo=-0.99,hi=3.0; for(var i=0;i<80;i++){var m=(lo+hi)/2; if(f(m)>0) lo=m; else hi=m;}
+        var irp=((lo+hi)/2)*100, mx=Math.max(irp,hurdle,1);
+        q(root,'ans').textContent=irp.toFixed(1)+'%'; var c=q(root,'chip'); c.className='chip '+(irp>=hurdle?'good':'lost'); c.textContent=irp>=hurdle?'beats the 10% hurdle':'below the 10% hurdle';
+        q(root,'note').textContent='paying $20,000 for '+money(C)+' a year over '+N+' years earns about '+irp.toFixed(1)+'% a year';
+        q(root,'irrval').textContent=irp.toFixed(1)+'%'; q(root,'hurval').textContent='10%';
+        q(root,'irrbar').style.width=(Math.max(irp,0)/mx*100)+'%'; q(root,'hurbar').style.width=(hurdle/mx*100)+'%'; q(root,'hurbar').style.background='var(--faint)';
+        K(q(root,'fnum'),'-20000 + '+C+'\\times AF(\\text{IRR},'+N+') = 0 \\;\\Rightarrow\\; '+irp.toFixed(1)+'\\%');}},
+
+    annuity:{ch:'H1 · discounting',eyebrow:'a stream of payments',idea:'Many fixed payments add up to a single lump sum today.',
+      usecase:"The same payment for a set number of years, like a loan, a pension, a lease, or a lottery paid yearly. This shows the single lump sum they are all worth.",
+      fixed:"$1,000 paid to you each year", src:'Berk-DeMarzo Ch.4 · test_epfl_exam2.py',
+      inputs:[{k:'n',label:'number of years',min:1,max:25,step:1,val:10,unit:'yr'},{k:'r',label:'your rate',min:1,max:12,step:0.5,val:5,unit:'%'}],
+      viz:'<div data-r="bars" style="display:flex;align-items:flex-end;gap:4px;height:104px;justify-content:center;"></div><div class="explain" style="text-align:center;" data-r="sumnote"></div>',
+      fgen:"PV \\;=\\; \\dfrac{C}{r}\\left(1-\\dfrac{1}{(1+r)^{n}}\\right)",
+      explain:'Each bar is one payment brought back to today (smaller the further out it is). Add them all up and that is what the whole stream is worth now.',
+      update:function(v,root){var r=v.r/100, c0=1000, pv=c0/r*(1-1/Math.pow(1+r,v.n));
+        q(root,'ans').textContent=money(pv); var c=q(root,'chip'); c.className='chip info'; c.textContent=money(c0*v.n)+' on paper';
+        q(root,'note').textContent="$1,000 a year for "+v.n+" years is worth this much today";
+        var shown=Math.min(v.n,16), bars='';
+        for(var t=0;t<shown;t++){var h=Math.max(4,(1/Math.pow(1+r,t))*84);bars+='<div style="width:'+(shown>12?9:13)+'px;height:'+h+'px;background:var(--accent);border-radius:3px;opacity:'+(0.5+0.5/Math.pow(1+r,t)).toFixed(2)+';"></div>';}
+        q(root,'bars').innerHTML=bars;
+        q(root,'sumnote').textContent='each yearly payment, shrunk to today, then summed';
+        K(q(root,'fnum'),"\\dfrac{1000}{"+r.toFixed(3)+"}\\left(1-\\dfrac{1}{(1+"+r.toFixed(3)+")^{"+v.n+"}}\\right)="+Math.round(pv));}},
+
+    npv:{ch:'H1 · project decisions',eyebrow:'is it worth it?',idea:'Only do it if the future cash beats the cost, in today’s money.',
+      usecase:"Deciding whether to buy equipment, a rental, solar panels, or take on any project that costs money now and pays back over years. Positive means do it; negative means walk away.",
+      fixed:"it costs $20,000 today and runs for 6 years", src:'Berk-DeMarzo Ch.7 · test_epfl_exam1.py',
+      inputs:[{k:'c',label:'cash it returns each year',min:1000,max:8000,step:250,val:5000,unit:'$'},{k:'r',label:'your rate',min:1,max:15,step:0.5,val:10,unit:'%'}],
+      viz:hbar('cost','var(--lost)','what it costs today')+hbar('ben','var(--good)','what it returns, valued today'),
+      fgen:"\\text{NPV} \\;=\\; \\underbrace{\\textstyle\\sum \\dfrac{C}{(1+r)^t}}_{\\text{benefits today}} \\;-\\; \\text{cost}",
+      explain:'Bring every future payment back to today, add them up, and subtract the cost. Positive creates value; negative destroys it.',
+      update:function(v,root){var r=v.r/100, X=20000, n=6, pvB=v.c/r*(1-1/Math.pow(1+r,n)), npv=pvB-X, mx=Math.max(pvB,X);
+        q(root,'ans').textContent=(npv>=0?'+':'−')+money(Math.abs(npv)); var c=q(root,'chip'); c.className='chip '+(npv>=0?'good':'lost'); c.textContent=npv>=0?'worth doing':'destroys value';
+        q(root,'note').textContent=npv>=0?"after covering the cost you are ahead by this much, in today’s money":"the cost outweighs what it is worth today";
+        q(root,'costval').textContent=money(X); q(root,'benval').textContent=money(pvB);
+        q(root,'costbar').style.width=(X/mx*100)+'%'; q(root,'benbar').style.width=(pvB/mx*100)+'%';
+        K(q(root,'fnum'),Math.round(pvB)+" - "+X+" = "+(npv>=0?'+':'')+Math.round(npv));}},
+
+    diversification:{ch:'H2 · risk & return',eyebrow:'diversification',idea:'You may hold fewer real bets than you think.',
+      usecase:"You own several stocks and feel safe because you have many. This shows whether you are really spread out, or whether they all move together as one big bet that could drop at once.",
+      fixed:"each stock swings about 35% a year", src:'Berk-DeMarzo Ch.11 · test_portfolio.py',
+      inputs:[{k:'n',label:'how many stocks you hold',min:1,max:20,step:1,val:8,unit:''},{k:'rho',label:'how much they move together',min:0,max:100,step:5,val:70,unit:'%',lo:'each on its own',hi:'all as one',fmt:function(v){var w=v<5?'not at all':v<25?'barely':v<55?'somewhat':v<85?'a lot':'almost fully';return w+' ('+v+'%)';}}],
+      viz:hbar('real','var(--accent)','your real risk')+hbar('ind','var(--good)','if they were truly independent'),
+      fgen:"\\text{real bets} \\;=\\; \\dfrac{n}{1+(n-1)\\,\\rho}",
+      explain:'When your stocks move together a lot, owning more hardly helps. Many of them act like just a few real bets, so your risk stays high.',
+      update:function(v,root){var rho=v.rho/100, sig=0.35, eff=v.n/(1+(v.n-1)*rho), pVol=sig*Math.sqrt((1+(v.n-1)*rho)/v.n), iVol=sig/Math.sqrt(v.n), mx=sig;
+        q(root,'ans').textContent=v.n+' → '+eff.toFixed(1)+' bets'; var c=q(root,'chip'); c.className='chip info'; c.textContent='risk '+pct(pVol);
+        q(root,'note').textContent="in risk terms your "+v.n+(v.n===1?" stock acts":" stocks act")+" like only "+eff.toFixed(1)+" independent bets";
+        q(root,'realval').textContent=pct(pVol); q(root,'indval').textContent=pct(iVol);
+        q(root,'realbar').style.width=(pVol/mx*100)+'%'; q(root,'indbar').style.width=(iVol/mx*100)+'%';
+        K(q(root,'fnum'),"\\dfrac{"+v.n+"}{1+("+(v.n-1)+")\\times"+rho.toFixed(2)+"}="+eff.toFixed(1));}},
+
+    capm:{ch:'H2 · risk & return',eyebrow:'CAPM',idea:'The riskier a stock, the more return you should ask for.',
+      usecase:"Before buying a stock, this is the lowest yearly return you should ask for, given its risk. If a stock offers less than this, you are not paid enough for the risk.",
+      fixed:"a 4% safe rate and a 6% market premium", src:'Berk-DeMarzo Ch.12 · test_epfl_exam2.py',
+      inputs:[{k:'beta',label:'how much it moves with the market',min:0,max:2.5,step:0.05,val:1,unit:'',lo:'steady',hi:'2.5x the market',fmt:function(v){return v.toFixed(2)+(v<0.95?' (calmer)':v>1.05?' (wilder)':' (same as market)');}}],
+      viz:'<svg data-r="svg" viewBox="0 0 320 170" width="100%" style="max-width:340px;display:block;margin:0 auto;"></svg>',
+      fgen:"\\text{fair return} \\;=\\; r_f + \\beta\\,(\\text{market premium})",
+      explain:'Only the risk you cannot spread away earns extra return. A stock that moves twice as hard as the market should pay you a bigger return.',
+      update:function(v,root){var rf=4,mrp=6,req=rf+v.beta*mrp;
+        q(root,'ans').textContent=req.toFixed(1)+'%'; var c=q(root,'chip'); c.className='chip info'; c.textContent='lowest return to ask for';
+        q(root,'note').textContent="for this much risk, ask for at least "+req.toFixed(1)+"% a year before buying";
+        var maxY=22, x0=42,x1=300,y0=148,y1=18, bx=function(b){return x0+(b/2.5)*(x1-x0);}, by=function(r){return y0-(r/maxY)*(y0-y1);};
+        var s='<line x1="'+x0+'" y1="'+y0+'" x2="'+x1+'" y2="'+y0+'" stroke="var(--border)"/><line x1="'+x0+'" y1="'+y0+'" x2="'+x0+'" y2="'+y1+'" stroke="var(--border)"/>';
+        s+='<line x1="'+bx(0)+'" y1="'+by(rf)+'" x2="'+bx(2.5)+'" y2="'+by(rf+2.5*mrp)+'" stroke="var(--accent)" stroke-width="2"/>';
+        s+='<line x1="'+bx(v.beta)+'" y1="'+y0+'" x2="'+bx(v.beta)+'" y2="'+by(req)+'" stroke="var(--faint)" stroke-dasharray="3 3"/>';
+        s+='<circle cx="'+bx(v.beta)+'" cy="'+by(req)+'" r="5" fill="var(--accent)"/>';
+        s+='<text x="'+x0+'" y="165" font-size="10" fill="var(--faint)">no risk</text><text x="'+x1+'" y="165" font-size="10" fill="var(--faint)" text-anchor="end">2.5x the market</text>';
+        s+='<text x="6" y="'+y1+'" font-size="10" fill="var(--faint)">return</text>';
+        var lx=bx(v.beta), le=lx>x1-46; s+='<text x="'+(le?lx-7:lx+8)+'" y="'+(by(req)+4)+'" font-size="11" fill="var(--text)" text-anchor="'+(le?'end':'start')+'">'+req.toFixed(1)+'%</text>';
+        q(root,'svg').innerHTML=s;
+        K(q(root,'fnum'),"4 + "+v.beta+"\\times 6 = "+req.toFixed(1)+"\\%");}},
+
+    wacc:{ch:'H3 · financing',eyebrow:'WACC',idea:'A company must clear one blended rate set by its lenders and owners.',
+      usecase:"A company raises money from lenders (debt) and owners (equity). This blends the two into one rate the company must beat to be worth it. It is the standard rate used to value a whole business.",
+      fixed:"owners want 11%, debt costs 5%, tax is 21%", src:'Berk-DeMarzo Ch.15 · test_epfl_exam1.py',
+      inputs:[{k:'d',label:'how much of the company is funded by debt',min:0,max:80,step:5,val:40,unit:'%'}],
+      viz:'<div class="hblab"><span>equity part + debt part (after tax break)</span><b data-r="waccval"></b></div><div class="hbar" style="height:26px;display:flex;"><div data-r="eqseg" style="background:var(--accent);height:100%;"></div><div data-r="dbseg" style="background:var(--good);height:100%;"></div></div><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--faint);margin-top:5px;"><span data-r="eqlab"></span><span data-r="dblab"></span></div>',
+      fgen:"\\text{WACC} \\;=\\; \\tfrac{E}{V}\\,r_e \\;+\\; \\tfrac{D}{V}\\,r_d\\,(1-\\tau)",
+      explain:'Owners want more than lenders, and debt gets a tax break, so adding some debt lowers the blended rate, up to a point. The company must earn more than this rate to create value.',
+      update:function(v,root){var d=v.d/100, re=11, rd=5, tax=0.21, eqC=(1-d)*re, dbC=d*rd*(1-tax), wacc=eqC+dbC;
+        q(root,'ans').textContent=wacc.toFixed(1)+'%'; var c=q(root,'chip'); c.className='chip info'; c.textContent='rate it must beat';
+        q(root,'note').textContent="the business must earn more than "+wacc.toFixed(1)+"% to create value";
+        q(root,'waccval').textContent=wacc.toFixed(1)+'%';
+        q(root,'eqseg').style.width=(wacc>0?eqC/wacc*100:50)+'%'; q(root,'dbseg').style.width=(wacc>0?dbC/wacc*100:50)+'%';
+        q(root,'eqlab').textContent='equity '+eqC.toFixed(1)+'%'; q(root,'dblab').textContent='debt '+dbC.toFixed(1)+'%';
+        K(q(root,'fnum'),(1-d).toFixed(2)+"\\times 11 + "+d.toFixed(2)+"\\times 5\\times 0.79 = "+wacc.toFixed(1)+"\\%");}}
+,
+
+    pi:{ch:'H1 · project decisions',eyebrow:'profitability index',idea:'When money is tight, back the projects that give the most value per dollar.',
+      usecase:"You have a limited budget and several projects competing for it. This ranks them by value created per dollar spent, so you fund the most efficient ones first.",
+      fixed:"the project pays back over 6 years at a 10% rate", src:'Berk-DeMarzo Ch.7',
+      inputs:[{k:'x',label:'it costs you, today',min:1000,max:100000,step:1000,val:20000,unit:'$'},{k:'c',label:'cash it returns each year',min:1000,max:8000,step:250,val:5000,unit:'$'}],
+      viz:hbar('pi','var(--accent)','net value created per $1 put in'),
+      fgen:"\\text{PI} \\;=\\; \\dfrac{\\text{NPV}}{\\text{cost}}",
+      explain:'Above 0 it creates value. The higher the index, the more net value per dollar, so fund the highest-index projects first when cash is limited.',
+      update:function(v,root){var r=0.10,n=6,pvB=v.c/r*(1-1/Math.pow(1+r,n)),npv=pvB-v.x,pi=npv/v.x;
+        q(root,'ans').textContent=pi.toFixed(2); var c=q(root,'chip'); c.className='chip '+(pi>=0?'good':'lost'); c.textContent=pi>=0?'worth funding':'destroys value';
+        q(root,'note').textContent='each $1 you put in creates '+pi.toFixed(2)+' of net value';
+        q(root,'pival').textContent=pi.toFixed(2); q(root,'pibar').style.width=Math.min(Math.max(pi,0)/0.6*100,100)+'%';
+        K(q(root,'fnum'),Math.round(npv)+' / '+v.x+' = '+pi.toFixed(2));}},
+
+    payback:{ch:'H1 · project decisions',eyebrow:'payback period',idea:'How fast does a project return what you put in?',
+      usecase:"A project costs money now and returns cash each year. The payback period is how long until those returns add back up to the cost. It is quick and intuitive, but it ignores the time value of money, so use it to screen, not to decide.",
+      fixed:"it costs $20,000 today", src:'Berk-DeMarzo Ch.7',
+      inputs:[{k:'c',label:'cash it returns each year',min:2000,max:8000,step:250,val:5000,unit:'$'},{k:'cut',label:'longest payback you would accept',min:2,max:12,step:1,val:5,unit:'yr'}],
+      viz:hbar('pb','var(--accent)','years to pay the cost back')+hbar('cut','var(--track)','the longest you would accept'),
+      fgen:"\\text{payback} \\;=\\; \\dfrac{\\text{cost}}{\\text{annual cash}}",
+      explain:'Payback is easy to grasp but blind to two things: the time value of money, and any cash that arrives after the cutoff. Use it as a rough screen, then let NPV make the real call.',
+      update:function(v,root){var X=20000, pb=X/v.c, mx=Math.max(pb,v.cut,1);
+        q(root,'ans').textContent=pb.toFixed(1)+' yrs'; var c=q(root,'chip'); c.className='chip '+(pb<=v.cut?'good':'lost'); c.textContent=pb<=v.cut?'within your cutoff':'too slow for you';
+        q(root,'note').textContent='at '+money(v.c)+' a year, $20,000 is paid back in '+pb.toFixed(1)+' years';
+        q(root,'pbval').textContent=pb.toFixed(1)+' yr'; q(root,'cutval').textContent=v.cut+' yr';
+        q(root,'pbbar').style.width=(pb/mx*100)+'%'; q(root,'cutbar').style.width=(v.cut/mx*100)+'%'; q(root,'cutbar').style.background='var(--faint)';
+        K(q(root,'fnum'),'20000 / '+v.c+' = '+pb.toFixed(1)+' \\text{ yrs}');}},
+
+    ear:{ch:'H1 · rates',eyebrow:'real yearly rate',idea:'A rate quoted per month hides its true yearly cost.',
+      usecase:"Comparing a credit card, a loan, or a savings account that compound at different speeds. This turns the headline rate into the true yearly rate so you compare fairly.",
+      fixed:"the same headline rate, compounded the chosen number of times", src:'Berk-DeMarzo Ch.5',
+      inputs:[{k:'apr',label:'headline yearly rate (APR)',min:1,max:30,step:0.5,val:18,unit:'%'},{k:'k',label:'times it compounds per year',min:1,max:12,step:1,val:12,unit:'',lo:'once a year',hi:'every month',fmt:function(v){return v+(v===1?' time':' times')+' a year';}}],
+      viz:twoBarHTML('quoted (APR)','real (EAR)'),
+      fgen:"\\text{EAR} \\;=\\; \\left(1+\\dfrac{\\text{APR}}{k}\\right)^{k} - 1",
+      explain:'The more often interest is added, the more you really pay or earn. Always line up offers on their EAR, not their APR.',
+      update:function(v,root){var ear=Math.pow(1+v.apr/100/v.k,v.k)-1, earp=ear*100, mx=Math.max(v.apr,earp);
+        q(root,'ans').textContent=earp.toFixed(2)+'%'; var c=q(root,'chip'); c.className='chip lost'; c.textContent='+'+(earp-v.apr).toFixed(2)+'% hidden';
+        q(root,'note').textContent='a '+v.apr+'% APR is really '+earp.toFixed(2)+'% a year once compounding is counted';
+        q(root,'av').textContent=v.apr+'%'; q(root,'bv').textContent=earp.toFixed(2)+'%';
+        q(root,'abar').style.height=(v.apr/mx*144)+'px'; q(root,'bbar').style.height=(earp/mx*144)+'px';
+        K(q(root,'fnum'),'(1+'+(v.apr/100).toFixed(3)+'/'+v.k+')^{'+v.k+'} - 1 = '+earp.toFixed(2)+'\\%');}},
+
+    loan:{ch:'H1 · rates',eyebrow:'loan payment',idea:'A loan is the amount you borrowed plus interest, spread over time.',
+      usecase:"Taking a car loan or a mortgage. This shows your monthly payment and how much of everything you pay is just interest.",
+      fixed:"you borrow $20,000", src:'Berk-DeMarzo Ch.5',
+      inputs:[{k:'r',label:'yearly rate',min:1,max:12,step:0.5,val:6,unit:'%'},{k:'n',label:'how many years to pay it back',min:1,max:30,step:1,val:5,unit:'yr'}],
+      viz:hbar('prin','var(--accent)','the amount you borrowed')+hbar('int','var(--lost)','interest you pay on top'),
+      fgen:"\\text{payment} \\;=\\; \\dfrac{P\\,r}{1-(1+r)^{-N}}",
+      explain:'A lower rate or a shorter term means far less interest. Stretch the loan longer and the total interest climbs fast.',
+      update:function(v,root){var P=20000, mr=v.r/100/12, N=v.n*12, pay=P*mr/(1-Math.pow(1+mr,-N)), total=pay*N, interest=total-P, mx=total;
+        q(root,'ans').textContent=money(pay)+'/mo'; var c=q(root,'chip'); c.className='chip lost'; c.textContent=money(interest)+' total interest';
+        q(root,'note').textContent='you pay '+money(pay)+' a month, '+money(total)+' in all';
+        q(root,'prinval').textContent=money(P); q(root,'intval').textContent=money(interest);
+        q(root,'prinbar').style.width=(P/mx*100)+'%'; q(root,'intbar').style.width=(interest/mx*100)+'%';
+        K(q(root,'fnum'),'\\text{monthly} = '+pay.toFixed(0)+', \\text{ interest} = '+Math.round(interest));}},
+
+    spot:{ch:'H1 · bonds & rates',eyebrow:'the rate for one maturity',idea:'A bond bought below its payout locks in a yearly rate.',
+      usecase:"A bond pays you $100 at the end and nothing before. You pay less than $100 today. This is the yearly rate you lock in, the building block of the yield curve.",
+      fixed:"the bond pays you $100 at maturity", src:'Berk-DeMarzo Ch.8',
+      inputs:[{k:'price',label:'price you pay today (for $100 at the end)',min:50,max:99,step:1,val:90,unit:'$'},{k:'n',label:'years until it pays out',min:1,max:15,step:1,val:3,unit:'yr'}],
+      viz:twoBarHTML('you pay now','you get at the end'),
+      fgen:"r_n \\;=\\; \\left(\\dfrac{100}{\\text{price}}\\right)^{1/n} - 1",
+      explain:'A lower price for the same $100 means a higher rate. The rate is usually different for each maturity, which traces out the yield curve. Prices line up across maturities by the law of one price: the same $100 payoff cannot trade at two prices.',
+      update:function(v,root){var rate=Math.pow(100/v.price,1/v.n)-1, rp=rate*100;
+        q(root,'ans').textContent=rp.toFixed(2)+'%'; var c=q(root,'chip'); c.className='chip info'; c.textContent='locked for '+v.n+(v.n===1?' year':' years');
+        q(root,'note').textContent='paying '+money(v.price)+' now for $100 in '+v.n+' years earns '+rp.toFixed(2)+'% a year';
+        q(root,'av').textContent=money(v.price); q(root,'bv').textContent='$100';
+        q(root,'abar').style.height=(v.price/100*144)+'px'; q(root,'bbar').style.height='144px';
+        K(q(root,'fnum'),'(100/'+v.price+')^{1/'+v.n+'} - 1 = '+rp.toFixed(2)+'\\%');}},
+
+    forward:{ch:'H1 · bonds & rates',eyebrow:'a future rate, locked today',idea:'Today’s rates already imply a rate for next year.',
+      usecase:"Wondering whether to lock a rate now or wait. The rates for 1 and 2 years already imply the market’s rate for the second year. Beat it and waiting pays.",
+      fixed:"using the 1-year and 2-year rates", src:'Berk-DeMarzo Ch.8',
+      inputs:[{k:'r1',label:'rate to lock money for 1 year',min:1,max:10,step:0.25,val:3,unit:'%'},{k:'r2',label:'rate to lock money for 2 years',min:1,max:10,step:0.25,val:4,unit:'%'}],
+      viz:hbar('a','var(--accent)','rate for year 1')+hbar('b','var(--good)','rate the market implies for year 2'),
+      fgen:"(1+r_2)^2 \\;=\\; (1+r_1)\\,(1+f)",
+      explain:'If two years pays more than one, the gap is the rate the market expects for the second year. That implied rate is the forward rate. This is the law of one price at work: locking money for two years must equal one year then rolling into the forward, or there is a free lunch.',
+      update:function(v,root){var f=(Math.pow(1+v.r2/100,2)/(1+v.r1/100))-1, fp=f*100, mx=Math.max(v.r1,fp,v.r2);
+        q(root,'ans').textContent=fp.toFixed(2)+'%'; var c=q(root,'chip'); c.className='chip info'; c.textContent='implied year-2 rate';
+        q(root,'note').textContent='the market is already pricing '+fp.toFixed(2)+'% for the second year';
+        q(root,'aval').textContent=v.r1+'%'; q(root,'bval').textContent=fp.toFixed(2)+'%';
+        q(root,'abar').style.width=(v.r1/mx*100)+'%'; q(root,'bbar').style.width=(fp/mx*100)+'%';
+        K(q(root,'fnum'),'(1+'+(v.r2/100).toFixed(3)+')^2 / (1+'+(v.r1/100).toFixed(3)+') - 1 = '+fp.toFixed(2)+'\\%');}},
+
+    yieldcurve:{ch:'H1 · bonds & rates',eyebrow:'the term structure',idea:'Every maturity has its own rate; together they trace the yield curve.',
+      usecase:"The rate you can lock in depends on how long you tie up your money. Plot the rate for each maturity, from 1 year out to 10, and you get the yield curve. Its shape, rising, flat, or inverted, is the market’s read on where rates are headed.",
+      fixed:"rates shown from 1 to 10 years", src:'Berk-DeMarzo Ch.8',
+      inputs:[{k:'r1',label:'the 1-year rate (the short end)',min:0.5,max:8,step:0.25,val:2,unit:'%'},{k:'slope',label:'how the rate changes per extra year',min:-0.6,max:0.6,step:0.05,val:0.3,unit:'%',lo:'inverted',hi:'steep'}],
+      viz:'<svg data-r="svg" viewBox="0 0 320 170" width="100%" style="max-width:340px;display:block;margin:0 auto;"></svg>',
+      fgen:"r_n \\;=\\; r_1 + \\text{slope}\\times(n-1)",
+      explain:'A rising curve (the usual case) means longer money costs more. A flat curve means maturity barely matters. An inverted curve, where long rates sit below short ones, often signals that markets expect rates, and growth, to fall.',
+      update:function(v,root){var r10=Math.max(0,v.r1+v.slope*9), shape=v.slope > 0.03 ? 'rising' : (v.slope < -0.03 ? 'inverted' : 'flat');
+        q(root,'ans').textContent=r10.toFixed(2)+'%'; var c=q(root,'chip'); c.className='chip '+(shape==='inverted'?'lost':'info'); c.textContent=shape+' curve';
+        q(root,'note').textContent='1-year locks in '+v.r1+'%, 10-year '+r10.toFixed(2)+'%: a '+shape+' curve';
+        var x0=42,x1=300,y0=148,y1=18,maxY=14, MX=function(n){return x0+((n-1)/9)*(x1-x0);}, MY=function(r){return y0-(Math.max(0,Math.min(r,maxY))/maxY)*(y0-y1);};
+        var s='<line x1="'+x0+'" y1="'+y0+'" x2="'+x1+'" y2="'+y0+'" stroke="var(--border)"/><line x1="'+x0+'" y1="'+y0+'" x2="'+x0+'" y2="'+y1+'" stroke="var(--border)"/>';
+        var pts=''; for(var n=1;n<=10;n++){var rn=Math.max(0,v.r1+v.slope*(n-1)); pts+=MX(n).toFixed(1)+','+MY(rn).toFixed(1)+' ';}
+        s+='<polyline points="'+pts+'" fill="none" stroke="var(--accent)" stroke-width="2"/>';
+        s+='<circle cx="'+MX(1).toFixed(1)+'" cy="'+MY(v.r1).toFixed(1)+'" r="3.5" fill="var(--accent)"/><circle cx="'+MX(10).toFixed(1)+'" cy="'+MY(r10).toFixed(1)+'" r="3.5" fill="var(--accent)"/>';
+        s+='<text x="'+x0+'" y="165" font-size="10" fill="var(--faint)">1 yr</text><text x="'+x1+'" y="165" font-size="10" fill="var(--faint)" text-anchor="end">10 yr</text><text x="6" y="'+y1+'" font-size="10" fill="var(--faint)">rate</text>';
+        q(root,'svg').innerHTML=s;
+        K(q(root,'fnum'),'r_{10} = '+v.r1+' + '+v.slope.toFixed(2)+'\\times 9 = '+r10.toFixed(2)+'\\%');}},
+
+    bond:{ch:'H1 · bonds & rates',eyebrow:'price a bond',idea:'A bond is worth more when its coupon beats today’s rate.',
+      usecase:"A bond pays a fixed coupon each year plus $100 at the end. Given the rate you require today, this is what it should be worth, and whether it is cheap or dear.",
+      fixed:"a 10-year bond with $100 face value", src:'Berk-DeMarzo Ch.8',
+      inputs:[{k:'cpn',label:'yearly coupon it pays (on $100)',min:0,max:10,step:0.5,val:5,unit:'$'},{k:'y',label:'the yearly return you require',min:1,max:12,step:0.5,val:4,unit:'%'}],
+      viz:twoBarHTML('its price','its $100 face'),
+      fgen:"\\text{price} \\;=\\; \\textstyle\\sum \\dfrac{\\text{coupon}}{(1+y)^t} + \\dfrac{100}{(1+y)^N}",
+      explain:'If the coupon beats the rate you require, the bond is worth more than $100 (a premium). If it is below, the bond trades for less (a discount).',
+      update:function(v,root){var y=v.y/100, n=10, price=v.cpn/y*(1-1/Math.pow(1+y,n))+100/Math.pow(1+y,n), mx=Math.max(price,100);
+        q(root,'ans').textContent=money(price); var c=q(root,'chip'); c.className='chip '+(price>100.5?'good':price<99.5?'lost':'info'); c.textContent=price>100.5?'above face (premium)':price<99.5?'below face (discount)':'about face value';
+        q(root,'note').textContent='at a '+v.y+'% required return this bond is worth '+money(price);
+        q(root,'av').textContent=money(price); q(root,'bv').textContent='$100';
+        q(root,'abar').style.height=(price/mx*144)+'px'; q(root,'bbar').style.height=(100/mx*144)+'px';
+        K(q(root,'fnum'),'\\text{price} = '+price.toFixed(2));}},
+
+    ytm:{ch:'H1 · bonds & rates',eyebrow:'return from a price',idea:'A bond’s price tells you the return you actually earn.',
+      usecase:"A bond is on sale at some price. This is the true yearly return you earn if you buy at that price and hold it to the end, so you can compare bonds fairly.",
+      fixed:"a 10-year bond paying a $5 coupon, $100 face", src:'Berk-DeMarzo Ch.8 · test_epfl_exam2.py',
+      inputs:[{k:'price',label:'price you pay today',min:60,max:130,step:1,val:95,unit:'$'}],
+      viz:hbar('cpn','var(--accent)','coupon rate it prints')+hbar('ytm','var(--good)','your real return (yield to maturity)'),
+      fgen:"\\text{price} \\;=\\; \\textstyle\\sum \\dfrac{5}{(1+y)^t} + \\dfrac{100}{(1+y)^{10}}",
+      explain:'Buy below face and your real return beats the coupon, because you also gain as the price rises to $100. Buy above face and it is the reverse.',
+      update:function(v,root){var n=10,cpn=5,lo=0.0001,hi=0.6,f=function(y){return cpn/y*(1-1/Math.pow(1+y,n))+100/Math.pow(1+y,n)-v.price;};
+        for(var i=0;i<60;i++){var m=(lo+hi)/2; if(f(m)>0) lo=m; else hi=m;} var y=(lo+hi)/2, yp=y*100, mx=Math.max(5,yp);
+        q(root,'ans').textContent=yp.toFixed(2)+'%'; var c=q(root,'chip'); c.className='chip info'; c.textContent='real return if held to the end';
+        q(root,'note').textContent='buying at '+money(v.price)+' earns '+yp.toFixed(2)+'% a year to maturity';
+        q(root,'cpnval').textContent='5%'; q(root,'ytmval').textContent=yp.toFixed(2)+'%';
+        q(root,'cpnbar').style.width=(5/mx*100)+'%'; q(root,'ytmbar').style.width=(yp/mx*100)+'%';
+        K(q(root,'fnum'),'\\text{solve } y: \\;\\text{price}='+v.price+' \\Rightarrow y='+yp.toFixed(2)+'\\%');}},
+
+    duration:{ch:'H1 · bonds & rates',eyebrow:'rate-change risk',idea:'When rates rise, bond prices fall, and longer bonds fall harder.',
+      usecase:"You hold bonds or a bond fund and rates are moving. This estimates how much your value drops or rises for a given change in rates.",
+      fixed:"a bond fund with the chosen duration", src:'Berk-DeMarzo Ch.8',
+      inputs:[{k:'d',label:'duration (roughly its average life, in years)',min:1,max:20,step:1,val:7,unit:'yr'},{k:'dy',label:'how much rates move',min:-3,max:3,step:0.25,val:1,unit:'%',lo:'rates fall',hi:'rates rise'}],
+      viz:hbar('mv','var(--accent)','how much your bonds move'),
+      fgen:"\\dfrac{\\Delta\\text{price}}{\\text{price}} \\;\\approx\\; -\\,D \\times \\Delta r",
+      explain:'A duration of 7 means a 1% rate rise costs you about 7%. Longer-dated bonds carry more of this risk.',
+      update:function(v,root){var move=-v.d*v.dy;
+        q(root,'ans').textContent=(move>=0?'+':'')+move.toFixed(1)+'%'; var c=q(root,'chip'); c.className='chip '+(move>=0?'good':'lost'); c.textContent=move>=0?'your bonds gain':'your bonds lose';
+        q(root,'note').textContent='a '+v.dy+'% move in rates changes your bonds by about '+move.toFixed(1)+'%';
+        q(root,'mvval').textContent=move.toFixed(1)+'%'; q(root,'mvbar').style.width=Math.min(Math.abs(move)/20*100,100)+'%'; q(root,'mvbar').style.background=move>=0?'var(--good)':'var(--lost)';
+        K(q(root,'fnum'),'-'+v.d+' \\times '+v.dy+'\\% = '+move.toFixed(1)+'\\%');}},
+
+    ddm:{ch:'H1 · stocks',eyebrow:'value a stock from dividends',idea:'A stock is worth its next dividend, divided by return minus growth.',
+      usecase:"Valuing a steady dividend-paying stock. Given the return you require and how fast its dividend grows, this is a simple estimate of what a share is worth.",
+      fixed:"the stock pays a $2 dividend next year", src:'Berk-DeMarzo Ch.9 · test_epfl_exam2.py',
+      inputs:[{k:'r',label:'the yearly return you require',min:4,max:14,step:0.5,val:8,unit:'%'},{k:'g',label:'how fast the dividend grows each year',min:0,max:8,step:0.5,val:2,unit:'%'}],
+      viz:hbar('val','var(--accent)','what one share is worth'),
+      fgen:"\\text{price} \\;=\\; \\dfrac{\\text{next dividend}}{r - g}",
+      explain:'The closer growth gets to your required return, the more the price shoots up, because the dividends are expected to keep growing nearly as fast as you discount them.',
+      update:function(v,root){var spread=(v.r-v.g)/100;
+        if(spread<=0){q(root,'ans').textContent='∞'; var c0=q(root,'chip'); c0.className='chip lost'; c0.textContent='growth cannot beat your return'; q(root,'note').textContent='if growth matches or beats your required return, the simple formula breaks down'; q(root,'valval').textContent='∞'; q(root,'valbar').style.width='100%'; K(q(root,'fnum'),'2 / ('+v.r+'\\% - '+v.g+'\\%) \\to \\infty'); return;}
+        var price=2/spread;
+        q(root,'ans').textContent=money(price); var c=q(root,'chip'); c.className='chip info'; c.textContent='value of one share';
+        q(root,'note').textContent='a $2 dividend growing '+v.g+'% a year, at a '+v.r+'% required return, is worth '+money(price);
+        q(root,'valval').textContent=money(price); q(root,'valbar').style.width=Math.min(price/100*100,100)+'%';
+        K(q(root,'fnum'),'2 / ('+(v.r/100).toFixed(3)+' - '+(v.g/100).toFixed(3)+') = '+Math.round(price));}}
+,
+
+    expvar:{ch:'H2 · risk & return',eyebrow:'expected return & risk',idea:'An average return hides how wild the ride is.',
+      usecase:"Sizing up an investment. The average return is only half the story; this also shows the swing, so you know what a normal good or bad year looks like.",
+      fixed:"based on its past returns", src:'Berk-DeMarzo Ch.10',
+      inputs:[{k:'avg',label:'average yearly return',min:0,max:25,step:1,val:9,unit:'%'},{k:'vol',label:'how much it swings (volatility)',min:2,max:40,step:1,val:18,unit:'%',lo:'calm',hi:'wild'}],
+      viz:'<div style="margin:6px 0;"><div style="position:relative;height:30px;background:var(--track);border-radius:6px;"><div data-r="band" style="position:absolute;top:0;bottom:0;background:var(--accent-soft);border-radius:6px;"></div><div data-r="mark" style="position:absolute;top:-4px;width:2px;height:38px;background:var(--accent);"></div></div><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--faint);margin-top:5px;"><span data-r="lo"></span><span data-r="hi"></span></div></div>',
+      fgen:"\\text{a normal year} \\;\\approx\\; \\bar R \\;\\pm\\; \\text{volatility}",
+      explain:'Returns swing roughly one volatility above and below the average in a normal year. A higher swing means more very good and very bad years.',
+      update:function(v,root){var lo=v.avg-v.vol, hi=v.avg+v.vol, S=-70, E=70, px=function(x){return (x-S)/(E-S)*100;};
+        q(root,'ans').textContent=v.avg+'%'; var c=q(root,'chip'); c.className='chip info'; c.textContent='swings about ±'+v.vol+'%';
+        q(root,'note').textContent='a normal year runs from about '+lo+'% to '+hi+'%';
+        q(root,'band').style.left=px(lo)+'%'; q(root,'band').style.width=(px(hi)-px(lo))+'%'; q(root,'mark').style.left=px(v.avg)+'%';
+        q(root,'lo').textContent=lo+'%'; q(root,'hi').textContent='+'+hi+'%';
+        K(q(root,'fnum'),v.avg+'\\% \\pm '+v.vol+'\\% = ['+lo+'\\%,\\; '+hi+'\\%]');}},
+
+    covcorr:{ch:'H2 · risk & return',eyebrow:'correlation',idea:'Two stocks that move apart cancel each other’s risk.',
+      usecase:"Before adding a second stock, check how it moves with the first. The more they move oppositely, the more they smooth each other out and cut your overall risk.",
+      fixed:"two stocks, each swinging 20%, held half and half", src:'Berk-DeMarzo Ch.11 · test_epfl_exam2.py',
+      inputs:[{k:'rho',label:'how the two move together',min:-100,max:100,step:5,val:30,unit:'%',lo:'move opposite',hi:'move together'}],
+      viz:hbar('one','var(--track)','each stock on its own')+hbar('two','var(--accent)','the two combined'),
+      fgen:"\\sigma_p \\;=\\; \\sigma\\,\\sqrt{\\tfrac{1+\\rho}{2}}",
+      explain:'At perfect opposite (-100%) the two can cancel to almost no risk. At perfect together (+100%) you get no benefit at all.',
+      update:function(v,root){var sig=20, rho=v.rho/100, pv=sig*Math.sqrt((1+rho)/2), mx=sig;
+        q(root,'ans').textContent=pv.toFixed(1)+'%'; var c=q(root,'chip'); c.className='chip '+(pv<sig-1?'good':'info'); c.textContent=(pv<sig-1?'risk cut by combining':'no benefit');
+        q(root,'note').textContent='holding both cuts the swing from 20% to '+pv.toFixed(1)+'%';
+        q(root,'oneval').textContent='20%'; q(root,'twoval').textContent=pv.toFixed(1)+'%';
+        q(root,'onebar').style.width=(sig/mx*100)+'%'; q(root,'onebar').style.background='var(--faint)'; q(root,'twobar').style.width=(pv/mx*100)+'%';
+        K(q(root,'fnum'),'20\\sqrt{(1+'+rho.toFixed(2)+')/2} = '+pv.toFixed(1)+'\\%');}},
+
+    portvar:{ch:'H2 · risk & return',eyebrow:'combining assets',idea:'A mix is less risky than the average of its parts.',
+      usecase:"Splitting money between two investments. The blended return is just the average, but the blended risk comes out lower, because they do not crash at the exact same time.",
+      fixed:"stock A (12% return, 25% swing) and stock B (8%, 15%), correlation 0.3", src:'Berk-DeMarzo Ch.11',
+      inputs:[{k:'w',label:'share you put in stock A',min:0,max:100,step:5,val:50,unit:'%'}],
+      viz:hbar('avg','var(--track)','average of their two risks')+hbar('port','var(--accent)','your actual blended risk'),
+      fgen:"\\sigma_p^2 \\;=\\; w_A^2\\sigma_A^2 + w_B^2\\sigma_B^2 + 2w_Aw_B\\,\\rho\\,\\sigma_A\\sigma_B",
+      explain:'The blended risk dips below the simple average because the two assets partly offset each other. The return, though, is just the straight weighted average.',
+      update:function(v,root){var w=v.w/100, sa=25,sb=15,rho=0.3, ret=w*12+(1-w)*8,
+        pv=Math.sqrt(w*w*sa*sa+(1-w)*(1-w)*sb*sb+2*w*(1-w)*rho*sa*sb), avg=w*sa+(1-w)*sb, mx=Math.max(avg,sa);
+        q(root,'ans').textContent=pv.toFixed(1)+'%'; var c=q(root,'chip'); c.className='chip info'; c.textContent='blended return '+ret.toFixed(1)+'%';
+        q(root,'note').textContent='this mix earns '+ret.toFixed(1)+'% with a '+pv.toFixed(1)+'% swing';
+        q(root,'avgval').textContent=avg.toFixed(1)+'%'; q(root,'portval').textContent=pv.toFixed(1)+'%';
+        q(root,'avgbar').style.width=(avg/mx*100)+'%'; q(root,'avgbar').style.background='var(--faint)'; q(root,'portbar').style.width=(pv/mx*100)+'%';
+        K(q(root,'fnum'),'\\sigma_p = '+pv.toFixed(1)+'\\%,\\;\\; \\bar R = '+ret.toFixed(1)+'\\%');}},
+
+    riskcontrib:{ch:'H2 · risk & return',eyebrow:'who drives your risk',idea:'One volatile holding can drive most of your risk.',
+      usecase:"You hold a calm portfolio plus one jumpy stock. This shows how much of your total risk that one stock really drives, which is usually far more than its share of your money.",
+      fixed:"the rest of your portfolio swings 12%, correlation 0.3", src:'Berk-DeMarzo Ch.11 · test_portfolio.py',
+      inputs:[{k:'w',label:'share of your money in the jumpy stock',min:5,max:60,step:5,val:15,unit:'%'},{k:'rv',label:'how much that stock swings',min:20,max:70,step:5,val:45,unit:'%'}],
+      viz:hbar('cap','var(--track)','its share of your money')+hbar('rsk','var(--accent)','its share of your risk'),
+      fgen:"\\text{risk share}_i \\;=\\; \\dfrac{w_i\\,\\text{Cov}(i,\\text{portfolio})}{\\text{portfolio variance}}",
+      explain:'Because risk grows with the square of the swing, a small but jumpy holding can quietly dominate your total risk. That is the one to trim first.',
+      update:function(v,root){var w=v.w/100, rv=v.rv, ro=12, rho=0.3,
+        cov=w*rv*rv+(1-w)*rho*rv*ro, pVar=w*w*rv*rv+(1-w)*(1-w)*ro*ro+2*w*(1-w)*rho*rv*ro, share=w*cov/pVar;
+        q(root,'ans').textContent=Math.round(share*100)+'% of your risk'; var c=q(root,'chip'); c.className='chip lost'; c.textContent='but only '+v.w+'% of your money';
+        q(root,'note').textContent='this one stock is '+v.w+'% of your money but '+Math.round(share*100)+'% of your risk';
+        q(root,'capval').textContent=v.w+'%'; q(root,'rskval').textContent=Math.round(share*100)+'%';
+        q(root,'capbar').style.width=v.w+'%'; q(root,'capbar').style.background='var(--faint)'; q(root,'rskbar').style.width=(share*100)+'%';
+        K(q(root,'fnum'),'\\text{risk share} = '+Math.round(share*100)+'\\%');}},
+
+    minvar:{ch:'H2 · risk & return',eyebrow:'the calmest mix',idea:'There is one mix of two assets that swings the least.',
+      usecase:"You want the steadiest possible blend of two investments. This finds the exact split that gives the lowest swing, given how they move together.",
+      fixed:"stock A swings 24%, stock B swings 15%", src:'Berk-DeMarzo Ch.11 · test_epfl_exam2.py',
+      inputs:[{k:'rho',label:'how the two move together',min:-90,max:90,step:5,val:30,unit:'%',lo:'move opposite',hi:'move together'}],
+      viz:'<div class="hblab"><span>the calmest split</span><b data-r="sv"></b></div><div class="hbar" style="height:26px;display:flex;"><div data-r="aseg" style="background:var(--accent);height:100%;"></div><div data-r="bseg" style="background:var(--good);height:100%;"></div></div><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--faint);margin-top:5px;"><span data-r="alab"></span><span data-r="blab"></span></div>',
+      fgen:"w_A^* \\;=\\; \\dfrac{\\sigma_B^2 - \\rho\\,\\sigma_A\\sigma_B}{\\sigma_A^2 + \\sigma_B^2 - 2\\rho\\,\\sigma_A\\sigma_B}",
+      explain:'Put more in the calmer asset, and even more when the two move oppositely. This is the lowest-risk point you can reach with just these two.',
+      update:function(v,root){var sa=24,sb=15,rho=v.rho/100, denom=sa*sa+sb*sb-2*rho*sa*sb, wA=denom>0?(sb*sb-rho*sa*sb)/denom:0.5; wA=Math.max(0,Math.min(1,wA));
+        q(root,'ans').textContent=Math.round(wA*100)+'% in A'; var c=q(root,'chip'); c.className='chip info'; c.textContent=Math.round((1-wA)*100)+'% in B';
+        q(root,'note').textContent='the steadiest blend is '+Math.round(wA*100)+'% in A and '+Math.round((1-wA)*100)+'% in B';
+        q(root,'sv').textContent=Math.round(wA*100)+' / '+Math.round((1-wA)*100);
+        q(root,'aseg').style.width=(wA*100)+'%'; q(root,'bseg').style.width=((1-wA)*100)+'%';
+        q(root,'alab').textContent='stock A'; q(root,'blab').textContent='stock B';
+        K(q(root,'fnum'),'w_A^* = '+Math.round(wA*100)+'\\%');}},
+
+    frontier:{ch:'H2 · risk & return',eyebrow:'efficient frontier',idea:'Some mixes give more return for the same risk.',
+      usecase:"Choosing how to split between two investments. This draws every possible mix, so you can pick the ones that give the most return for the risk you accept.",
+      fixed:"stock A (12% return, 25% swing), stock B (8%, 15%)", src:'Berk-DeMarzo Ch.11',
+      inputs:[{k:'rho',label:'how the two move together',min:-90,max:90,step:5,val:20,unit:'%',lo:'move opposite',hi:'move together'}],
+      viz:'<svg data-r="svg" viewBox="0 0 320 180" width="100%" style="max-width:340px;display:block;margin:0 auto;"></svg>',
+      fgen:"\\text{return up, risk left} \\;=\\; \\text{better}",
+      explain:'The curve bends toward the left as the two assets move more oppositely, meaning you reach the same return for less risk. Only the upper part is worth holding.',
+      update:function(v,root){var sa=25,sb=15,ra=12,rb=8,rho=v.rho/100,
+        x0=42,x1=300,y0=156,y1=16, mxv=30,mnr=4,mxr=14, vx=function(s){return x0+(s/mxv)*(x1-x0);}, ry=function(r){return y0-((r-mnr)/(mxr-mnr))*(y0-y1);};
+        var pts=''; for(var i=0;i<=20;i++){var w=i/20, ret=w*ra+(1-w)*rb, vol=Math.sqrt(w*w*sa*sa+(1-w)*(1-w)*sb*sb+2*w*(1-w)*rho*sa*sb); pts+=vx(vol)+','+ry(ret)+' ';}
+        var g='<line x1="'+x0+'" y1="'+y0+'" x2="'+x1+'" y2="'+y0+'" stroke="var(--border)"/><line x1="'+x0+'" y1="'+y0+'" x2="'+x0+'" y2="'+y1+'" stroke="var(--border)"/>';
+        g+='<polyline points="'+pts+'" fill="none" stroke="var(--accent)" stroke-width="2"/>';
+        g+='<text x="6" y="'+y1+'" font-size="10" fill="var(--faint)">return</text><text x="'+x1+'" y="172" font-size="10" fill="var(--faint)" text-anchor="end">risk</text>';
+        q(root,'svg').innerHTML=g;
+        var minVol=Math.min.apply(null,[].map ? [0,5,10,15,20].map(function(i){var w=i/20;return Math.sqrt(w*w*sa*sa+(1-w)*(1-w)*sb*sb+2*w*(1-w)*rho*sa*sb);}):[15]);
+        q(root,'ans').textContent=minVol.toFixed(1)+'%'; var c=q(root,'chip'); c.className='chip info'; c.textContent='lowest risk of any mix';
+        q(root,'note').textContent='the curve shows every mix of the two; pick the upper edge for the best return per risk';
+        K(q(root,'fnum'),'\\text{each point} = \\text{one mix of A and B}');}},
+
+    sharpe:{ch:'H2 · risk & return',eyebrow:'reward for risk',idea:'Are you paid enough for the risk you take?',
+      usecase:"Comparing two investments or funds. This measures return earned above a safe rate, per unit of risk, so a calm 8% can beat a wild 15%.",
+      fixed:"a safe rate of 4%", src:'Berk-DeMarzo Ch.11 · test_portfolio.py',
+      inputs:[{k:'ret',label:'its yearly return',min:2,max:30,step:1,val:12,unit:'%'},{k:'vol',label:'how much it swings',min:2,max:40,step:1,val:18,unit:'%',lo:'calm',hi:'wild'}],
+      viz:hbar('rew','var(--good)','reward above the safe rate')+hbar('rsk','var(--lost)','risk you take for it'),
+      fgen:"\\text{Sharpe} \\;=\\; \\dfrac{\\text{return} - \\text{safe rate}}{\\text{volatility}}",
+      explain:'Above about 1 is strong; below 0.5 you are taking a lot of risk for little extra reward. It lets you compare very different investments fairly.',
+      update:function(v,root){var rf=4, sh=(v.ret-rf)/v.vol, mx=Math.max(v.ret-rf,v.vol);
+        q(root,'ans').textContent=sh.toFixed(2); var c=q(root,'chip'); c.className='chip '+(sh>=0.5?'good':'lost'); c.textContent=sh>=1?'strong':sh>=0.5?'decent':'weak for the risk';
+        q(root,'note').textContent='you earn '+(v.ret-rf)+'% above safe for every '+v.vol+'% of swing';
+        q(root,'rewval').textContent=(v.ret-rf)+'%'; q(root,'rskval').textContent=v.vol+'%';
+        q(root,'rewbar').style.width=((v.ret-rf)/mx*100)+'%'; q(root,'rskbar').style.width=(v.vol/mx*100)+'%';
+        K(q(root,'fnum'),'('+v.ret+' - 4)/'+v.vol+' = '+sh.toFixed(2));}},
+
+    beta:{ch:'H2 · risk & return',eyebrow:'market sensitivity',idea:'Beta is how hard a stock swings versus the market.',
+      usecase:"Gauging how a stock will behave when the market moves. A beta of 2 means it tends to swing twice as hard, up and down, so you know what to brace for.",
+      fixed:"compared with the whole market", src:'Berk-DeMarzo Ch.12',
+      inputs:[{k:'beta',label:'how hard it swings vs the market',min:0,max:2.5,step:0.05,val:1.5,unit:'',lo:'steady',hi:'2.5x the market'},{k:'mkt',label:'the market moves',min:-15,max:15,step:1,val:-10,unit:'%',lo:'market drops',hi:'market rises'}],
+      viz:twoBarHTML('the market','this stock'),
+      fgen:"\\text{stock move} \\;\\approx\\; \\beta \\times \\text{market move}",
+      explain:'A high-beta stock amplifies the market, both ways. A beta below 1 is calmer than the market; above 1 is wilder.',
+      update:function(v,root){var sm=v.beta*v.mkt, mx=Math.max(Math.abs(v.mkt),Math.abs(sm),1);
+        q(root,'ans').textContent=(sm>=0?'+':'')+sm.toFixed(1)+'%'; var c=q(root,'chip'); c.className='chip '+(sm>=0?'good':'lost'); c.textContent='when the market does '+v.mkt+'%';
+        q(root,'note').textContent='a '+v.mkt+'% market move tends to move this stock about '+sm.toFixed(1)+'%';
+        q(root,'av').textContent=v.mkt+'%'; q(root,'bv').textContent=sm.toFixed(1)+'%';
+        q(root,'abar').style.height=(Math.abs(v.mkt)/mx*144)+'px'; q(root,'bbar').style.height=(Math.abs(sm)/mx*144)+'px';
+        q(root,'bbar').style.background=sm>=0?'var(--good)':'var(--lost)';
+        K(q(root,'fnum'),v.beta+' \\times '+v.mkt+'\\% = '+sm.toFixed(1)+'\\%');}},
+
+    sysidio:{ch:'H2 · risk & return',eyebrow:'risk you can remove',idea:'Part of a stock’s risk you can diversify away, part you cannot.',
+      usecase:"Deciding how much one stock really endangers a diversified portfolio. Only its market-linked part survives diversification; the company-specific part washes out.",
+      fixed:"the market swings 20%", src:'Berk-DeMarzo Ch.12 · test_epfl_exam2.py',
+      inputs:[{k:'beta',label:'how hard it swings vs the market',min:0.2,max:2.5,step:0.05,val:1,unit:'',lo:'steady',hi:'wild'},{k:'tot',label:'how much the stock swings in total',min:15,max:60,step:1,val:35,unit:'%',lo:'calm',hi:'wild'}],
+      viz:'<div class="hblab"><span>market part vs company-specific part</span><b data-r="sv"></b></div><div class="hbar" style="height:26px;display:flex;"><div data-r="mseg" style="background:var(--lost);height:100%;"></div><div data-r="fseg" style="background:var(--good);height:100%;"></div></div><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--faint);margin-top:5px;"><span data-r="mlab"></span><span data-r="flab"></span></div>',
+      fgen:"\\sigma_i^2 \\;=\\; \\underbrace{\\beta^2\\sigma_M^2}_{\\text{market}} + \\underbrace{\\sigma_\\varepsilon^2}_{\\text{company}}",
+      explain:'Only the market part earns a reward, because the company-specific part disappears once you hold many stocks. Diversifying removes it for free.',
+      update:function(v,root){var sm=20, sysVar=Math.pow(v.beta*sm,2), totVar=v.tot*v.tot, firmVar=Math.max(totVar-sysVar,0), firmPct=firmVar/totVar*100, mktPct=100-firmPct;
+        q(root,'ans').textContent=Math.round(firmPct)+'% removable'; var c=q(root,'chip'); c.className='chip good'; c.textContent='by holding many stocks';
+        q(root,'note').textContent=Math.round(firmPct)+'% of this stock’s risk is company-specific and diversifies away';
+        q(root,'sv').textContent=Math.round(mktPct)+' / '+Math.round(firmPct);
+        q(root,'mseg').style.width=mktPct+'%'; q(root,'fseg').style.width=firmPct+'%';
+        q(root,'mlab').textContent='market '+Math.round(mktPct)+'%'; q(root,'flab').textContent='company '+Math.round(firmPct)+'%';
+        K(q(root,'fnum'),'\\text{company-specific} = '+Math.round(firmPct)+'\\%');}},
+
+    alpha:{ch:'H2 · risk & return',eyebrow:'beat the benchmark?',idea:'Alpha is return beyond what the risk deserved.',
+      usecase:"Judging a stock or a fund. This compares what it actually returned with what its risk alone should have earned. Positive means real skill or luck; negative means it lagged.",
+      fixed:"a 4% safe rate and a 6% market premium", src:'Berk-DeMarzo Ch.12',
+      inputs:[{k:'act',label:'the return it actually made',min:-5,max:25,step:1,val:13,unit:'%'},{k:'beta',label:'how hard it swings vs the market',min:0,max:2.5,step:0.05,val:1.5,unit:'',lo:'steady',hi:'wild'}],
+      viz:hbar('act','var(--accent)','what it actually returned')+hbar('req','var(--track)','what its risk alone deserved'),
+      fgen:"\\alpha \\;=\\; \\text{actual} - \\big(r_f + \\beta\\times\\text{premium}\\big)",
+      explain:'A stock can post a big number just by taking more risk. Alpha strips that out and shows whether it truly beat its fair reward.',
+      update:function(v,root){var req=4+v.beta*6, a=v.act-req, mx=Math.max(v.act,req,1);
+        q(root,'ans').textContent=(a>=0?'+':'')+a.toFixed(1)+'%'; var c=q(root,'chip'); c.className='chip '+(a>=0?'good':'lost'); c.textContent=a>=0?'beat its risk':'lagged its risk';
+        q(root,'note').textContent='it made '+v.act+'% but its risk deserved '+req.toFixed(1)+'%';
+        q(root,'actval').textContent=v.act+'%'; q(root,'reqval').textContent=req.toFixed(1)+'%';
+        q(root,'actbar').style.width=(v.act/mx*100)+'%'; q(root,'reqbar').style.width=(req/mx*100)+'%'; q(root,'reqbar').style.background='var(--faint)';
+        K(q(root,'fnum'),v.act+' - (4 + '+v.beta+'\\times 6) = '+(a>=0?'+':'')+a.toFixed(1)+'\\%');}}
+,
+
+    fcf:{ch:'H3 · valuing a firm',eyebrow:'free cash flow',idea:'Profit on paper is not the same as cash in hand.',
+      usecase:"Judging a company. This strips accounting profit down to the cash it actually frees up after taxes and reinvesting in the business, which is what owners can really take out.",
+      fixed:"a 25% tax rate", src:'Berk-DeMarzo Ch.7 · test_epfl_exam1.py',
+      inputs:[{k:'ebit',label:'operating profit',min:20,max:300,step:10,val:100,unit:'$'},{k:'rein',label:'share of profit put back into the business',min:0,max:80,step:5,val:40,unit:'%'}],
+      viz:twoBarHTML('after-tax profit','free cash flow'),
+      fgen:"\\text{FCF} \\;=\\; \\text{EBIT}\\,(1-\\tau) \\;-\\; \\text{reinvestment}",
+      explain:'A fast-growing firm can show a big profit yet free little cash, because so much is plowed back into the business. Free cash flow is what is truly left over.',
+      update:function(v,root){var aft=v.ebit*0.75, fcf=aft*(1-v.rein/100), mx=aft;
+        q(root,'ans').textContent=money(fcf)+'M'; var c=q(root,'chip'); c.className='chip info'; c.textContent=money(aft*v.rein/100)+'M reinvested';
+        q(root,'note').textContent='of '+money(aft)+'M after-tax profit, '+money(fcf)+'M is free cash';
+        q(root,'av').textContent=money(aft)+'M'; q(root,'bv').textContent=money(fcf)+'M';
+        q(root,'abar').style.height='144px'; q(root,'bbar').style.height=(fcf/mx*144)+'px';
+        K(q(root,'fnum'),Math.round(aft)+' - '+Math.round(aft*v.rein/100)+' = '+Math.round(fcf));}},
+
+    nwc:{ch:'H3 · valuing a firm',eyebrow:'cash trapped by growth',idea:'Growth ties up cash in stock and unpaid bills.',
+      usecase:"Understanding why a profitable, fast-growing company can still run short of cash. Each extra sale locks money into inventory and customer credit before it ever comes back.",
+      fixed:"on $1,000M of current sales", src:'Berk-DeMarzo Ch.7',
+      inputs:[{k:'g',label:'how fast sales grow',min:0,max:50,step:5,val:30,unit:'%'},{k:'int',label:'cash tied up per $1 of new sales',min:5,max:40,step:5,val:20,unit:'%'}],
+      viz:hbar('lock','var(--lost)','cash locked up by growing'),
+      fgen:"\\Delta\\text{working capital} \\;=\\; \\text{intensity} \\times \\Delta\\text{sales}",
+      explain:'The faster it grows, the more cash gets trapped before customers pay and stock sells. Growth that outruns cash can sink an otherwise healthy firm.',
+      update:function(v,root){var newSales=1000*v.g/100, locked=newSales*v.int/100;
+        q(root,'ans').textContent=money(locked)+'M'; var c=q(root,'chip'); c.className='chip lost'; c.textContent='trapped this year';
+        q(root,'note').textContent='growing '+v.g+'% locks '+money(locked)+'M into stock and unpaid bills';
+        q(root,'lockval').textContent=money(locked)+'M'; q(root,'lockbar').style.width=Math.min(locked/200*100,100)+'%';
+        K(q(root,'fnum'),(v.int/100).toFixed(2)+' \\times '+Math.round(newSales)+' = '+Math.round(locked));}},
+
+    npvirr:{ch:'H3 · project decisions',eyebrow:'NPV vs IRR',idea:'The highest percentage return is not always the most value.',
+      usecase:"Choosing between two projects when you can only do one. A small project can show a higher rate of return yet create far less total value than a big one. Value should win.",
+      fixed:"A: cost $5k, $3,600/yr for 2 yrs (28% return). B: cost $100k, $66k/yr for 2 yrs (21%)", src:'Berk-DeMarzo Ch.7 · test_epfl_exam1.py',
+      inputs:[{k:'r',label:'your rate (the cost of money)',min:1,max:35,step:1,val:15,unit:'%'}],
+      viz:hbar('a','var(--accent)','Project A value (28% return)')+hbar('b','var(--good)','Project B value (21% return)'),
+      fgen:"\\text{pick the higher NPV, not the higher rate}",
+      explain:'Below the crossover rate, the big project B wins on value. Only above it does the high-rate project A pull ahead. The rate alone can point you the wrong way.',
+      update:function(v,root){var r=v.r/100, npv=function(cost,cf){return -cost+cf/(1+r)+cf/Math.pow(1+r,2);}, na=npv(5000,3600), nb=npv(100000,66000), mx=Math.max(Math.abs(na),Math.abs(nb),1);
+        var pick=na>nb?'Project A':'Project B';
+        q(root,'ans').textContent='pick '+pick; var c=q(root,'chip'); c.className='chip info'; c.textContent=(na>nb?'A':'B')+' creates more value';
+        q(root,'note').textContent='A is worth '+money(na)+', B is worth '+money(nb)+' at your '+v.r+'% rate';
+        q(root,'aval').textContent=money(na); q(root,'bval').textContent=money(nb);
+        q(root,'abar').style.width=(Math.max(na,0)/mx*100)+'%'; q(root,'bbar').style.width=(Math.max(nb,0)/mx*100)+'%';
+        K(q(root,'fnum'),'NPV_A = '+Math.round(na)+',\\;\\; NPV_B = '+Math.round(nb));}},
+
+    dcf:{ch:'H3 · valuing a firm',eyebrow:'value a whole company',idea:'A business is worth its future cash, brought back to today.',
+      usecase:"Putting a value on an entire company. This takes the cash it throws off, grows it, and discounts it back, giving an estimate of what the whole business is worth.",
+      fixed:"this year it frees $100M of cash", src:'Berk-DeMarzo Ch.9',
+      inputs:[{k:'g',label:'how fast its cash grows each year',min:0,max:6,step:0.5,val:3,unit:'%'},{k:'wacc',label:'the return investors require (WACC)',min:5,max:14,step:0.5,val:9,unit:'%'}],
+      viz:hbar('ev','var(--accent)','what the whole business is worth'),
+      fgen:"\\text{value} \\;=\\; \\dfrac{\\text{next year cash}}{\\text{WACC} - g}",
+      explain:'The closer growth gets to the required return, the larger the value, because the cash keeps growing nearly as fast as you discount it. Small changes swing it a lot.',
+      update:function(v,root){var spread=(v.wacc-v.g)/100;
+        if(spread<=0){q(root,'ans').textContent='∞'; var c0=q(root,'chip'); c0.className='chip lost'; c0.textContent='growth cannot beat the required return'; q(root,'note').textContent='if growth reaches the required return, the simple formula breaks down'; q(root,'evval').textContent='∞'; q(root,'evbar').style.width='100%'; K(q(root,'fnum'),'\\to \\infty'); return;}
+        var ev=100*(1+v.g/100)/spread;
+        q(root,'ans').textContent=money(ev)+'M'; var c=q(root,'chip'); c.className='chip info'; c.textContent='enterprise value';
+        q(root,'note').textContent='at '+v.g+'% growth and a '+v.wacc+'% required return, the business is worth '+money(ev)+'M';
+        q(root,'evval').textContent=money(ev)+'M'; q(root,'evbar').style.width=Math.min(ev/3000*100,100)+'%';
+        K(q(root,'fnum'),'100\\times(1+'+(v.g/100).toFixed(3)+') / '+spread.toFixed(3)+' = '+Math.round(ev));}},
+
+    terminal:{ch:'H3 · valuing a firm',eyebrow:'terminal value',idea:'Most of a valuation often sits beyond the forecast years.',
+      usecase:"Reading a DCF with a critical eye. A large share of the value usually comes from a terminal value after the forecast, which rests on long-run assumptions, not hard numbers.",
+      fixed:"a 9% required return and 2.5% long-run growth", src:'Berk-DeMarzo Ch.9',
+      inputs:[{k:'n',label:'how many years you forecast in detail',min:3,max:20,step:1,val:10,unit:'yr'}],
+      viz:'<div class="hblab"><span>forecast years vs everything after</span><b data-r="sv"></b></div><div class="hbar" style="height:26px;display:flex;"><div data-r="fseg" style="background:var(--accent);height:100%;"></div><div data-r="tseg" style="background:var(--lost);height:100%;"></div></div><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--faint);margin-top:5px;"><span data-r="flab"></span><span data-r="tlab"></span></div>',
+      fgen:"\\text{terminal value} \\;=\\; \\dfrac{\\text{FCF after year }n}{\\text{WACC}-g}",
+      explain:'Even with a 10-year forecast, more than half the value can come from the years beyond it. That part is the least certain, so treat the assumptions with care.',
+      update:function(v,root){var wacc=0.09,g=0.025,fcf=100, sum=0; for(var t=1;t<=v.n;t++){sum+=fcf*Math.pow(1+g,t-1)/Math.pow(1+wacc,t);}
+        var tv=fcf*Math.pow(1+g,v.n)/(wacc-g), pvtv=tv/Math.pow(1+wacc,v.n), total=sum+pvtv, tpct=pvtv/total*100, fpct=100-tpct;
+        q(root,'ans').textContent=Math.round(tpct)+'%'; var c=q(root,'chip'); c.className='chip lost'; c.textContent='beyond year '+v.n+', least certain';
+        q(root,'note').textContent=Math.round(tpct)+'% of the value comes from after your '+v.n+'-year forecast';
+        q(root,'sv').textContent=Math.round(fpct)+' / '+Math.round(tpct);
+        q(root,'fseg').style.width=fpct+'%'; q(root,'tseg').style.width=tpct+'%';
+        q(root,'flab').textContent='forecast '+Math.round(fpct)+'%'; q(root,'tlab').textContent='after '+Math.round(tpct)+'%';
+        K(q(root,'fnum'),'\\text{after year '+v.n+'} = '+Math.round(tpct)+'\\%');}},
+
+    hamada:{ch:'H3 · financing',eyebrow:'how debt adds risk',idea:'Borrowing makes a company’s stock swing more.',
+      usecase:"Comparing firms that carry different amounts of debt. This separates the steady business risk from the extra swing that debt piles on top, so you compare like with like.",
+      fixed:"the business alone has a beta of 0.8, tax 21%", src:'Berk-DeMarzo Ch.14 · test_epfl_exam1.py',
+      inputs:[{k:'dv',label:'share of the company funded by debt',min:0,max:80,step:5,val:40,unit:'%'}],
+      viz:twoBarHTML('business alone','with its debt'),
+      fgen:"\\beta_{\\text{equity}} \\;=\\; \\beta_{\\text{business}}\\,(1+(1-\\tau)\\,\\tfrac{D}{E})",
+      explain:'Debt does not change the business, but it concentrates its ups and downs onto the shareholders, so the stock swings harder. More debt means more equity risk.',
+      update:function(v,root){var dv=v.dv/100, de=dv/(1-dv), bu=0.8, bl=bu*(1+(1-0.21)*de), mx=Math.max(bu,bl);
+        q(root,'ans').textContent=bl.toFixed(2); var c=q(root,'chip'); c.className='chip info'; c.textContent='equity beta';
+        q(root,'note').textContent='debt lifts the stock’s beta from 0.80 to '+bl.toFixed(2);
+        q(root,'av').textContent='0.80'; q(root,'bv').textContent=bl.toFixed(2);
+        q(root,'abar').style.height=(bu/mx*144)+'px'; q(root,'bbar').style.height=(bl/mx*144)+'px';
+        K(q(root,'fnum'),'0.8\\times(1+0.79\\times'+de.toFixed(2)+') = '+bl.toFixed(2));}},
+
+    mm:{ch:'H3 · financing',eyebrow:'Modigliani-Miller',idea:'In a perfect world, how you finance a firm does not change its value.',
+      usecase:"A reality check before believing that clever debt creates value. Setting taxes and trouble aside, slicing the firm into more debt and less equity leaves the total worth unchanged.",
+      fixed:"a firm worth $1,000M, no taxes or distress", src:'Berk-DeMarzo Ch.14',
+      inputs:[{k:'d',label:'share funded by debt',min:0,max:80,step:5,val:40,unit:'%'}],
+      viz:'<div class="hblab"><span>equity + debt = the same total</span><b data-r="tv"></b></div><div class="hbar" style="height:26px;display:flex;"><div data-r="eseg" style="background:var(--accent);height:100%;"></div><div data-r="dseg" style="background:var(--good);height:100%;"></div></div><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--faint);margin-top:5px;"><span data-r="elab"></span><span data-r="dlab"></span></div>',
+      fgen:"V_{\\text{with debt}} \\;=\\; V_{\\text{no debt}}",
+      explain:'Add more debt and the equity shrinks by exactly as much, so the whole pie stays the same size. Value comes from the business, not the way you finance it.',
+      update:function(v,root){var total=1000, d=v.d/100*1000, e=total-d;
+        q(root,'ans').textContent='$1,000M'; var c=q(root,'chip'); c.className='chip info'; c.textContent='value unchanged';
+        q(root,'note').textContent='at '+v.d+'% debt the equity is '+money(e)+'M and debt '+money(d)+'M, still $1,000M in total';
+        q(root,'tv').textContent='$1,000M';
+        q(root,'eseg').style.width=(e/total*100)+'%'; q(root,'dseg').style.width=(d/total*100)+'%';
+        q(root,'elab').textContent='equity '+money(e)+'M'; q(root,'dlab').textContent='debt '+money(d)+'M';
+        K(q(root,'fnum'),'\\text{equity }'+Math.round(e)+' + \\text{debt }'+Math.round(d)+' = 1000');}},
+
+    taxshield:{ch:'H3 · financing',eyebrow:'the tax break on debt',idea:'Debt is cheaper because interest is tax-deductible.',
+      usecase:"Seeing the upside of borrowing. Interest is deducted before tax, so each dollar of lasting debt hands the company a permanent tax saving worth real money today.",
+      fixed:"debt that stays on the books", src:'Berk-DeMarzo Ch.15 · test_epfl_exam1.py',
+      inputs:[{k:'debt',label:'how much lasting debt the firm carries',min:0,max:1000,step:50,val:400,unit:'$'},{k:'tax',label:'the tax rate',min:0,max:40,step:1,val:21,unit:'%'}],
+      viz:hbar('sh','var(--good)','value the tax break adds'),
+      fgen:"\\text{value of tax break} \\;=\\; \\tau \\times \\text{debt}",
+      explain:'Every dollar of permanent debt adds about the tax rate in value, because the government effectively pays that share of the interest. This is why some debt helps.',
+      update:function(v,root){var sh=v.tax/100*v.debt;
+        q(root,'ans').textContent=money(sh)+'M'; var c=q(root,'chip'); c.className='chip good'; c.textContent='added by the tax break';
+        q(root,'note').textContent='each $1 of lasting debt adds about $'+(v.tax/100).toFixed(2)+' of value';
+        q(root,'shval').textContent=money(sh)+'M'; q(root,'shbar').style.width=Math.min(sh/300*100,100)+'%';
+        K(q(root,'fnum'),(v.tax/100).toFixed(2)+' \\times '+v.debt+' = '+Math.round(sh));}},
+
+    apv:{ch:'H3 · financing',eyebrow:'APV',idea:'Value the business first, then add the financing perks.',
+      usecase:"Valuing a company in a clean, layered way. Start with what the business is worth on its own, then add the value of the tax break from its debt. Honest and easy to audit.",
+      fixed:"the business alone is worth $1,000M, tax 21%", src:'Berk-DeMarzo Ch.15',
+      inputs:[{k:'debt',label:'how much lasting debt it carries',min:0,max:1000,step:50,val:400,unit:'$'}],
+      viz:'<div class="hblab"><span>business value + tax break</span><b data-r="tv"></b></div><div class="hbar" style="height:26px;display:flex;"><div data-r="bseg" style="background:var(--accent);height:100%;"></div><div data-r="sseg" style="background:var(--good);height:100%;"></div></div><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--faint);margin-top:5px;"><span data-r="blab"></span><span data-r="slab"></span></div>',
+      fgen:"\\text{APV} \\;=\\; V_{\\text{business}} \\;+\\; \\tau \\times \\text{debt}",
+      explain:'Keeping the operating value and the financing value in separate layers makes it clear where worth comes from, instead of blending everything into one rate.',
+      update:function(v,root){var vu=1000, sh=0.21*v.debt, apv=vu+sh, mx=apv;
+        q(root,'ans').textContent=money(apv)+'M'; var c=q(root,'chip'); c.className='chip info'; c.textContent='+'+money(sh)+'M from debt';
+        q(root,'note').textContent='$1,000M of business plus '+money(sh)+'M of tax break = '+money(apv)+'M';
+        q(root,'tv').textContent=money(apv)+'M';
+        q(root,'bseg').style.width=(vu/mx*100)+'%'; q(root,'sseg').style.width=(sh/mx*100)+'%';
+        q(root,'blab').textContent='business $1,000M'; q(root,'slab').textContent='tax break '+money(sh)+'M';
+        K(q(root,'fnum'),'1000 + 0.21\\times'+v.debt+' = '+Math.round(apv));}},
+
+    distress:{ch:'H3 · financing',eyebrow:'how much debt is healthy',idea:'Too much debt costs more than it saves.',
+      usecase:"Finding a sensible debt level. The tax break grows with debt, but so does the risk of trouble, and faster. Past a point, more debt destroys value instead of adding it.",
+      fixed:"on a $1,000M firm", src:'Berk-DeMarzo Ch.16',
+      inputs:[{k:'d',label:'share funded by debt',min:0,max:80,step:5,val:35,unit:'%'}],
+      viz:hbar('ben','var(--good)','value the tax break adds')+hbar('cost','var(--lost)','expected cost of trouble'),
+      fgen:"\\text{net} \\;=\\; \\underbrace{\\text{tax break}}_{\\text{rises}} - \\underbrace{\\text{distress cost}}_{\\text{rises faster}}",
+      explain:'The tax break rises steadily with debt, but the cost of possible trouble rises much faster. The best debt level is where the gap between them is widest.',
+      update:function(v,root){var f=v.d/100, ben=210*f, cost=400*f*f, net=ben-cost, mx=Math.max(ben,cost,1);
+        q(root,'ans').textContent=(net>=0?'+':'')+money(net)+'M'; var c=q(root,'chip'); c.className='chip '+(net>=0?'good':'lost'); c.textContent=net>=0?'debt still helps':'too much debt';
+        q(root,'note').textContent='at '+v.d+'% debt the tax break adds '+money(ben)+'M but trouble costs '+money(cost)+'M';
+        q(root,'benval').textContent=money(ben)+'M'; q(root,'costval').textContent=money(cost)+'M';
+        q(root,'benbar').style.width=(ben/mx*100)+'%'; q(root,'costbar').style.width=(cost/mx*100)+'%';
+        K(q(root,'fnum'),Math.round(ben)+' - '+Math.round(cost)+' = '+(net>=0?'+':'')+Math.round(net));}}
+,
+
+    fwdfut:{ch:'H4 · derivatives',eyebrow:'lock a price today',idea:'A forward locks the price of a future trade right now.',
+      usecase:"A farmer, an airline, or an importer who knows they will buy or sell later and wants no surprises. A forward fixes the price today; whatever the market does, the deal is set.",
+      fixed:"you agreed to buy at $100", src:'Berk-DeMarzo Ch.20',
+      inputs:[{k:'s',label:'the market price when the deal settles',min:60,max:140,step:1,val:115,unit:'$'}],
+      viz:twoBarHTML('your locked price','the market price'),
+      fgen:"\\text{gain} \\;=\\; \\text{market price} - \\text{locked price}",
+      explain:'Lock at $100 and you gain if the market ends higher, lose if it ends lower. A futures contract is the same idea, but traded on an exchange and settled daily.',
+      update:function(v,root){var pay=v.s-100, mx=Math.max(v.s,100);
+        q(root,'ans').textContent=(pay>=0?'+':'')+money(pay); var c=q(root,'chip'); c.className='chip '+(pay>=0?'good':'lost'); c.textContent=pay>=0?'the lock paid off':'you locked too high';
+        q(root,'note').textContent='locked at $100, the market at '+money(v.s)+', so you are '+(pay>=0?'ahead ':'behind ')+money(Math.abs(pay));
+        q(root,'av').textContent='$100'; q(root,'bv').textContent=money(v.s);
+        q(root,'abar').style.height=(100/mx*144)+'px'; q(root,'bbar').style.height=(v.s/mx*144)+'px'; q(root,'bbar').style.background=pay>=0?'var(--good)':'var(--lost)';
+        K(q(root,'fnum'),money(v.s).replace('$','')+' - 100 = '+(pay>=0?'+':'')+pay);}},
+
+    fwdprice:{ch:'H4 · derivatives',eyebrow:'the fair forward price',idea:'The fair price to lock in is today’s price plus the cost of waiting.',
+      usecase:"Setting the delivery price in a forward so neither side gets a free lunch. It is just today’s price grown at the interest rate over the wait.",
+      fixed:"delivery in 1 year", src:'Berk-DeMarzo Ch.20',
+      inputs:[{k:'s',label:'the price today',min:50,max:150,step:5,val:100,unit:'$'},{k:'r',label:'the interest rate',min:0,max:10,step:0.5,val:4,unit:'%'}],
+      viz:twoBarHTML('price today','fair forward price'),
+      fgen:"\\text{forward} \\;=\\; \\text{today} \\times (1+r)^{T}",
+      explain:'Buying now and holding costs you the interest you give up, so the fair future price is today’s price plus that carry. Any other price lets someone arbitrage you.',
+      update:function(v,root){var f=v.s*(1+v.r/100), mx=f;
+        q(root,'ans').textContent=money(f); var c=q(root,'chip'); c.className='chip info'; c.textContent='+'+money(f-v.s)+' of carry';
+        q(root,'note').textContent=money(v.s)+' today grows to a fair forward price of '+money(f);
+        q(root,'av').textContent=money(v.s); q(root,'bv').textContent=money(f);
+        q(root,'abar').style.height=(v.s/mx*144)+'px'; q(root,'bbar').style.height='144px';
+        K(q(root,'fnum'),v.s+'\\times(1+'+(v.r/100).toFixed(3)+') = '+f.toFixed(2));}},
+
+    swap:{ch:'H4 · derivatives',eyebrow:'trade floating for fixed',idea:'A swap turns an unpredictable rate into a fixed one.',
+      usecase:"A borrower with a variable-rate loan who wants to stop worrying about rate moves. A swap exchanges the floating rate for a fixed one, the price of sleeping at night.",
+      fixed:"you swapped to a fixed 3.2%", src:'Berk-DeMarzo Ch.20',
+      inputs:[{k:'fl',label:'where the floating rate ends up',min:1,max:7,step:0.25,val:4,unit:'%',lo:'rates fall',hi:'rates rise'}],
+      viz:hbar('flo','var(--track)','what you would have paid floating')+hbar('fix','var(--accent)','what you actually pay (fixed)'),
+      fgen:"\\text{you pay fixed} \\;\\text{instead of}\\; \\text{floating}",
+      explain:'You give up the chance of cheaper payments if rates fall, in exchange for certainty if they rise. The swap removes the surprise either way.',
+      update:function(v,root){var fix=3.2, save=v.fl-fix, mx=Math.max(v.fl,fix);
+        q(root,'ans').textContent='fixed at 3.2%'; var c=q(root,'chip'); c.className='chip '+(save>=0?'good':'lost'); c.textContent=save>=0?'the swap saved you '+save.toFixed(1)+'%':'you paid '+(-save).toFixed(1)+'% for certainty';
+        q(root,'note').textContent='floating would cost '+v.fl+'%, your fixed rate is 3.2%';
+        q(root,'floval').textContent=v.fl+'%'; q(root,'fixval').textContent='3.2%';
+        q(root,'flobar').style.width=(v.fl/mx*100)+'%'; q(root,'flobar').style.background='var(--faint)'; q(root,'fixbar').style.width=(fix/mx*100)+'%';
+        K(q(root,'fnum'),'\\text{floating }'+v.fl+'\\% \\to \\text{fixed }3.2\\%');}},
+
+    optpayoff:{ch:'H4 · derivatives',eyebrow:'options',idea:'An option is the right, not the duty, to trade at a set price.',
+      usecase:"Betting on a rise with limited downside, or protecting a holding from a fall. A call lets you buy at a set price; you only use it if it helps, and lose only what you paid.",
+      fixed:"a call to buy at $100, costing $5", src:'Berk-DeMarzo Ch.20',
+      inputs:[{k:'s',label:'the stock price at expiry',min:50,max:150,step:1,val:115,unit:'$'}],
+      viz:'<svg data-r="svg" viewBox="0 0 320 170" width="100%" style="max-width:340px;display:block;margin:0 auto;"></svg>',
+      fgen:"\\text{call profit} \\;=\\; \\max(\\text{stock}-100,\\,0) - 5",
+      explain:'Below $100 you simply let it expire and lose only the $5 you paid. Above $105 you are in profit, and the upside keeps climbing. Limited loss, open-ended gain.',
+      update:function(v,root){var prof=Math.max(v.s-100,0)-5;
+        q(root,'ans').textContent=(prof>=0?'+':'')+money(prof); var c=q(root,'chip'); c.className='chip '+(prof>=0?'good':'lost'); c.textContent=prof>=0?'in profit':'lost the premium';
+        q(root,'note').textContent='at a '+money(v.s)+' stock price, the call profits '+(prof>=0?'+':'')+money(prof);
+        var x0=40,x1=300,yz=110,k=100,prem=5, sx=function(s){return x0+((s-50)/100)*(x1-x0);}, py=function(p){return yz-p*2.2;};
+        var g='<line x1="'+x0+'" y1="'+yz+'" x2="'+x1+'" y2="'+yz+'" stroke="var(--border)"/>';
+        g+='<polyline points="'+sx(50)+','+py(-5)+' '+sx(100)+','+py(-5)+' '+sx(150)+','+py(45)+'" fill="none" stroke="var(--accent)" stroke-width="2"/>';
+        g+='<line x1="'+sx(105)+'" y1="14" x2="'+sx(105)+'" y2="160" stroke="var(--faint)" stroke-dasharray="2 3"/>';
+        g+='<circle cx="'+sx(v.s)+'" cy="'+py(prof)+'" r="5" fill="'+(prof>=0?'var(--good)':'var(--lost)')+'"/>';
+        g+='<text x="'+(sx(105)+4)+'" y="24" font-size="10" fill="var(--faint)">break even $105</text>';
+        g+='<text x="'+x0+'" y="135" font-size="10" fill="var(--faint)">$50</text><text x="'+x1+'" y="135" font-size="10" fill="var(--faint)" text-anchor="end">$150</text>';
+        q(root,'svg').innerHTML=g;
+        K(q(root,'fnum'),'\\max('+v.s+'-100,0) - 5 = '+(prof>=0?'+':'')+prof);}},
+
+    putcall:{ch:'H4 · derivatives',eyebrow:'put-call parity',idea:'A call, a put, the stock and a bond are tied by one equation.',
+      usecase:"Spotting a free lunch in option prices. If a call minus a put does not equal the stock minus the discounted strike, the prices are out of line and someone can arbitrage.",
+      fixed:"stock $100, strike $100, 5% rate, 1 year", src:'Berk-DeMarzo Ch.21',
+      inputs:[{k:'call',label:'price of the call',min:1,max:20,step:0.5,val:8,unit:'$'},{k:'put',label:'price of the put',min:1,max:20,step:0.5,val:6,unit:'$'}],
+      viz:hbar('lhs','var(--accent)','call minus put')+hbar('rhs','var(--good)','stock minus discounted strike'),
+      fgen:"C - P \\;=\\; S - \\dfrac{K}{(1+r)^{T}}",
+      explain:'The two sides must match. If call minus put is bigger, the call is dear: sell it, buy the put and the stock, and pocket the difference risk-free.',
+      update:function(v,root){var lhs=v.call-v.put, rhs=100-100/1.05, gap=lhs-rhs, mx=Math.max(Math.abs(lhs),Math.abs(rhs),1);
+        q(root,'ans').textContent=Math.abs(gap)<0.4?'in line':'mispriced by '+money(Math.abs(gap)); var c=q(root,'chip'); c.className='chip '+(Math.abs(gap)<0.4?'good':'lost'); c.textContent=Math.abs(gap)<0.4?'no free lunch':'arbitrage';
+        q(root,'note').textContent='call minus put is '+money(lhs)+', it should equal '+money(rhs);
+        q(root,'lhsval').textContent=money(lhs); q(root,'rhsval').textContent=money(rhs);
+        q(root,'lhsbar').style.width=(Math.abs(lhs)/mx*100)+'%'; q(root,'rhsbar').style.width=(Math.abs(rhs)/mx*100)+'%';
+        K(q(root,'fnum'),'('+v.call+'-'+v.put+') = '+lhs.toFixed(2)+' \\text{ vs } '+rhs.toFixed(2));}},
+
+    binomial:{ch:'H4 · derivatives',eyebrow:'binomial model',idea:'Price an option from its next up or down move.',
+      usecase:"Valuing an option step by step, by what it pays if the stock goes up versus down. It is the simplest engine behind modern option pricing.",
+      fixed:"stock $100, strike $100, 5% rate, one step", src:'Berk-DeMarzo Ch.21',
+      inputs:[{k:'up',label:'how far the stock could rise',min:5,max:50,step:5,val:20,unit:'%'},{k:'dn',label:'how far the stock could fall',min:5,max:40,step:5,val:15,unit:'%'}],
+      viz:'<div style="display:flex;align-items:center;justify-content:center;gap:30px;height:130px;font-size:13px;"><div style="text-align:center;"><div style="font-weight:600;font-size:16px;">$100</div><div class="explain" style="margin:2px 0 0;">today</div></div><div style="display:flex;flex-direction:column;gap:34px;"><div>up to <b data-r="su"></b> &middot; <span style="color:var(--good);">call <b data-r="cu"></b></span></div><div>down to <b data-r="sd"></b> &middot; <span style="color:var(--lost);">call <b data-r="cd"></b></span></div></div></div>',
+      fgen:"\\text{value} \\;=\\; \\dfrac{p\\,C_{up} + (1-p)\\,C_{down}}{1+r}",
+      explain:'Weigh the up and down payoffs by their risk-neutral chances, then discount. No guessing the real odds is needed, which is the clever part.',
+      update:function(v,root){var u=1+v.up/100, d=1-v.dn/100, Su=100*u, Sd=100*d, Cu=Math.max(Su-100,0), Cd=Math.max(Sd-100,0), r=0.05, p=(1+r-d)/(u-d), val=(p*Cu+(1-p)*Cd)/(1+r);
+        q(root,'ans').textContent=money(val); var c=q(root,'chip'); c.className='chip info'; c.textContent='value of the call';
+        q(root,'note').textContent='balancing a '+money(Su)+' up case and a '+money(Sd)+' down case, the call is worth '+money(val);
+        q(root,'su').textContent=money(Su); q(root,'sd').textContent=money(Sd); q(root,'cu').textContent=money(Cu); q(root,'cd').textContent=money(Cd);
+        K(q(root,'fnum'),'('+p.toFixed(2)+'\\times'+Cu.toFixed(0)+' + '+(1-p).toFixed(2)+'\\times'+Cd.toFixed(0)+')/1.05 = '+val.toFixed(2));}},
+
+    bs:{ch:'H4 · derivatives',eyebrow:'Black-Scholes',idea:'Price an option from volatility and time.',
+      usecase:"Putting a number on an option the way markets do. The value is driven mostly by how volatile the stock is and how long until expiry: more of either, more value.",
+      fixed:"stock $100, strike $100, 5% rate", src:'Berk-DeMarzo Ch.21',
+      inputs:[{k:'vol',label:'how volatile the stock is',min:10,max:60,step:5,val:30,unit:'%',lo:'calm',hi:'wild'},{k:'t',label:'years until it expires',min:0.25,max:3,step:0.25,val:1,unit:'yr'}],
+      viz:hbar('cv','var(--accent)','what the option is worth'),
+      fgen:"C \\;=\\; S\\,N(d_1) - K\\,e^{-rT}N(d_2)",
+      explain:'With no move expected on average, the option still has value because the stock might swing your way. The wilder the stock and the longer the wait, the more that chance is worth.',
+      update:function(v,root){function Ncdf(x){var t=1/(1+0.2316419*Math.abs(x)),d=0.3989423*Math.exp(-x*x/2),p=d*t*(0.3193815+t*(-0.3565638+t*(1.781478+t*(-1.821256+t*1.330274))));return x>0?1-p:p;}
+        var S=100,K=100,r=0.05,sig=v.vol/100,T=v.t, d1=((r+sig*sig/2)*T)/(sig*Math.sqrt(T)), d2=d1-sig*Math.sqrt(T), call=S*Ncdf(d1)-K*Math.exp(-r*T)*Ncdf(d2);
+        q(root,'ans').textContent=money(call); var c=q(root,'chip'); c.className='chip info'; c.textContent='fair value of the call';
+        q(root,'note').textContent='at '+v.vol+'% volatility over '+v.t+(v.t===1?' year':' years')+', the call is worth '+money(call);
+        q(root,'cvval').textContent=money(call); q(root,'cvbar').style.width=Math.min(call/40*100,100)+'%';
+        K(q(root,'fnum'),'C = 100\\,N('+d1.toFixed(2)+') - 100e^{-0.05\\cdot'+T+'}N('+d2.toFixed(2)+') = '+call.toFixed(2));}}
+,
+
+    growann:{ch:'H1 · discounting',eyebrow:'growing payments',idea:'Payments that grow each year, for a set number of years.',
+      usecase:"Valuing a salary, a pension, or a savings plan where the amount rises each year, say with raises or inflation, but stops after a set number of years.",
+      fixed:"a $1,000 first payment, 5% rate", src:'Berk-DeMarzo Ch.4 · test_epfl_exam2.py',
+      inputs:[{k:'g',label:'how fast each payment grows',min:0,max:4,step:0.5,val:3,unit:'%'},{k:'n',label:'number of years',min:1,max:30,step:1,val:15,unit:'yr'}],
+      viz:'<div data-r="bars" style="display:flex;align-items:flex-end;gap:4px;height:104px;justify-content:center;"></div><div class="explain" style="text-align:center;" data-r="sumnote"></div>',
+      fgen:"PV \\;=\\; \\dfrac{C}{r-g}\\left(1-\\left(\\dfrac{1+g}{1+r}\\right)^{n}\\right)",
+      explain:'Each payment is bigger than the last but still discounted back to today. Growth lifts the value, and the closer growth gets to your rate, the more it climbs.',
+      update:function(v,root){var r=0.05,g=v.g/100,c0=1000, gaf=(1/(r-g))*(1-Math.pow((1+g)/(1+r),v.n)), pv=c0*gaf;
+        q(root,'ans').textContent=money(pv); var c=q(root,'chip'); c.className='chip info'; c.textContent='grows '+v.g+'% a year';
+        q(root,'note').textContent='a $1,000 payment growing '+v.g+'% a year for '+v.n+' years is worth '+money(pv)+' today';
+        var shown=Math.min(v.n,16), bars='';
+        for(var t=0;t<shown;t++){var pvt=c0*Math.pow(1+g,t)/Math.pow(1+r,t+1), h=Math.max(4,pvt/1000*84); bars+='<div style="width:'+(shown>12?9:13)+'px;height:'+h+'px;background:var(--accent);border-radius:3px;"></div>';}
+        q(root,'bars').innerHTML=bars;
+        q(root,'sumnote').textContent='each growing payment, discounted to today, then summed';
+        K(q(root,'fnum'),'\\dfrac{1000}{'+(r-g).toFixed(3)+'}(1-('+((1+g)/(1+r)).toFixed(3)+')^{'+v.n+'}) = '+Math.round(pv));}},
+
+    contcomp:{ch:'H1 · rates',eyebrow:'continuous compounding',idea:'Compounded every instant, money grows a little faster still.',
+      usecase:"Comparing a rate that compounds continuously, common in finance and option pricing, with a plain once-a-year rate. The gap is small but real.",
+      fixed:"starting from $100", src:'Berk-DeMarzo Ch.5',
+      inputs:[{k:'r',label:'the yearly rate',min:1,max:12,step:0.5,val:5,unit:'%'},{k:'t',label:'years it grows',min:1,max:20,step:1,val:10,unit:'yr'}],
+      viz:twoBarHTML('compounded yearly','compounded continuously'),
+      fgen:"\\text{future} \\;=\\; \\text{today}\\times e^{\\,r\\,t}",
+      explain:'Adding interest more and more often nudges the total up. Doing it every instant is the limit, using the number e, and gives the most growth for the same rate.',
+      update:function(v,root){var yr=100*Math.pow(1+v.r/100,v.t), cont=100*Math.exp(v.r/100*v.t), mx=cont;
+        q(root,'ans').textContent=money(cont); var c=q(root,'chip'); c.className='chip good'; c.textContent='+'+money(cont-yr)+' vs yearly';
+        q(root,'note').textContent='$100 at '+v.r+'% over '+v.t+(v.t===1?' year':' years')+' grows to '+money(cont)+' compounded continuously';
+        q(root,'av').textContent=money(yr); q(root,'bv').textContent=money(cont);
+        q(root,'abar').style.height=(yr/mx*144)+'px'; q(root,'bbar').style.height='144px';
+        K(q(root,'fnum'),'100\\times e^{'+(v.r/100).toFixed(3)+'\\cdot'+v.t+'} = '+cont.toFixed(2));}},
+
+    cml:{ch:'H2 · risk & return',eyebrow:'capital market line',idea:'Mixing the market with cash gives the best deals available.',
+      usecase:"Deciding how much to hold in a broad market fund versus safe cash. Every blend sits on one straight line, and that line is the best return for each level of risk.",
+      fixed:"market: 8% return, 16% swing; safe rate 3%", src:'Berk-DeMarzo Ch.11',
+      inputs:[{k:'x',label:'share you put in the market',min:0,max:150,step:5,val:60,unit:'%',lo:'all safe',hi:'borrow to buy more'}],
+      viz:'<svg data-r="svg" viewBox="0 0 320 170" width="100%" style="max-width:340px;display:block;margin:0 auto;"></svg>',
+      fgen:"\\text{return} \\;=\\; r_f + \\text{share}\\times(r_M - r_f)",
+      explain:'Hold some cash to sit safely below the market; borrow to push past it for more return and more risk. Either way you stay on the same straight line.',
+      update:function(v,root){var rf=3,rm=8,vm=16,x=v.x/100, ret=rf+x*(rm-rf), vol=x*vm;
+        q(root,'ans').textContent=ret.toFixed(1)+'%'; var c=q(root,'chip'); c.className='chip info'; c.textContent='at '+vol.toFixed(1)+'% risk';
+        q(root,'note').textContent=v.x+'% in the market gives a '+ret.toFixed(1)+'% return at a '+vol.toFixed(1)+'% swing';
+        var x0=42,x1=300,y0=148,y1=16, vx=function(s){return x0+(s/26)*(x1-x0);}, ry=function(r){return y0-(r/14)*(y0-y1);};
+        var g='<line x1="'+x0+'" y1="'+y0+'" x2="'+x1+'" y2="'+y0+'" stroke="var(--border)"/><line x1="'+x0+'" y1="'+y0+'" x2="'+x0+'" y2="'+y1+'" stroke="var(--border)"/>';
+        g+='<line x1="'+vx(0)+'" y1="'+ry(rf)+'" x2="'+vx(24)+'" y2="'+ry(rf+(24/vm)*(rm-rf))+'" stroke="var(--accent)" stroke-width="2"/>';
+        g+='<circle cx="'+vx(16)+'" cy="'+ry(rm)+'" r="3" fill="var(--faint)"/>';
+        g+='<circle cx="'+vx(Math.min(vol,26))+'" cy="'+ry(Math.min(ret,14))+'" r="5" fill="var(--accent)"/>';
+        g+='<text x="6" y="'+y1+'" font-size="10" fill="var(--faint)">return</text><text x="'+x1+'" y="164" font-size="10" fill="var(--faint)" text-anchor="end">risk</text>';
+        g+='<text x="'+vx(16)+'" y="'+(ry(rm)-8)+'" font-size="9" fill="var(--faint)" text-anchor="middle">market</text>';
+        q(root,'svg').innerHTML=g;
+        K(q(root,'fnum'),'3 + '+x.toFixed(2)+'\\times(8-3) = '+ret.toFixed(1)+'\\%');}},
+
+    portbeta:{ch:'H2 · risk & return',eyebrow:'portfolio beta',idea:'A portfolio’s beta is the average of its parts.',
+      usecase:"Gauging how your whole portfolio will move with the market by blending the betas of what you hold, weighted by how much of each you own.",
+      fixed:"a calm stock (beta 0.5) and a wild one (beta 1.25)", src:'Berk-DeMarzo Ch.12 · test_epfl_exam2.py',
+      inputs:[{k:'w',label:'share in the calm stock',min:0,max:100,step:5,val:50,unit:'%'}],
+      viz:hbar('pb','var(--accent)','how your whole portfolio moves with the market'),
+      fgen:"\\beta_{\\text{portfolio}} \\;=\\; \\textstyle\\sum w_i\\,\\beta_i",
+      explain:'No need for anything fancy: weight each holding beta by its share and add them up. More in the calm stock pulls the whole portfolio steadier.',
+      update:function(v,root){var w=v.w/100, pb=w*0.5+(1-w)*1.25;
+        q(root,'ans').textContent=pb.toFixed(2); var c=q(root,'chip'); c.className='chip info'; c.textContent=pb<0.97?'calmer than the market':pb>1.03?'wilder than the market':'moves with the market';
+        q(root,'note').textContent='your portfolio swings about '+pb.toFixed(2)+' times as hard as the market';
+        q(root,'pbval').textContent=pb.toFixed(2); q(root,'pbbar').style.width=Math.min(pb/2.5*100,100)+'%';
+        K(q(root,'fnum'),w.toFixed(2)+'\\times 0.5 + '+(1-w).toFixed(2)+'\\times 1.25 = '+pb.toFixed(2));}},
+
+    mm2:{ch:'H3 · financing',eyebrow:'MM II',idea:'More debt makes shareholders demand a higher return.',
+      usecase:"Understanding why a company cost of equity rises as it borrows more. The shrinking slice of equity bears more of the swings, so owners ask for more.",
+      fixed:"the business earns 9%, debt costs 5%", src:'Berk-DeMarzo Ch.14',
+      inputs:[{k:'dv',label:'share funded by debt',min:0,max:75,step:5,val:40,unit:'%'}],
+      viz:twoBarHTML('the business return','what equity now demands'),
+      fgen:"r_E \\;=\\; r_A + \\tfrac{D}{E}\\,(r_A - r_D)",
+      explain:'Total value does not change, but the risk is squeezed onto a smaller equity base, so the return shareholders require climbs with every bit of debt.',
+      update:function(v,root){var dv=v.dv/100, de=dv/(1-dv), rE=9+de*(9-5), mx=Math.max(9,rE);
+        q(root,'ans').textContent=rE.toFixed(1)+'%'; var c=q(root,'chip'); c.className='chip info'; c.textContent='cost of equity';
+        q(root,'note').textContent='at '+v.dv+'% debt, equity holders now demand '+rE.toFixed(1)+'% instead of 9%';
+        q(root,'av').textContent='9.0%'; q(root,'bv').textContent=rE.toFixed(1)+'%';
+        q(root,'abar').style.height=(9/mx*144)+'px'; q(root,'bbar').style.height='144px';
+        K(q(root,'fnum'),'9 + '+de.toFixed(2)+'\\times(9-5) = '+rE.toFixed(1)+'\\%');}}
+  };
+
+  var CHAPTERS=[
+    {id:'H1',title:'Discounting & valuation',sub:'what a future dollar is worth today',
+     cards:[{id:'pv',t:'Present value',r:1},{id:'fv',t:'Future value',r:1},{id:'perpetuity',t:'Perpetuity',r:1},{id:'growperp',t:'Growing perpetuity',r:1},{id:'annuity',t:'Annuity',r:1},{id:'growann',t:'Growing annuity',r:1},{id:'npv',t:'NPV: is it worth it?',r:1},{id:'irr',t:'IRR: break-even rate',r:1},
+            {id:'pi',t:'Profitability index',r:1},{id:'payback',t:'Payback period',r:1},{id:'ear',t:'EAR vs APR',r:1},{id:'loan',t:'Loan & amortization',r:1},{id:'contcomp',t:'Continuous compounding',r:1},{id:'spot',t:'Spot rates',r:1},{id:'forward',t:'Forward rates',r:1},{id:'yieldcurve',t:'The yield curve',r:1},{id:'bond',t:'Bond pricing',r:1},{id:'ytm',t:'Yield to maturity',r:1},{id:'duration',t:'Duration',r:1},{id:'ddm',t:'Dividend-discount',r:1}]},
+    {id:'H2',title:'Risk & return',sub:'how much you should be paid for risk',
+     cards:[{id:'diversification',t:'Diversification',r:1},{id:'capm',t:'CAPM: return to ask for',r:1},
+            {id:'expvar',t:'Expected return & volatility',r:1},{id:'covcorr',t:'Covariance & correlation',r:1},{id:'portvar',t:'Portfolio variance',r:1},{id:'riskcontrib',t:'Risk contribution',r:1},{id:'minvar',t:'Minimum-variance',r:1},{id:'frontier',t:'Efficient frontier',r:1},{id:'cml',t:'Capital market line',r:1},{id:'sharpe',t:'Sharpe ratio',r:1},{id:'beta',t:'Beta',r:1},{id:'portbeta',t:'Portfolio beta',r:1},{id:'sysidio',t:'Systematic vs idiosyncratic',r:1},{id:'alpha',t:'Alpha',r:1}]},
+    {id:'H3',title:'Capital budgeting & financing',sub:'judging companies and how they pay for themselves',
+     cards:[{id:'wacc',t:'WACC',r:1},
+            {id:'fcf',t:'Free cash flow',r:1},{id:'nwc',t:'Net working capital',r:1},{id:'npvirr',t:'NPV vs IRR',r:1},{id:'dcf',t:'DCF / enterprise value',r:1},{id:'terminal',t:'Terminal value',r:1},{id:'hamada',t:'Unlever / relever beta',r:1},{id:'mm',t:'Modigliani-Miller',r:1},{id:'mm2',t:'MM II: cost of equity',r:1},{id:'apv',t:'APV',r:1},{id:'taxshield',t:'Tax shield',r:1},{id:'distress',t:'Distress costs',r:1}]},
+    {id:'H4',title:'Derivatives',sub:'moving and pricing risk',
+     cards:[{id:'fwdfut',t:'Forward vs futures',r:1},{id:'fwdprice',t:'Forward pricing',r:1},{id:'swap',t:'Swaps',r:1},{id:'optpayoff',t:'Option payoffs',r:1},{id:'putcall',t:'Put-call parity',r:1},{id:'binomial',t:'Binomial model',r:1},{id:'bs',t:'Black-Scholes',r:1}]}
+  ];
+
+  function renderHome(){
+    var ready=0,total=0;
+    CHAPTERS.forEach(function(c){c.cards.forEach(function(k){total++; if(k.r)ready++;});});
+    var h='<div class="top"><span class="bname">OpenQuant</span><span class="pill">'+ready+' of '+total+' cards live</span></div>'
+      +'<p class="lede">Finance, one card at a time. The EPFL <i>Principles of Finance</i> course as a deck of cards. Each one has one idea, one picture, and one formula, on numbers you can move. Tap any concept.</p>';
+    CHAPTERS.forEach(function(c){
+      h+='<div class="chap"><h2>'+c.id+' · '+c.title+'</h2><div class="cs">'+c.sub+'</div><div class="grid">';
+      c.cards.forEach(function(k){
+        if(k.r) h+='<a class="tile" href="#/c/'+k.id+'"><div class="tt">'+k.t+'</div><div class="ts"><span class="ddot"></span>open</div></a>';
+        else h+='<div class="tile soon"><div class="tt">'+k.t+'</div><div class="ts"><span class="ddot s"></span>soon</div></div>';
+      });
+      h+='</div></div>';
+    });
+    app.innerHTML=h; window.scrollTo(0,0);
+  }
+
+  function renderCard(id){
+    var c=CARDS[id]; if(!c){location.hash='#/';return;}
+    var inp=c.inputs.map(function(i){return '<div class="ctrl"><div class="row"><span>'+i.label+'</span><b data-rk="'+i.k+'"></b></div><input type="range" data-key="'+i.k+'" min="'+i.min+'" max="'+i.max+'" step="'+i.step+'" value="'+i.val+'">'+((i.lo||i.hi)?'<div class="sanchor"><span>'+(i.lo||'')+'</span><span>'+(i.hi||'')+'</span></div>':'')+'</div>';}).join('');
+    app.innerHTML='<div class="crumb"><span class="back" onclick="location.hash=\'#/\'">← all concepts</span><span class="ch">'+c.ch+'</span></div>'
+      +'<div class="card"><div class="eyebrow">'+c.eyebrow+'</div><h1>'+c.idea+'</h1>'
+      +'<div class="usecase">'+c.usecase+'</div>'
+      +'<div class="hero"><span class="big" data-r="ans"></span><span data-r="chip"></span></div><p class="heronote" data-r="note"></p>'
+      +'<div class="viz">'+c.viz+'</div>'
+      +'<div class="ctrls">'+inp+'</div>'
+      +(c.fixed?'<div class="fixed">'+c.fixed+'</div>':'')
+      +'<p class="explain">'+c.explain+'</p>'
+      +'<div class="formula"><div class="gen" data-r="fgen"></div><div class="num" data-r="fnum"></div></div>'
+      +'<p class="src">'+c.src+'</p></div>';
+    var root=app;
+    K(q(root,'fgen'),c.fgen);
+    function recompute(){
+      var v={}; c.inputs.forEach(function(i){var el=root.querySelector('[data-key="'+i.k+'"]'),val=+el.value; v[i.k]=val;
+        var disp=i.fmt?i.fmt(val):(i.unit==='$'?money(val):i.unit==='%'?val+'%':i.unit==='yr'?val+(val===1?' yr':' yrs'):val);
+        root.querySelector('[data-rk="'+i.k+'"]').textContent=disp;});
+      c.update(v,root);
+    }
+    root.querySelectorAll('input[type=range]').forEach(function(el){el.addEventListener('input',recompute);});
+    recompute(); window.scrollTo(0,0);
+  }
+
+  function route(){var h=location.hash||'#/'; var m=h.match(/^#\/c\/(.+)$/); if(m) renderCard(m[1]); else renderHome();}
+  window.addEventListener('hashchange',route);
+  if(window.katex) route(); else window.addEventListener('load',route);
+})();
+</script>
+</body>
+</html>

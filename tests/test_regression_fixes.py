@@ -20,13 +20,13 @@ import pytest
 from pydantic import ValidationError
 
 from core.data import FinancialStatements
-from core.dcf import DCFEngine
-from core.fcf import FCFAnalyser
-from core.suitability import (
+from core.valuation.dcf import DCFEngine
+from core.valuation.fcf import FCFAnalyser
+from core.valuation.suitability import (
     SuitabilityChecker,
     SuitabilityRating,
 )
-from core.wacc import WACCResult, WACCBuilder
+from core.valuation.wacc import WACCResult, WACCBuilder
 
 
 # ── Helpers (mirrors test_dcf.make_statements) ───────────────────────────────
@@ -110,11 +110,11 @@ class TestRedFlagsSurfaceWithBlocking:
 
     def test_red_dimensions_not_suppressed_by_blocking(self):
         """A blocking suitability issue must not hide RED diagnostic dims."""
-        from core.red_flags import RedFlagBuilder
-        from core.suitability import (
+        from core.valuation.red_flags import RedFlagBuilder
+        from core.valuation.suitability import (
             SuitabilityReport, SuitabilityCheck, SuitabilityCheckName,
         )
-        from core.assumption_diagnostic import (
+        from core.valuation.assumption_diagnostic import (
             AssumptionDiagnostic, DimensionScore, DiagnosticRating,
         )
         blocking = SuitabilityCheck(
@@ -290,7 +290,7 @@ class TestMultiplesFalsyZero:
 
     def test_zero_fcf_does_not_skip_yield(self):
         """A company with exactly zero FCF should report 0% yield, not None."""
-        from core.multiples import MultiplesAnalyser
+        from core.valuation.multiples import MultiplesAnalyser
         st = make_statements([0.0, 0.0, 0.0, 0.0, 0.0])
         result = MultiplesAnalyser().compute(
             st, current_price=10.0, total_debt=0.0, cash=0.0,

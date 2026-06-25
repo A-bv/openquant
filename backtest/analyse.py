@@ -1,9 +1,9 @@
 """
-Calibration analysis — turn the raw backtest CSV into trust-story metrics.
+Calibration analysis — turn the raw backtest CSV into model reliability metrics.
 
 Reads backtest/results/backtest_2014_2024.csv and produces:
-  1. Verdict hit rate by bucket (overvalued / fairly_priced / undervalued)
-  2. Calibration regression: model's predicted "upside %" vs realized TSR
+  1. Realized return by model value gap bucket
+  2. Calibration regression: model value gap % vs realized TSR
   3. Suitability check validity (does AMBER actually correlate with larger errors?)
   4. Sector-level failure-mode analysis
   5. Headline numbers ready to drop into the per-ticker page §9
@@ -37,7 +37,7 @@ def load() -> pd.DataFrame:
 
 
 def add_derived(df: pd.DataFrame) -> pd.DataFrame:
-    """Compute upside %, error metrics."""
+    """Compute model value gap %, error metrics."""
     df = df.copy()
     df["model_upside_pct"] = (df["iv_base"] / df["market_price_as_of"] - 1.0) * 100
     df["realized_10yr_pct"] = df["realized_annualised_return"] * 100
@@ -46,11 +46,11 @@ def add_derived(df: pd.DataFrame) -> pd.DataFrame:
 
 def verdict_hit_rate(df: pd.DataFrame) -> dict:
     """
-    For each verdict bucket, report:
+    For each model value gap bucket, report:
       - n (count)
       - mean realized 10yr annualised return
       - vs S&P 500 baseline (~10%/yr 2014-2024)
-      - "hit rate" — what fraction matched the directional bet
+      - historical reliability check versus the directional model gap
     """
     SP500_TSR = 0.121  # S&P 500 2014-2024 annualised total return, ~12.1%
     results = {}
@@ -81,7 +81,7 @@ def verdict_hit_rate(df: pd.DataFrame) -> dict:
 
 def calibration_regression(df: pd.DataFrame) -> dict:
     """
-    Regress realized 10yr annualised return on model's predicted upside %.
+    Regress realized 10yr annualised return on model value gap %.
     A well-calibrated model has positive slope and meaningful R².
     """
     sub = df.dropna(subset=["model_upside_pct", "realized_annualised_return"])
@@ -101,8 +101,8 @@ def calibration_regression(df: pd.DataFrame) -> dict:
         "intercept": float(intercept),
         "r_squared": float(r2),
         "interpretation": (
-            "Slope > 0 means stocks the model called more undervalued "
-            "actually outperformed. R² says how much of the cross-section "
+            "Slope > 0 means stocks with a higher model value gap later "
+            "earned higher returns. R² says how much of the cross-section "
             "the model explains."
         ),
     }
@@ -127,10 +127,10 @@ def suitability_validity(df: pd.DataFrame) -> dict:
 
 
 def sector_breakdown(df: pd.DataFrame) -> dict:
-    """For each sector, mean absolute error in predicted vs realized return."""
+    """For each sector, mean absolute error in model gap vs realized return."""
     sub = df.dropna(subset=["model_upside_pct", "realized_annualised_return"])
     sub = sub.copy()
-    sub["pred_return_pct"] = sub["model_upside_pct"]  # 10-yr predicted upside
+    sub["pred_return_pct"] = sub["model_upside_pct"]  # 10-yr model value gap
     sub["realized_pct"] = sub["realized_annualised_return"] * 100 * 10  # 10yr realized total
     sub["error_pp"] = sub["realized_pct"] - sub["pred_return_pct"]
     out = {}
@@ -194,7 +194,7 @@ def main() -> None:
     print(f"Backtest: {h['data_period']}")
     print(f"Universe: {h['universe_size']} stocks, {h['successful_runs']} ran cleanly")
     print()
-    print("Verdict outcomes:")
+    print("Model value gap outcomes:")
     for k in ["overvalued", "fairly_priced", "undervalued"]:
         v = summary["verdict_hit_rate"].get(k)
         if not v:
@@ -214,7 +214,7 @@ def main() -> None:
     for rating, stats in summary["suitability_validity"].items():
         print(f"  {rating:8s} n={stats['n']:2d}  median |error| = {stats['median_abs_error_pct']:>6.1f}%")
     print()
-    print("Sector breakdown (predicted upside vs realized 10yr total):")
+    print("Sector breakdown (model value gap vs realized 10yr total):")
     for sector, stats in summary["sector_breakdown"].items():
         print(f"  {sector:12s} n={stats['n']:2d}  pred={stats['mean_predicted_upside_pct']:>+7.0f}%  realized={stats['mean_realized_10yr_pct']:>+7.0f}%  error={stats['mean_error_pp']:>+7.0f}pp")
     print()

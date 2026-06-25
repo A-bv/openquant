@@ -18,7 +18,7 @@ import pytest
 from datetime import datetime
 
 from core.data import FinancialStatements
-from core.fcf import FCFAnalyser
+from core.valuation.fcf import FCFAnalyser
 
 
 # ── Fixture builder ───────────────────────────────────────────────────────────
@@ -296,7 +296,7 @@ class TestLatestFCFFallback:
         the median of the last 3 years as the projection base.
         The median of [3B, 4B, -1B] = 3B — not -1B.
         """
-        from core.fcf import FCFAnalyser
+        from core.valuation.fcf import FCFAnalyser
         stmts = make_statements([1e9, 2e9, 3e9, 4e9, -1e9])
         analysis = FCFAnalyser().analyse(stmts)
         projection = FCFAnalyser().project(analysis, scenario="base")
