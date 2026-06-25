@@ -74,13 +74,13 @@ export default function NowOrLaterLab({ API }) {
         <div className="eyebrow">Everyday money</div>
         <h1 className="page-title">Take it now, or spread it out?</h1>
         <p className="page-copy">
-          Money later is worth less than money today. Enter any "lump sum now
-          versus payments over time" choice — a lottery, a settlement, 0%
-          financing, a pension buyout — and see which is really worth more,
-          and the one assumption that decides it.
+          Money later is worth less than money today. Pick any "lump sum now
+          versus payments over time" choice, like a lottery, a settlement, 0%
+          financing, or a pension buyout, and see which is really worth more,
+          plus the one assumption that decides it.
         </p>
         <p className="intro-proof">
-          Works for everyone · no account, no ticker · EPFL time-value-of-money
+          Works for everyone · no account, no ticker · the time value of money
         </p>
 
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', margin: '14px 0 6px' }}>
@@ -102,10 +102,16 @@ export default function NowOrLaterLab({ API }) {
             {kind === 'pay' ? 'Cash price now' : 'Amount offered now'}
             <input type="number" value={lumpSum} onChange={e => setLump(e.target.value)}
               style={inp} />
+            <span style={{ display: 'block', fontSize: 11, color: '#9CA3AF', marginTop: 3 }}>
+              {lumpSum ? fmt(Number(lumpSum), '$') : ''}
+            </span>
           </label>
           <label style={{ fontSize: 12, color: '#6B7280' }}>
             Each payment
             <input type="number" value={payment} onChange={e => setPayment(e.target.value)} style={inp} />
+            <span style={{ display: 'block', fontSize: 11, color: '#9CA3AF', marginTop: 3 }}>
+              {payment ? fmt(Number(payment), '$') : ''}
+            </span>
           </label>
           <label style={{ fontSize: 12, color: '#6B7280' }}>
             Number of payments
@@ -169,7 +175,7 @@ export default function NowOrLaterLab({ API }) {
           <DisclosureSection
             eyebrow="Show your work"
             title="The present-value calculation & break-even rate"
-            summary="Open this to see how each payment is discounted to today, the rate at which the answer flips, and the EPFL source."
+            summary="Open this to see how each payment is discounted to today, the rate at which the answer flips, and the source it is checked against."
           >
             <h3 style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: '0 0 8px' }}>
               Present value, step by step
