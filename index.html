@@ -490,7 +490,7 @@
         g+='<text x="6" y="'+y1+'" font-size="10" fill="var(--faint)">return</text><text x="'+x1+'" y="172" font-size="10" fill="var(--faint)" text-anchor="end">risk</text>';
         q(root,'svg').innerHTML=g;
         var minVol=Math.min.apply(null,[].map ? [0,5,10,15,20].map(function(i){var w=i/20;return Math.sqrt(w*w*sa*sa+(1-w)*(1-w)*sb*sb+2*w*(1-w)*rho*sa*sb);}):[15]);
-        q(root,'ans').textContent='lowest risk '+minVol.toFixed(1)+'%'; var c=q(root,'chip'); c.className='chip info'; c.textContent='across all mixes';
+        q(root,'ans').textContent=minVol.toFixed(1)+'%'; var c=q(root,'chip'); c.className='chip info'; c.textContent='lowest risk of any mix';
         q(root,'note').textContent='the curve shows every mix of the two; pick the upper edge for the best return per risk';
         K(q(root,'fnum'),'\\text{each point} = \\text{one mix of A and B}');}},
 
