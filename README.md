@@ -20,20 +20,7 @@ The app (top nav) is three tabs, each one course block applied to real data:
 
 Alongside the app lives the **teaching deck** (`frontend/public/companion.html`): the whole course as **51 interactive cards** (one idea, one picture, one live formula each). It's standalone — no backend, no build.
 
-```text
- You ─▶ OpenQuant app   (3 tabs, opens on Money)
-          │
-          ├─ Money     (H1) ─▶ /now-or-later     ─▶ core/money
-          ├─ Stock     (H3) ─▶ /analyse          ─▶ core/valuation (reverse-DCF)
-          └─ Portfolio (H2) ─▶ /diversification  ─▶ core/portfolio
-                                    │
-                                    ▼
-            each returns ONE plain-English answer + its honest limit
-            (Layer 1 = the result · Layer 2 = the depth, on demand)
-
- Teaching deck = frontend/public/companion.html
-   └─ 51 interactive cards, fully standalone (no API, no backend)
-```
+![OpenQuant's three labs: each tab calls one endpoint backed by one core module and returns one plain-English answer; the teaching deck is standalone.](docs/openquant-labs.svg)
 
 ---
 
@@ -52,19 +39,7 @@ So a beginner gets *"8 holdings = 1.4 independent bets — you carry more risk t
 
 Three clean layers. `core/` holds all the finance math with **zero web dependencies**, so every Lab can be unit-tested against real EPFL exam answers. `api/` exposes it; `frontend/` renders it. The deck sits off to the side.
 
-```text
- SEC EDGAR ─┐
-            ├─▶ core/data ─┬─▶ core/valuation (H3) ─▶ routers/stock      ─┐
- yfinance ──┘              └─▶ core/portfolio (H2) ─▶ routers/portfolio  ─┼─▶ React app
-                              core/money     (H1) ─▶ routers/money       ─┘   (3 tabs)
-
- flow:   data sources → core/ engine (pure Python, EPFL-tested)
-                      → api/ (thin main.py + routers/) → frontend/ (React, 3 tabs)
- plus:   core/common = shared helpers · companion.html deck is standalone (no API)
-```
-
-Read it left to right: data → engine → endpoint → screen. The Money lab needs no
-market data; the deck plugs into nothing.
+![OpenQuant architecture: external data → pure-Python core engine → FastAPI routers → React app, read left to right. The Money lab needs no market data; the teaching deck plugs into nothing.](docs/openquant-architecture.svg)
 
 ---
 
@@ -72,23 +47,7 @@ market data; the deck plugs into nothing.
 
 `POST /analyse {"ticker":"AAPL"}` runs the reverse-DCF pipeline. The heart is **step 8**: instead of guessing a value, it solves for the FCF growth the *current price* already assumes — then the app asks if that's believable.
 
-```text
- Ticker (e.g. AAPL)
-   │
-   ├─ 1-2  validate + fetch data (SEC EDGAR + yfinance)
-   ├─ 3    free cash flow history
-   ├─ 4    beta → CAPM → WACC
-   ├─ 5    suitability — is a DCF even fair for this company?
-   ├─ 6-7  net debt, shares, forward DCF
-   ├─ 8    REVERSE DCF → the growth today's price assumes     ◀ the key step
-   ├─ 8b   diagnostic · red flags · audit trail
-   ├─ 9    sensitivity grid (growth × WACC)
-   └─ 10   market multiples cross-check
-   │
-   ▼
- Verdict: "to justify this price you must believe X"
-          + how reliable the model has been in the past (/calibration)
-```
+![The Stock lab pipeline: a ticker runs through ten steps; step 8 is the reverse DCF that solves for the growth the current price assumes, ending in a verdict plus a backtest reliability check.](docs/openquant-pipeline.svg)
 
 ---
 
@@ -125,14 +84,7 @@ openquant/
 
 ## Deployment (3 independent targets)
 
-```text
- git push ─┬─▶ Vercel  — React app     (auto)  ── proxies /api/* ─▶ Render
-           └─▶ Render  — FastAPI API    (auto)
-
- Teaching deck only — MANUAL, no CI:
-   copy frontend/public/companion.html ─▶ gh-pages branch (as index.html)
-                                       ─▶ https://a-bv.github.io/openquant
-```
+![OpenQuant deployment: pushing to GitHub auto-deploys the React app to Vercel and the API to Render (Vercel proxies /api/* to Render); the teaching deck is published manually to GitHub Pages.](docs/openquant-deploy.svg)
 
 - **React app → Vercel** (`frontend/vercel.json`) — auto-deploys on push; proxies `/api/*` to the Render API.
 - **API → Render** (`render.yaml`, `Procfile`) — auto-deploys on push.
