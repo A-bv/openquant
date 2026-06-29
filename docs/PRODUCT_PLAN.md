@@ -57,6 +57,59 @@ single link, with nothing for the user to run.** This is the simplicity bar.
   backend because the math was put server-side. It belongs client-side like the
   cards.
 
+## Architecture (decided 2026-06-29): hybrid
+
+Where the calculations live — the decision the whole structure follows from.
+
+**The boundary rule:** does it need live market data or a real dataset?
+- NO  → pure formula on user inputs → runs in the BROWSER (JavaScript), no server.
+- YES → runs on ONE Python service in the cloud.
+
+**What that means per piece:**
+- Browser (static, GitHub Pages, reachable by link): the deck, the journeys, and
+  every simple-formula card — H1 (TVM, annuities, NPV/IRR, bonds), and the
+  formula-level parts of H2/H3/H4 (CAPM, Sharpe, WACC, the DCF formula, options,
+  Black-Scholes). The Money lab belongs here too.
+- One cloud service (Python = `api/` + `core/` + `core/data`): the data labs that
+  need real tickers — Stock reverse-DCF (EDGAR + yfinance) and Portfolio
+  (price history → covariance / frontier). This is the ONLY server.
+
+**Source of truth and bounded duplication:**
+- `core/` stays the proven oracle (191 tests).
+- Simple formulas are reimplemented in JS for the browser; a PARITY TEST pins
+  `JS == Python` so the two can't drift. Duplication is limited to simple
+  formulas only.
+- Heavy / data-driven logic is never reimplemented in JS — it runs server-side.
+
+**Deployment topology:**
+- GitHub Pages: all static frontend.
+- One cloud host (e.g. Render, `render.yaml` already present — needs the user's
+  account): the Python service.
+
+**Migration (current → target), in order:**
+1. Pin the boundary list: which concepts are browser-JS vs server-Python.
+2. One shared JS math module + parity tests vs `core/` (replaces the per-card
+   copies). [P1]
+3. Deploy the Python service to the cloud so the data labs work by link. [needs host]
+4. Point the data labs at the cloud service (not localhost); ship them static.
+5. One entry point + navigation across everything.
+
+### Refinement (2026-06-29, user): API-less by default
+
+Push as much as possible client-side; keep the Python API deliberately small —
+**one showcase feature** that doubles as a full-stack Python web-app demo.
+
+- The whole product is API-less except that one feature: the deck, the journeys,
+  every formula card, and Portfolio / diversification (the deck already does
+  diversification from manual inputs) all run in the browser.
+- The one API feature: **Stock reverse-DCF on a real ticker**. It is the most
+  impressive piece, and live data genuinely needs a server anyway — a browser
+  cannot fetch SEC EDGAR or Yahoo / yfinance directly (CORS). So the single live
+  feature is exactly where the full-stack Python app belongs: by necessity, not
+  vanity.
+- Net: one product, reachable by link, with a single live-ticker valuation that
+  exists to demonstrate the full-stack Python skill.
+
 ## Why this format (from the honest evaluation)
 
 Measured state today:
