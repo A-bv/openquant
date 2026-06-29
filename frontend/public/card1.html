@@ -170,6 +170,7 @@
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js" crossorigin="anonymous"></script>
+<script src="finance.js"></script>
 <script>
 (function(){
   // ---- shared state (the whole deal lives here) ----
@@ -181,10 +182,9 @@
   function money(v){ return '$' + Math.round(v).toLocaleString('en-US'); }
   function money2(v){ return '$' + v.toLocaleString('en-US',{maximumFractionDigits:2}); }
   function K(el, tex){ if(window.katex && el) katex.render(tex, el, {throwOnError:false}); }
-  // PV of a single future amount
-  function pv(fv, r, n){ return fv / Math.pow(1+r, n); }
-  // PV of a level annuity: C/r (1 - 1/(1+r)^n)
-  function annuityPV(c, r, n){ return r === 0 ? c*n : c/r * (1 - 1/Math.pow(1+r, n)); }
+  // delegate to the shared, parity-tested finance module (finance.js)
+  function pv(fv, r, n){ return Finance.pv(fv, r, n); }
+  function annuityPV(c, r, n){ return Finance.annuityPV(c, r, n); }
   // rate at which NPV(stream) - cost == 0  (bisection)
   function breakEvenRate(c, n, cost){
     var lo=0.0001, hi=1.0, f=function(r){ return annuityPV(c, r, n) - cost; };
