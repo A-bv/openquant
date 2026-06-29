@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>OpenQuant — everything built so far</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f4f4f0; --surface:#ffffff; --text:#1b1a17; --muted:#6c6a63; --faint:#a4a299;
+    --border:#e9e7e0; --track:#efeee8; --accent:#2f6fe0; --accent-2:#1b4fb0; --accent-soft:#ebf2fd;
+    --good:#2f8f5b; --good-soft:#e2f1e8; --live:#c2410c; --live-soft:#fbe7d8;
+    --shadow:0 1px 2px rgba(20,20,15,.04), 0 10px 30px rgba(20,20,15,.07);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#0f0f12; --surface:#17171c; --text:#ededf0; --muted:#9b9ba2; --faint:#65656d;
+      --border:#27272e; --track:#222228; --accent:#6f9bf0; --accent-2:#9bbcf6; --accent-soft:#19233c;
+      --good:#5cba84; --good-soft:#16291f; --live:#f0935a; --live-soft:#3a2614;
+      --shadow:0 1px 2px rgba(0,0,0,.3), 0 12px 32px rgba(0,0,0,.4); }
+  }
+  *{box-sizing:border-box} html,body{margin:0}
+  body{background:var(--bg); color:var(--text); padding:40px 18px 64px;
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif; line-height:1.5; -webkit-font-smoothing:antialiased;}
+  .wrap{max-width:620px; margin:0 auto;}
+  a{color:inherit; text-decoration:none;}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:.86em; background:var(--track); padding:1px 6px; border-radius:5px;}
+
+  .brand{display:flex; align-items:center; gap:9px; margin-bottom:26px;}
+  .brand .dot{width:10px; height:10px; border-radius:50%; background:var(--accent);}
+  .brand b{font-size:15px; font-weight:700; letter-spacing:-.01em;}
+
+  .hero h1{font-size:30px; font-weight:800; letter-spacing:-.025em; line-height:1.15; margin:0 0 12px;}
+  .hero p{font-size:15px; color:var(--muted); margin:0 0 6px; max-width:52ch;}
+  .hero .sub{font-size:12.5px; color:var(--faint);}
+
+  .sec{margin-top:34px;}
+  .sec .h{display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:13px;}
+  .sec .h h2{font-size:13px; font-weight:600; letter-spacing:.05em; text-transform:uppercase; color:var(--accent); margin:0;}
+  .sec .h span{font-size:12px; color:var(--faint); text-align:right;}
+
+  .tiles{display:grid; gap:12px;}
+  .tile{display:block; background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:18px 18px; box-shadow:var(--shadow);}
+  a.tile{transition:transform .12s, border-color .12s;}
+  a.tile:hover{transform:translateY(-2px); border-color:var(--accent);}
+  .tile.muted{box-shadow:none; background:transparent;}
+  .tile .top{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:6px;}
+  .tile .ttl{font-size:16px; font-weight:600; letter-spacing:-.01em;}
+  .tile .desc{font-size:13.5px; color:var(--muted); margin:0;}
+  .tile .meta{font-size:11.5px; color:var(--faint); margin-top:9px;}
+
+  .pill{font-size:10.5px; font-weight:600; letter-spacing:.04em; text-transform:uppercase; padding:3px 9px; border-radius:999px; white-space:nowrap;}
+  .pill.ready{color:var(--good); background:var(--good-soft);}
+  .pill.server{color:var(--faint); background:var(--track);}
+  .pill.live{color:var(--live); background:var(--live-soft);}
+
+  .subrows{margin-top:14px; border-top:1px solid var(--border); padding-top:12px; display:flex; flex-direction:column; gap:10px;}
+  .subrow{display:flex; align-items:flex-start; justify-content:space-between; gap:10px;}
+  .subrow .l{font-size:13.5px;}
+  .subrow .l b{font-weight:600;}
+  .subrow .l .d{color:var(--muted); font-size:12.5px;}
+
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  @media (max-width:480px){ .grid2{grid-template-columns:1fr;} }
+
+  .foot{margin-top:40px; padding-top:18px; border-top:1px solid var(--border); font-size:12px; color:var(--faint); line-height:1.6;}
+  .foot b{color:var(--muted);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand"><span class="dot"></span><b>OpenQuant</b></div>
+
+  <header class="hero">
+    <h1>Everything built so far.</h1>
+    <p>A map of what is coded. The card pages open from a link with no server. The React app needs the two local servers. The engine sits underneath.</p>
+    <p class="sub">honest by design · every number carries its limit</p>
+  </header>
+
+  <section class="sec">
+    <div class="h"><h2>Open by link · no server</h2><span>pure browser, like the 53 cards</span></div>
+    <div class="tiles">
+      <a class="tile" href="card1.html">
+        <div class="top"><span class="ttl">Should I take this deal?</span><span class="pill ready">Ready</span></div>
+        <p class="desc">A 4-step decision journey on the time value of money: a lump sum now versus payments over time, and the one rate that flips the answer.</p>
+        <div class="meta">page: <code>card1.html</code> · client-side · the guided journey</div>
+      </a>
+      <a class="tile" href="companion.html">
+        <div class="top"><span class="ttl">The 53 ideas</span><span class="pill ready">Ready</span></div>
+        <p class="desc">The whole course as a deck of interactive cards: one idea, one picture, one live formula each, across H1 to H4.</p>
+        <div class="meta">page: <code>companion.html</code> · client-side · already public at a-bv.github.io/openquant</div>
+      </a>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="h"><h2>The React data app</h2><span>needs both local servers running</span></div>
+    <div class="tile">
+      <div class="top"><span class="ttl">OpenQuant data app</span><span class="pill server">needs servers</span></div>
+      <p class="desc">A React single-page app for the data-driven labs. Run the frontend and the backend, then open the page below. It has three tabs.</p>
+      <div class="meta">page: <code>localhost:5173/</code> · React (<code>frontend/src</code>) + FastAPI (<code>api/</code>, <code>localhost:8000</code>)</div>
+      <div class="subrows">
+        <div class="subrow">
+          <span class="l"><b>Money</b> <span class="d">· lump sum now vs payments over time</span></span>
+          <span class="pill server">no live data</span>
+        </div>
+        <div class="subrow">
+          <span class="l"><b>Stock</b> <span class="d">· reverse-DCF on a real ticker</span></span>
+          <span class="pill live">live · yfinance + EDGAR</span>
+        </div>
+        <div class="subrow">
+          <span class="l"><b>Portfolio</b> <span class="d">· diversification on real tickers</span></span>
+          <span class="pill live">live · yfinance</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="h"><h2>Under the hood</h2><span>the engine · code, not a page</span></div>
+    <div class="tiles grid2">
+      <div class="tile muted">
+        <div class="top"><span class="ttl">The finance engine</span></div>
+        <p class="desc">Python. 191 tests pinned to the EPFL sample exams. The proven source of truth every screen draws from.</p>
+        <div class="meta"><code>core/</code> · pytest</div>
+      </div>
+      <div class="tile muted">
+        <div class="top"><span class="ttl">The data layer</span></div>
+        <p class="desc">Fetches live prices and filings. yfinance for prices, SEC EDGAR for fundamentals. The module we extract next.</p>
+        <div class="meta"><code>core/data/</code> · the live-data source</div>
+      </div>
+      <div class="tile muted">
+        <div class="top"><span class="ttl">The API</span></div>
+        <p class="desc">FastAPI that serves the engine and the data to the React app. Replaced later by a single cloud endpoint.</p>
+        <div class="meta"><code>api/</code> · <code>localhost:8000</code></div>
+      </div>
+      <div class="tile muted">
+        <div class="top"><span class="ttl">The backtest</span></div>
+        <p class="desc">"Did the theory hold?" run on 2014 to 2024 data. Computed, not yet wired into any screen.</p>
+        <div class="meta"><code>backtest/</code></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="foot">
+    <b>OpenQuant</b> · proving the finance course is useful in real life.<br>
+    Temporary map: it surfaces everything coded so far so nothing is hidden. Next step: extract the data layer into its own importable, testable module.
+  </div>
+</div>
+</body>
+</html>

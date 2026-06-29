@@ -930,7 +930,7 @@
   function renderHome(){
     var ready=0,total=0;
     CHAPTERS.forEach(function(c){c.cards.forEach(function(k){total++; if(k.r)ready++;});});
-    var h='<div class="top"><span class="bname">OpenQuant</span><span class="pill">'+ready+' of '+total+' cards live</span></div>'
+    var h='<div class="top"><a href="app.html" class="bname" style="text-decoration:none;color:inherit;">← OpenQuant</a><span class="pill">'+ready+' of '+total+' cards live</span></div>'
       +'<p class="lede">Finance, one card at a time. The EPFL <i>Principles of Finance</i> course as a deck of cards. Each one has one idea, one picture, and one formula, on numbers you can move. Tap any concept.</p>';
     CHAPTERS.forEach(function(c){
       h+='<div class="chap"><h2>'+c.id+' · '+c.title+'</h2><div class="cs">'+c.sub+'</div><div class="grid">';
