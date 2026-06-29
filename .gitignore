@@ -2,6 +2,9 @@
 .env
 *.env
 
+# Local reference only — EPFL/Berk-DeMarzo course handouts (copyrighted). Never publish.
+infoSource/
+
 # Cache and data
 data/cache/
 *.csv
