@@ -1,16 +1,10 @@
-name: Deploy the card pages to GitHub Pages
+name: Deploy the site to GitHub Pages
 
 on:
   push:
     branches: [main]
     paths:
-      - "frontend/public/companion.html"
-      - "frontend/public/app.html"
-      - "frontend/public/card1.html"
-      - "frontend/public/theory.html"
-      - "frontend/public/finance.js"
-      - "frontend/public/favicon.svg"
-      - "frontend/public/icons.svg"
+      - "site/**"
   workflow_dispatch:
 
 permissions:
@@ -25,14 +19,8 @@ jobs:
       - name: Assemble the site (root stays the 53-card deck)
         run: |
           mkdir -p out
-          cp frontend/public/companion.html out/index.html
-          cp frontend/public/companion.html out/companion.html
-          cp frontend/public/app.html       out/app.html
-          cp frontend/public/card1.html     out/card1.html
-          cp frontend/public/theory.html    out/theory.html
-          cp frontend/public/finance.js     out/finance.js
-          cp frontend/public/favicon.svg    out/favicon.svg || true
-          cp frontend/public/icons.svg      out/icons.svg || true
+          cp site/*.html site/*.js site/*.svg out/
+          cp site/companion.html out/index.html
 
       - name: Publish to the gh-pages branch
         uses: peaceiris/actions-gh-pages@v4
