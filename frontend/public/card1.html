@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>OpenQuant — should I take this deal?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css" crossorigin="anonymous" />
+<style>
+  :root{
+    --bg:#f4f4f0; --surface:#ffffff; --text:#1b1a17; --muted:#6c6a63; --faint:#a4a299;
+    --border:#e9e7e0; --track:#efeee8; --accent:#2f6fe0; --accent-2:#1b4fb0; --accent-soft:#ebf2fd;
+    --good:#2f8f5b; --good-soft:#e2f1e8; --lost:#d98a2b; --lost-soft:#f6e6cf;
+    --shadow:0 1px 2px rgba(20,20,15,.04), 0 10px 30px rgba(20,20,15,.07);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#0f0f12; --surface:#17171c; --text:#ededf0; --muted:#9b9ba2; --faint:#65656d;
+      --border:#27272e; --track:#222228; --accent:#6f9bf0; --accent-2:#9bbcf6; --accent-soft:#19233c;
+      --good:#5cba84; --good-soft:#16291f; --lost:#d49a4e; --lost-soft:#3a2f1d;
+      --shadow:0 1px 2px rgba(0,0,0,.3), 0 12px 32px rgba(0,0,0,.4); }
+  }
+  *{box-sizing:border-box} html,body{margin:0}
+  body{background:var(--bg); color:var(--text); padding:28px 16px 56px;
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif; line-height:1.5; -webkit-font-smoothing:antialiased;}
+  .wrap{max-width:460px; margin:0 auto;}
+
+  .stepper{display:flex; align-items:center; margin-bottom:20px;}
+  .step{display:flex; align-items:center; gap:7px; cursor:pointer;}
+  .dot{width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:11px; font-weight:600; border:1.5px solid var(--border); color:var(--faint); background:var(--surface); transition:.2s;}
+  .step.on .dot{background:var(--accent); border-color:var(--accent); color:#fff;}
+  .step.done .dot{border-color:var(--accent); color:var(--accent);}
+  .step .lbl{font-size:11px; color:var(--faint); white-space:nowrap;}
+  .step.on .lbl{color:var(--text); font-weight:500;}
+  .seg{flex:1; height:1.5px; background:var(--border); margin:0 8px; min-width:6px;}
+
+  .card{background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:24px 22px; box-shadow:var(--shadow);}
+  .card[hidden]{display:none;}
+  .eyebrow{font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--accent); margin-bottom:8px;}
+  h1{font-size:20px; font-weight:600; letter-spacing:-.01em; margin:0 0 12px; line-height:1.35;}
+  .lede{font-size:14px; color:var(--muted); margin:0 0 18px;}
+
+  .hero{display:flex; align-items:flex-end; gap:12px; margin-bottom:2px; flex-wrap:wrap;}
+  .big{font-size:44px; font-weight:700; letter-spacing:-.03em; line-height:1; color:var(--text);}
+  .chip{font-size:12px; font-weight:500; padding:4px 10px; border-radius:999px; margin-bottom:7px;}
+  .chip.lost{color:var(--lost); background:var(--lost-soft);}
+  .chip.good{color:var(--good); background:var(--good-soft);}
+  .chip.info{color:var(--accent-2); background:var(--accent-soft);}
+  .heronote{font-size:12.5px; color:var(--faint); margin:8px 0 18px;}
+
+  .bars{display:flex; flex-direction:column; gap:12px; margin:6px 0 4px;}
+  .bar .blab{display:flex; justify-content:space-between; font-size:12.5px; color:var(--muted); margin-bottom:5px;}
+  .bar .blab b{color:var(--text); font-weight:600;}
+  .track{height:14px; background:var(--track); border-radius:7px; overflow:hidden;}
+  .fill{height:100%; border-radius:7px; transition:width .5s cubic-bezier(.33,.02,.18,1);}
+
+  .ctrls{margin-top:18px; display:flex; flex-direction:column; gap:16px;}
+  .ctrl .row{display:flex; justify-content:space-between; font-size:13px; color:var(--muted); margin-bottom:6px;}
+  .ctrl .row b{color:var(--text); font-weight:600;}
+  input[type=range]{width:100%; accent-color:var(--accent); height:4px;}
+
+  .formula{background:var(--bg); border:1px solid var(--border); border-radius:14px; padding:14px; margin-top:20px; text-align:center; overflow-x:auto;}
+  .formula .gen{opacity:.72;}
+  .formula .num{margin-top:9px; font-size:1.02em;}
+  .note{font-size:13px; color:var(--muted); margin-top:12px; line-height:1.55;}
+  .note b{color:var(--text);}
+
+  .nav{display:flex; justify-content:space-between; align-items:center; margin-top:22px; gap:10px;}
+  .nav .of{font-size:12px; color:var(--faint);}
+  button{font:inherit; font-size:13px; font-weight:500; padding:9px 16px; border-radius:11px; border:1px solid var(--border);
+    background:var(--surface); color:var(--text); cursor:pointer;}
+  button.primary{background:var(--accent); color:#fff; border-color:var(--accent);}
+  button:disabled{opacity:.4; cursor:default;}
+  .foot{text-align:center; font-size:11px; color:var(--faint); margin-top:18px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav style="display:flex;align-items:center;gap:6px;font-size:13px;margin:0 0 20px;flex-wrap:wrap;">
+    <a href="app.html" style="font-weight:700;color:var(--text);text-decoration:none;margin-right:auto;">OpenQuant</a>
+    <a href="app.html" style="text-decoration:none;padding:5px 10px;border-radius:8px;color:var(--muted);">Map</a>
+    <a href="card1.html" style="text-decoration:none;padding:5px 10px;border-radius:8px;color:var(--accent);font-weight:600;">Deal journey</a>
+    <a href="companion.html" style="text-decoration:none;padding:5px 10px;border-radius:8px;color:var(--muted);">53 cards</a>
+  </nav>
+  <div class="stepper" id="stepper">
+    <div class="step" data-go="0"><span class="dot">1</span><span class="lbl">a dollar, later</span></div>
+    <span class="seg"></span>
+    <div class="step" data-go="1"><span class="dot">2</span><span class="lbl">a stream</span></div>
+    <span class="seg"></span>
+    <div class="step" data-go="2"><span class="dot">3</span><span class="lbl">worth it?</span></div>
+    <span class="seg"></span>
+    <div class="step" data-go="3"><span class="dot">4</span><span class="lbl">decide</span></div>
+  </div>
+
+  <!-- STEP 1 -->
+  <section class="card" data-step="0">
+    <div class="eyebrow">the principle</div>
+    <h1>Money later is worth less than money now.</h1>
+    <p class="lede">A deal pays you in the future. Start simple: what is a single <b>$100</b> promised later worth to you today?</p>
+    <div class="hero"><span class="big" id="s1ans">$0</span><span class="chip lost" id="s1chip"></span></div>
+    <p class="heronote" id="s1note"></p>
+    <div class="ctrls">
+      <div class="ctrl"><div class="row"><span>how far in the future</span><b id="s1yOut"></b></div><input type="range" data-bind="yrs" min="1" max="30" step="1"></div>
+      <div class="ctrl"><div class="row"><span>your rate (what a dollar now is worth to you)</span><b id="s1rOut"></b></div><input type="range" data-bind="rate" min="1" max="15" step="0.5"></div>
+    </div>
+    <div class="formula"><div class="gen" id="s1fgen"></div><div class="num" id="s1fnum"></div></div>
+    <p class="note">Each year of waiting divides the value by <b>(1 + your rate)</b>. Wait longer, or use a higher rate, and today's value shrinks.</p>
+    <div class="nav"><span class="of">step 1 of 4</span><button class="primary" data-next>next: a stream of payments →</button></div>
+  </section>
+
+  <!-- STEP 2 -->
+  <section class="card" data-step="1" hidden>
+    <div class="eyebrow">your deal</div>
+    <h1>Most deals pay a stream, not one lump.</h1>
+    <p class="lede">This deal pays you the same amount <b>every year</b> for a set number of years. On paper it looks big — but in today's money it is worth less.</p>
+    <div class="hero"><span class="big" id="s2ans">$0</span><span class="chip info" id="s2chip"></span></div>
+    <p class="heronote" id="s2note"></p>
+    <div class="bars">
+      <div class="bar"><div class="blab"><span>on paper (just added up)</span><b id="s2paperv"></b></div><div class="track"><div class="fill" id="s2paperbar" style="background:var(--track);border:1px dashed var(--faint);"></div></div></div>
+      <div class="bar"><div class="blab"><span>in today's money (what it's really worth)</span><b id="s2todayv"></b></div><div class="track"><div class="fill" id="s2todaybar" style="background:var(--accent);"></div></div></div>
+    </div>
+    <div class="ctrls">
+      <div class="ctrl"><div class="row"><span>cash it pays you each year</span><b id="s2pOut"></b></div><input type="range" data-bind="pay" min="1000" max="8000" step="250"></div>
+      <div class="ctrl"><div class="row"><span>for how many years</span><b id="s2yOut"></b></div><input type="range" data-bind="yrs" min="1" max="30" step="1"></div>
+      <div class="ctrl"><div class="row"><span>your rate</span><b id="s2rOut"></b></div><input type="range" data-bind="rate" min="1" max="15" step="0.5"></div>
+    </div>
+    <div class="formula"><div class="gen" id="s2fgen"></div><div class="num" id="s2fnum"></div></div>
+    <p class="note">Each yearly payment is brought back to today (smaller the further out it is), then all summed. That total is what the stream is worth now.</p>
+    <div class="nav"><button data-back>← back</button><button class="primary" data-next>next: is it worth the cost? →</button></div>
+  </section>
+
+  <!-- STEP 3 -->
+  <section class="card" data-step="2" hidden>
+    <div class="eyebrow">the test</div>
+    <h1>Is the stream worth its upfront cost?</h1>
+    <p class="lede">The deal costs you money <b>today</b>. The net value is what the stream is worth today, minus that cost. Positive means it adds value.</p>
+    <div class="hero"><span class="big" id="s3ans">$0</span><span class="chip" id="s3chip"></span></div>
+    <p class="heronote" id="s3note"></p>
+    <div class="bars">
+      <div class="bar"><div class="blab"><span>what it costs you today</span><b id="s3costv"></b></div><div class="track"><div class="fill" id="s3costbar" style="background:var(--lost);"></div></div></div>
+      <div class="bar"><div class="blab"><span>what the stream is worth today</span><b id="s3benv"></b></div><div class="track"><div class="fill" id="s3benbar" style="background:var(--good);"></div></div></div>
+    </div>
+    <div class="ctrls">
+      <div class="ctrl"><div class="row"><span>upfront cost of the deal</span><b id="s3cOut"></b></div><input type="range" data-bind="cost" min="5000" max="60000" step="1000"></div>
+      <div class="ctrl"><div class="row"><span>your rate</span><b id="s3rOut"></b></div><input type="range" data-bind="rate" min="1" max="15" step="0.5"></div>
+    </div>
+    <div class="formula"><div class="gen" id="s3fgen"></div><div class="num" id="s3fnum"></div></div>
+    <p class="note">Bring every future payment back to today, add them up, subtract the cost. <b>Positive creates value; negative destroys it.</b></p>
+    <div class="nav"><button data-back>← back</button><button class="primary" data-next>next: the verdict →</button></div>
+  </section>
+
+  <!-- STEP 4 -->
+  <section class="card" data-step="3" hidden>
+    <div class="eyebrow">the decision</div>
+    <h1 id="s4title">—</h1>
+    <p class="lede" id="s4lede"></p>
+    <div class="hero"><span class="big" id="s4ans">$0</span><span class="chip" id="s4chip"></span></div>
+    <p class="heronote" id="s4note"></p>
+    <div class="ctrls">
+      <div class="ctrl"><div class="row"><span>the one number that decides it — your rate</span><b id="s4rOut"></b></div><input type="range" data-bind="rate" min="1" max="15" step="0.5"></div>
+    </div>
+    <div class="formula"><div class="gen">the verdict hinges on your rate</div><div class="num" id="s4fnum"></div></div>
+    <p class="note" id="s4limit"></p>
+    <div class="nav"><button data-back>← back</button><button data-restart>start over ↺</button></div>
+  </section>
+
+  <div class="foot">OpenQuant · one decision at a time · the time value of money</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js" crossorigin="anonymous"></script>
+<script src="finance.js"></script>
+<script>
+(function(){
+  // ---- shared state (the whole deal lives here) ----
+  var S = { fut:100, pay:5000, yrs:6, rate:8, cost:20000 };
+  var cur = 0, NSTEPS = 4;
+
+  // ---- helpers ----
+  var $ = function(id){ return document.getElementById(id); };
+  function money(v){ return '$' + Math.round(v).toLocaleString('en-US'); }
+  function money2(v){ return '$' + v.toLocaleString('en-US',{maximumFractionDigits:2}); }
+  function K(el, tex){ if(window.katex && el) katex.render(tex, el, {throwOnError:false}); }
+  // delegate to the shared, parity-tested finance module (finance.js)
+  function pv(fv, r, n){ return Finance.pv(fv, r, n); }
+  function annuityPV(c, r, n){ return Finance.annuityPV(c, r, n); }
+  // rate at which NPV(stream) - cost == 0  (bisection)
+  function breakEvenRate(c, n, cost){
+    var lo=0.0001, hi=1.0, f=function(r){ return annuityPV(c, r, n) - cost; };
+    if(f(lo) < 0) return null;              // never worth it, even at ~0%
+    if(f(hi) > 0) return null;              // worth it even at 100%
+    for(var i=0;i<80;i++){ var m=(lo+hi)/2; if(f(m) > 0) lo=m; else hi=m; }
+    return (lo+hi)/2;
+  }
+
+  // ---- per-step renderers ----
+  function r1(){
+    var r=S.rate/100, val=pv(S.fut, r, S.yrs), loss=S.fut-val, f=val/S.fut;
+    $('s1ans').textContent = money2(val);
+    $('s1chip').textContent = money2(loss) + ' lost to waiting';
+    $('s1note').textContent = "that's all a future $100 is actually worth to you today";
+    $('s1yOut').textContent = S.yrs + (S.yrs===1?' year':' years');
+    $('s1rOut').textContent = S.rate + '%/yr';
+    K($('s1fgen'), "\\text{today} \\;=\\; \\dfrac{\\text{future amount}}{(1+r)^{\\,n}}");
+    K($('s1fnum'), "\\dfrac{100}{(1+"+r.toFixed(3)+")^{"+S.yrs+"}} = "+val.toFixed(2));
+  }
+  function r2(){
+    var r=S.rate/100, today=annuityPV(S.pay, r, S.yrs), paper=S.pay*S.yrs, f=paper>0?today/paper:0;
+    $('s2ans').textContent = money(today);
+    $('s2chip').textContent = money(paper) + ' on paper';
+    $('s2note').textContent = money(S.pay)+" a year for "+S.yrs+" years is worth "+money(today)+" today";
+    $('s2paperv').textContent = money(paper); $('s2todayv').textContent = money(today);
+    $('s2paperbar').style.width = '100%'; $('s2todaybar').style.width = (f*100).toFixed(1)+'%';
+    $('s2pOut').textContent = money(S.pay); $('s2yOut').textContent = S.yrs+' years'; $('s2rOut').textContent = S.rate+'%/yr';
+    K($('s2fgen'), "\\text{today} \\;=\\; \\dfrac{C}{r}\\left(1-\\dfrac{1}{(1+r)^{n}}\\right)");
+    K($('s2fnum'), "\\dfrac{"+S.pay+"}{"+r.toFixed(3)+"}\\left(1-\\dfrac{1}{(1+"+r.toFixed(3)+")^{"+S.yrs+"}}\\right) = "+Math.round(today));
+  }
+  function r3(){
+    var r=S.rate/100, ben=annuityPV(S.pay, r, S.yrs), npv=ben-S.cost, mx=Math.max(ben, S.cost, 1);
+    $('s3ans').textContent = (npv>=0?'+':'−') + money(Math.abs(npv));
+    var chip=$('s3chip'); chip.className = 'chip ' + (npv>=0?'good':'lost');
+    chip.textContent = npv>=0 ? 'worth doing' : 'destroys value';
+    $('s3note').textContent = npv>=0
+      ? "after covering the cost you are ahead by this much, in today's money"
+      : "the cost outweighs what the stream is worth today";
+    $('s3costv').textContent = money(S.cost); $('s3benv').textContent = money(ben);
+    $('s3costbar').style.width = (S.cost/mx*100).toFixed(1)+'%'; $('s3benbar').style.width = (ben/mx*100).toFixed(1)+'%';
+    $('s3cOut').textContent = money(S.cost); $('s3rOut').textContent = S.rate+'%/yr';
+    K($('s3fgen'), "\\text{net value} \\;=\\; \\underbrace{\\text{stream today}}_{\\text{benefits}} \\;-\\; \\text{cost}");
+    K($('s3fnum'), Math.round(ben)+" - "+S.cost+" = "+(npv>=0?'+':'')+Math.round(npv));
+  }
+  function r4(){
+    var r=S.rate/100, ben=annuityPV(S.pay, r, S.yrs), npv=ben-S.cost, take=npv>=0;
+    $('s4title').textContent = take ? 'Take the deal.' : 'Skip the deal.';
+    $('s4lede').textContent = money(S.pay)+" a year for "+S.yrs+" years, against "+money(S.cost)+" upfront.";
+    $('s4ans').textContent = (npv>=0?'+':'−') + money(Math.abs(npv));
+    var chip=$('s4chip'); chip.className='chip '+(take?'good':'lost');
+    chip.textContent = take ? 'net value created' : 'net value destroyed';
+    $('s4note').textContent = "the stream is worth "+money(ben)+" today; it costs "+money(S.cost)+".";
+    $('s4rOut').textContent = S.rate+'%/yr';
+    var be = breakEvenRate(S.pay, S.yrs, S.cost);
+    K($('s4fnum'), money(ben)+" - "+money(S.cost)+" = "+(npv>=0?'+':'')+money(npv));
+    if(be === null){
+      $('s4limit').innerHTML = take
+        ? "This deal wins at <b>any</b> reasonable rate — the payments simply outweigh the cost."
+        : "This deal loses at <b>any</b> reasonable rate — the cost outweighs the payments.";
+    } else {
+      var bp = (be*100).toFixed(1);
+      $('s4limit').innerHTML = "It hinges on your rate (now <b>"+S.rate+"%/yr</b>). "
+        + "<b>Above "+bp+"%/yr</b> the verdict flips to <b>skip</b>; below it, <b>take</b>. "
+        + "That single assumption is the whole decision.";
+    }
+  }
+  var RENDER = [r1, r2, r3, r4];
+
+  // ---- navigation ----
+  function syncInputs(){
+    document.querySelectorAll('input[type=range][data-bind]').forEach(function(el){
+      var k = el.getAttribute('data-bind');
+      if(S[k] !== undefined) el.value = S[k];
+    });
+  }
+  function show(step){
+    cur = Math.max(0, Math.min(NSTEPS-1, step));
+    document.querySelectorAll('.card[data-step]').forEach(function(c){
+      c.hidden = (+c.getAttribute('data-step') !== cur);
+    });
+    document.querySelectorAll('.step').forEach(function(s,i){
+      s.classList.toggle('on', i===cur); s.classList.toggle('done', i<cur);
+    });
+    syncInputs();
+    RENDER[cur]();
+  }
+
+  // ---- wiring ----
+  document.querySelectorAll('input[type=range][data-bind]').forEach(function(el){
+    el.addEventListener('input', function(){
+      var k = el.getAttribute('data-bind');
+      S[k] = parseFloat(el.value);
+      syncInputs();      // keep the same field on other steps in sync
+      RENDER[cur]();
+    });
+  });
+  document.querySelectorAll('[data-next]').forEach(function(b){ b.addEventListener('click', function(){ show(cur+1); window.scrollTo(0,0); }); });
+  document.querySelectorAll('[data-back]').forEach(function(b){ b.addEventListener('click', function(){ show(cur-1); window.scrollTo(0,0); }); });
+  document.querySelectorAll('[data-restart]').forEach(function(b){ b.addEventListener('click', function(){ show(0); window.scrollTo(0,0); }); });
+  document.querySelectorAll('.step').forEach(function(s){ s.addEventListener('click', function(){ show(+s.getAttribute('data-go')); window.scrollTo(0,0); }); });
+
+  function start(){ show(0); }
+  if(window.katex) start(); else window.addEventListener('load', start);
+})();
+</script>
+</body>
+</html>

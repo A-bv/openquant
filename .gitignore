@@ -2,10 +2,13 @@
 .env
 *.env
 
-# Cache and data
+# Local reference only — EPFL/Berk-DeMarzo course handouts (copyrighted). Never publish.
+infoSource/
+
+# Cache and data — fetched caches only. Blanket *.json/*.csv rules used to live
+# here and silently kept the frontend manifest, its lockfile and the backtest
+# results out of git entirely; ignore by location, never by extension.
 data/cache/
-*.csv
-*.json
 
 # Python
 __pycache__/
@@ -34,7 +37,8 @@ frontend/dist/
 frontend/node_modules/
 frontend/.env.local
 
-# IDE
+# IDE and local tooling
 .vscode/
 .idea/
 *.swp
+.claude/

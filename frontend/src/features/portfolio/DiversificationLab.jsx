@@ -59,12 +59,12 @@ export default function DiversificationLab({ API }) {
         <h1 className="page-title">How many bets are you really making?</h1>
         <p className="page-copy">
           Enter the tickers you hold (equal-weighted). OpenQuant pulls 3 years of
-          real returns and computes — from the covariance matrix — how many
+          real returns and works out, from how they move together, how many
           <em> independent</em> bets your portfolio actually is, and which holding
           secretly drives your risk.
         </p>
         <p className="intro-proof">
-          Real market data · EPFL Sample Exam 2 formulas · covariance → effective bets
+          Real market data · exam-tested formulas · your real number of bets
         </p>
 
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', margin: '14px 0 10px' }}>
@@ -117,13 +117,13 @@ export default function DiversificationLab({ API }) {
 
             {topIdx >= 0 && (
               <div style={{ marginTop: 16, padding: '12px 14px', background: '#F8FAFC', borderLeft: '3px solid #185FA5', borderRadius: '0 8px 8px 0', fontSize: 14, color: '#374151' }}>
-                Risk is driven by <strong>{data.tickers[topIdx]}</strong> — {Math.round(data.weights[topIdx] * 100)}% of capital but <strong>{Math.round(data.risk_contributions[topIdx] * 100)}% of the risk</strong>.
+                Risk is driven by <strong>{data.tickers[topIdx]}</strong>: {Math.round(data.weights[topIdx] * 100)}% of your money, but <strong>{Math.round(data.risk_contributions[topIdx] * 100)}% of your risk</strong>.
               </div>
             )}
 
             <div style={{ marginTop: 10, fontSize: 13, color: '#6B7280', display: 'flex', gap: 8 }}>
               <span>⚠️</span>
-              <span>In a crisis correlations rise toward 1 — your real diversification is even weaker than this calm-times snapshot.</span>
+              <span>In a crisis, holdings tend to move together, so your real diversification is even weaker than this calm-times snapshot.</span>
             </div>
           </section>
 
@@ -131,14 +131,14 @@ export default function DiversificationLab({ API }) {
           <DisclosureSection
             eyebrow="Show your work"
             title="Per-holding risk decomposition & formulas"
-            summary="Open this for each holding's true risk share, the correlation, the Sharpe ratio, and the EPFL source pinned by tests."
+            summary="Open this for each holding's true risk share, how the holdings move together, the Sharpe ratio, and the source pinned by tests."
           >
             <h3 style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>
               Risk contribution by holding
-              <EPFLCitation source="Berk-DeMarzo Ch.11.3–11.5 · EPFL formula sheet p.2–3" test="test_portfolio.py::TestExam2P4_ReducesToTwoAsset" />
+              <EPFLCitation source="Berk-DeMarzo Ch.11.3-11.5 · formula sheet p.2-3" test="test_portfolio.py::TestExam2P4_ReducesToTwoAsset" />
             </h3>
             <p style={{ fontSize: 12, color: '#6B7280', margin: '0 0 12px' }}>
-              Euler decomposition — a position's risk share can far exceed its capital weight.
+              Euler decomposition: a position's risk share can far exceed its share of the money.
             </p>
 
             {order.map(i => (
@@ -162,8 +162,8 @@ export default function DiversificationLab({ API }) {
               Var(R_p) = wᵀΣw &nbsp;·&nbsp; σ_indep = √(Σ wᵢ²σᵢ²) &nbsp;·&nbsp; bets = (Σ wᵢσᵢ / σ_p)²
             </div>
             <div style={{ marginTop: 6, fontSize: 11, color: '#9CA3AF' }}>
-              Computed from {data.trading_days} real trading days. Pinned against EPFL Sample
-              Exam 2 P4 (σ_p = 0.07 at ρ = −1; min-variance ω_Y = 0.20).
+              Computed from {data.trading_days} real trading days. Pinned against the
+              Sample Exam 2 portfolio problem (σ_p = 0.07 at ρ = −1; min-variance ω_Y = 0.20).
             </div>
           </DisclosureSection>
         </>

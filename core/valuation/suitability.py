@@ -19,7 +19,7 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 
-from config import (
+from core.config import (
     MIN_FCF_HISTORY_YEARS,
     MIN_PRICE_HISTORY_YEARS,
     MIN_TRADING_DAYS,
@@ -32,7 +32,7 @@ from config import (
     GROWTH_WINSOR_LOW,
     GROWTH_WINSOR_HIGH,
 )
-from config import DEFAULT_TERMINAL_GROWTH_RATE
+from core.config import DEFAULT_TERMINAL_GROWTH_RATE
 from core.data import FinancialStatements
 
 

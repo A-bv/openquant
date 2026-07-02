@@ -87,10 +87,10 @@ class NowVsLaterResult:
         if self.kind == "pay":
             verdict = (
                 f"Pay the {now} cash now." if self.winner == "now"
-                else "Take the financing — spread it out."
+                else "Take the financing, spread it out."
             )
             middle = (
-                f"Paying over time totals {nominal} on paper — but in today's "
+                f"Paying over time totals {nominal} on paper, but in today's "
                 f"money it costs {later_pv}."
             )
             who = "Paying cash" if self.winner == "now" else "Financing"
@@ -98,7 +98,7 @@ class NowVsLaterResult:
         else:
             verdict = f"Take the {now} now." if self.winner == "now" else "Take the payments."
             middle = (
-                f"The payments add up to {nominal} on paper — but in today's "
+                f"The payments add up to {nominal} on paper, but in today's "
                 f"money they're worth {later_pv}."
             )
             who = "The cash" if self.winner == "now" else "The payments"
@@ -109,7 +109,7 @@ class NowVsLaterResult:
         if self.breakeven_rate is not None:
             flips = "below" if self.winner == "now" else "above"
             assumption += (
-                f" — {flips} {format_percent(self.breakeven_rate)}/yr the answer flips."
+                f". {flips.capitalize()} {format_percent(self.breakeven_rate)}/yr the answer flips."
             )
         else:
             assumption += "."
@@ -142,12 +142,12 @@ class NowVsLaterResult:
         ]
         if self.breakeven_rate is not None:
             out.append(
-                f"Break-even rate: {format_percent(self.breakeven_rate)} — the two "
+                f"Break-even rate: {format_percent(self.breakeven_rate)}. The two "
                 f"options are worth exactly the same at this discount rate."
             )
         out += [
             "",
-            "Formula — Berk-DeMarzo Ch. 4 · EPFL formula sheet p.1 · PFEM slides 17-20",
+            "Source: Berk-DeMarzo Ch. 4 · formula sheet p.1 · PFEM slides 17-20",
             "  PV(stream) = Σ CFt / (1+r)^t   (value additivity / DCF)",
             "Pinned against the PFEM lottery ($30M as 30x$1M ≈ $12.16M at 8%) "
             "in tests/test_money.py.",

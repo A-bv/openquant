@@ -32,7 +32,7 @@ import numpy as np
 import pandas as pd
 import requests
 
-from config import (
+from core.config import (
     EDGAR_BASE_URL,
     EDGAR_SUBMISSIONS_URL,
     EDGAR_FACTS_URL,
@@ -50,482 +50,37 @@ logger = logging.getLogger(__name__)
 
 # ── Custom exceptions ─────────────────────────────────────────────────────────
 
-class DataFetchError(Exception):
-    """Raised when all data sources fail for a ticker."""
-    pass
-
-
-class InsufficientDataError(Exception):
-    """Raised when data exists but is insufficient for analysis."""
-    pass
-
-
-class UnsupportedTickerError(Exception):
-    """Raised when a ticker is not a supported US company."""
-    pass
-
-
-class DataInconsistencyWarning(UserWarning):
-    """Raised when cross-validation detects source disagreement."""
-    pass
+# Moved to core/data/errors.py; re-exported here for backward compatibility.
+from .errors import (
+    DataFetchError,
+    InsufficientDataError,
+    UnsupportedTickerError,
+    DataInconsistencyWarning,
+)
 
 
 # ── Data structures ───────────────────────────────────────────────────────────
 
-@dataclass
-class FinancialStatements:
-    """
-    Standardised financial statements for one company.
-    All values in USD. Annual frequency.
-    """
-    ticker: str
-    company_name: str
-    cik: str
-    source: str                          # "edgar" or "fmp"
-    fetched_at: datetime
-
-    # Income statement
-    revenue: pd.Series                   # Annual revenue
-    ebit: pd.Series                      # Earnings before interest and tax
-    depreciation_amortisation: pd.Series # D&A
-    interest_expense: pd.Series          # Interest expense
-    tax_expense: pd.Series               # Income tax expense
-    net_income: pd.Series                # Net income
-    ebitda: pd.Series                    # EBITDA
-
-    # Balance sheet
-    total_assets: pd.Series
-    total_debt: pd.Series                # Short + long term debt
-    beginning_debt: pd.Series            # Prior year debt (for avg debt cost)
-    cash_and_equivalents: pd.Series
-    shares_outstanding: pd.Series        # Diluted
-    net_working_capital: pd.Series       # Current assets - current liabilities
-
-    # Cash flow statement
-    operating_cash_flow: pd.Series
-    capital_expenditure: pd.Series       # Always positive (outflow)
-    free_cash_flow: pd.Series            # Computed: OCF - CapEx
-    stock_based_compensation: pd.Series  # SBC — shown separately
-
-    # Derived
-    effective_tax_rate: pd.Series        # tax_expense / pretax_income
-    fcf_margin: pd.Series                # FCF / revenue
-
-    # Warnings
-    data_warnings: list[str] = field(default_factory=list)
-
-
-@dataclass
-class PriceData:
-    """Daily adjusted closing prices for beta computation."""
-    ticker: str
-    prices: pd.Series                    # Adjusted close, date-indexed
-    market_prices: pd.Series             # Market index adjusted close
-    source: str
-    fetched_at: datetime
-
-
-@dataclass
-class TickerValidation:
-    """Result of pre-flight ticker validation."""
-    ticker: str
-    is_valid: bool
-    is_us_company: bool
-    company_name: str
-    sector: str
-    cik: Optional[str]
-    trading_days_available: int
-    has_financial_statements: bool
-    badge: str                           # "green", "amber", "red"
-    message: str
+# Moved to core/data/models.py; re-exported here for backward compatibility.
+from .models import FinancialStatements, PriceData, TickerValidation
 
 
 # ── Cache manager ─────────────────────────────────────────────────────────────
 
-class CacheManager:
-    """
-    Simple file-based cache for fetched data.
-    JSON for financial data, CSV for price series.
-    """
-
-    def __init__(self, cache_dir: str = CACHE_DIR):
-        self.cache_dir = Path(cache_dir)
-        self.cache_dir.mkdir(parents=True, exist_ok=True)
-
-    def _key_to_path(self, key: str, ext: str = "json") -> Path:
-        """Convert cache key to file path."""
-        safe_key = hashlib.md5(key.encode()).hexdigest()
-        return self.cache_dir / f"{safe_key}.{ext}"
-
-    def get(self, key: str, ttl_seconds: Optional[int] = CACHE_TTL_RECENT_SECONDS) -> Optional[dict]:
-        """
-        Retrieve cached value if it exists and is not expired.
-
-        Args:
-            key: Cache key string.
-            ttl_seconds: TTL in seconds. None means permanent.
-
-        Returns:
-            Cached data dict or None if miss/expired.
-        """
-        path = self._key_to_path(key)
-        if not path.exists():
-            return None
-
-        if ttl_seconds is not None:
-            age = time.time() - path.stat().st_mtime
-            if age > ttl_seconds:
-                path.unlink(missing_ok=True)
-                return None
-
-        try:
-            with open(path) as f:
-                return json.load(f)
-        except (json.JSONDecodeError, IOError):
-            path.unlink(missing_ok=True)
-            return None
-
-    def set(self, key: str, data: dict) -> None:
-        """Store data in cache atomically — write to a temp file in the same
-        directory and os.replace into place so concurrent writers cannot
-        observe a truncated file."""
-        path = self._key_to_path(key)
-        tmp_path = path.with_suffix(path.suffix + f".tmp.{os.getpid()}.{uuid.uuid4().hex[:8]}")
-        try:
-            with open(tmp_path, "w") as f:
-                json.dump(data, f, default=str)
-            os.replace(tmp_path, path)
-        except IOError as e:
-            logger.warning(f"Cache write failed for key {key}: {e}")
-            try:
-                tmp_path.unlink(missing_ok=True)
-            except OSError:
-                pass
-
-    def get_prices(self, key: str, ttl_seconds: Optional[int] = CACHE_TTL_RECENT_SECONDS) -> Optional[pd.Series]:
-        """Retrieve cached price series."""
-        path = self._key_to_path(key, ext="csv")
-        if not path.exists():
-            return None
-
-        age = time.time() - path.stat().st_mtime
-        if ttl_seconds is not None and age > ttl_seconds:
-            path.unlink(missing_ok=True)
-            return None
-
-        try:
-            df = pd.read_csv(path, index_col=0, parse_dates=True)
-            return df.iloc[:, 0]
-        except Exception:
-            path.unlink(missing_ok=True)
-            return None
-
-    def set_prices(self, key: str, prices: pd.Series) -> None:
-        """Store price series in cache atomically."""
-        path = self._key_to_path(key, ext="csv")
-        tmp_path = path.with_suffix(path.suffix + f".tmp.{os.getpid()}.{uuid.uuid4().hex[:8]}")
-        try:
-            prices.to_csv(tmp_path)
-            os.replace(tmp_path, path)
-        except IOError as e:
-            try:
-                tmp_path.unlink(missing_ok=True)
-            except OSError:
-                pass
-            logger.warning(f"Price cache write failed: {e}")
+# Moved to core/data/cache.py; re-exported here for backward compatibility.
+from .cache import CacheManager
 
 
 # ── EDGAR client ──────────────────────────────────────────────────────────────
 
-class EDGARClient:
-    """
-    SEC EDGAR API client.
-    Fetches XBRL financial data directly from the official source.
-    Unlimited, free, no API key required.
-    US companies only.
-    """
-
-    BASE_URL = "https://data.sec.gov"
-    TICKERS_URL = "https://www.sec.gov/files/company_tickers.json"
-    HEADERS = {
-        "User-Agent": "OpenQuant educational-tool contact@openquant.dev",
-        "Accept-Encoding": "gzip, deflate",
-    }
-    # Rate limit: EDGAR requests max 10/second
-    REQUEST_DELAY = 0.12
-
-    # XBRL tag mappings — companies use different tags for same concept
-    TAG_MAPPINGS = {
-        "revenue": [
-            "Revenues", "RevenueFromContractWithCustomerExcludingAssessedTax",
-            "SalesRevenueNet", "SalesRevenueGoodsNet", "RevenueFromContractWithCustomer",
-        ],
-        "ebit": [
-            "OperatingIncomeLoss",
-        ],
-        "depreciation_amortisation": [
-            "DepreciationDepletionAndAmortization",
-            "DepreciationAndAmortization",
-            "Depreciation",
-        ],
-        "interest_expense": [
-            "InterestExpense", "InterestAndDebtExpense",
-        ],
-        "net_income": [
-            "NetIncomeLoss", "NetIncome",
-        ],
-        "capital_expenditure": [
-            "PaymentsToAcquirePropertyPlantAndEquipment",
-            "CapitalExpendituresIncurringObligation",
-        ],
-        "operating_cash_flow": [
-            "NetCashProvidedByUsedInOperatingActivities",
-        ],
-        "total_debt": [
-            "LongTermDebt",                              # Total LT debt incl. current maturities
-            "LongTermDebtAndCapitalLeaseObligations",
-            "DebtAndCapitalLeaseObligations",
-            "LongTermDebtNoncurrent",                    # Fallback: non-current portion only
-            "LongTermDebtCurrent",                       # Fallback: current maturities only
-            "ShortTermBorrowings",
-        ],
-        "cash_and_equivalents": [
-            "CashAndCashEquivalentsAtCarryingValue",
-            "CashCashEquivalentsAndShortTermInvestments",
-        ],
-        "shares_outstanding": [
-            "CommonStockSharesOutstanding",
-            "WeightedAverageNumberOfDilutedSharesOutstanding",
-        ],
-        "tax_expense": [
-            "IncomeTaxExpenseBenefit",
-        ],
-        "stock_based_compensation": [
-            "ShareBasedCompensation",
-            "AllocatedShareBasedCompensationExpense",
-        ],
-        "current_assets": [
-            "AssetsCurrent",
-        ],
-        "current_liabilities": [
-            "LiabilitiesCurrent",
-        ],
-        "total_assets": [
-            "Assets",
-        ],
-    }
-
-    def __init__(self):
-        self._session = requests.Session()
-        self._session.headers.update(self.HEADERS)
-
-    def _get(self, url: str) -> dict:
-        """Make a GET request with rate limiting and error handling."""
-        time.sleep(self.REQUEST_DELAY)
-        try:
-            response = self._session.get(url, timeout=15)
-            response.raise_for_status()
-            return response.json()
-        except requests.exceptions.HTTPError as e:
-            raise DataFetchError(f"EDGAR HTTP error: {e}")
-        except requests.exceptions.ConnectionError:
-            raise DataFetchError("Cannot connect to SEC EDGAR. Check your internet connection.")
-        except requests.exceptions.Timeout:
-            raise DataFetchError("SEC EDGAR request timed out.")
-
-    def get_cik(self, ticker: str) -> Optional[str]:
-        """
-        Look up CIK (Central Index Key) for a ticker symbol.
-
-        Args:
-            ticker: Stock ticker symbol (e.g. "AAPL").
-
-        Returns:
-            CIK as zero-padded 10-digit string, or None if not found.
-        """
-        try:
-            data = self._get(self.TICKERS_URL)
-            ticker_upper = ticker.upper()
-            for _, company in data.items():
-                if company.get("ticker", "").upper() == ticker_upper:
-                    return str(company["cik_str"]).zfill(10)
-            return None
-        except DataFetchError:
-            return None
-
-    def get_company_info(self, cik: str) -> dict:
-        """
-        Get company metadata from EDGAR submissions.
-
-        Args:
-            cik: Zero-padded 10-digit CIK.
-
-        Returns:
-            Dict with name, sic, sector, exchanges.
-        """
-        url = EDGAR_SUBMISSIONS_URL.format(cik=int(cik))
-        data = self._get(url)
-        return {
-            "name": data.get("name", ""),
-            "sic": data.get("sic", ""),
-            "sic_description": data.get("sicDescription", ""),
-            "exchanges": data.get("exchanges", []),
-            "tickers": data.get("tickers", []),
-        }
-
-    def get_facts(self, cik: str) -> dict:
-        """
-        Get all XBRL facts for a company.
-
-        Args:
-            cik: Zero-padded 10-digit CIK.
-
-        Returns:
-            Raw XBRL facts dict.
-        """
-        url = EDGAR_FACTS_URL.format(cik=int(cik))
-        return self._get(url)
-
-    def extract_annual_series(
-        self,
-        facts: dict,
-        concept_tags: list[str],
-        unit: str = "USD",
-    ) -> Optional[pd.Series]:
-        """
-        Extract annual values for a concept from XBRL facts.
-
-        Tries each tag in concept_tags in order — companies use
-        different tag names for the same concept.
-
-        Args:
-            facts: Raw facts dict from get_facts().
-            concept_tags: List of XBRL tags to try.
-            unit: Unit of measurement. Default "USD".
-                  Use "shares" for share count data.
-
-        Returns:
-            pd.Series indexed by fiscal year end date, or None if not found.
-        """
-        us_gaap = facts.get("facts", {}).get("us-gaap", {})
-
-        candidates = []
-
-        for tag in concept_tags:
-            if tag not in us_gaap:
-                continue
-
-            tag_units = us_gaap[tag].get("units", {})
-
-            # Try specified unit first, then any available unit — do not mutate `unit`
-            unit_to_use = unit if unit in tag_units else next(iter(tag_units), None)
-            if not unit_to_use:
-                continue
-
-            records = tag_units[unit_to_use]
-
-            # Filter for annual 10-K filings only.
-            # EDGAR sometimes tags sub-annual periods (quarters, half-years)
-            # with fp="FY" inside 10-K filings (e.g. ASC 606 transition
-            # comparatives). Guard with a duration check: require the period
-            # to span at least 340 days so that 90-day and 180-day sub-periods
-            # are always rejected regardless of the fp label.
-            annual = [
-                r for r in records
-                if r.get("form") in ("10-K", "10-K/A")
-                and r.get("fp") == "FY"
-                and "end" in r
-                and (
-                    "start" not in r
-                    or (
-                        pd.Timestamp(r["end"]) - pd.Timestamp(r["start"])
-                    ).days >= 340
-                )
-            ]
-
-            if not annual:
-                continue
-
-            # Deduplicate by end date — keep most recently filed version
-            by_date: dict = {}
-            for r in annual:
-                end = r["end"]
-                if end not in by_date or r.get("filed", "") > by_date[end].get("filed", ""):
-                    by_date[end] = r
-
-            if not by_date:
-                continue
-
-            candidates.append(
-                pd.Series(
-                    {pd.Timestamp(end): r["val"] for end, r in by_date.items()}
-                ).sort_index()
-            )
-
-        if not candidates:
-            return None
-
-        # Return the candidate whose most recent data point is latest.
-        # Companies switch XBRL tags over time (e.g. AAPL moved from
-        # "Revenues" to "RevenueFromContractWithCustomerExcludingAssessedTax"
-        # in 2019). Always preferring the newest series avoids silently
-        # returning stale data from a retired tag.
-        return max(candidates, key=lambda s: s.index.max())
-
-        return None
+# Moved to core/data/providers/edgar.py; re-exported here for backward compatibility.
+from .providers.edgar import EDGARClient
 
 
 # ── yfinance price fetcher (mock-friendly interface) ─────────────────────────
 
-class PriceFetcher:
-    """
-    Fetches daily adjusted closing prices.
-    Uses yfinance when available, falls back to mock for testing.
-    """
-
-    def fetch(
-        self,
-        ticker: str,
-        years: int = BETA_LOOKBACK_YEARS,
-    ) -> pd.Series:
-        """
-        Fetch adjusted closing prices for a ticker.
-
-        Args:
-            ticker: Stock ticker symbol.
-            years: Years of history to fetch.
-
-        Returns:
-            pd.Series of adjusted closing prices, date-indexed.
-
-        Raises:
-            DataFetchError: If prices cannot be fetched.
-        """
-        try:
-            import yfinance as yf
-            end = datetime.today()
-            start = end - timedelta(days=years * 365 + 10)
-            data = yf.download(
-                ticker,
-                start=start.strftime("%Y-%m-%d"),
-                end=end.strftime("%Y-%m-%d"),
-                auto_adjust=True,
-                progress=False,
-            )
-            if data.empty:
-                raise DataFetchError(f"No price data found for {ticker}")
-            prices = data["Close"]
-            if isinstance(prices, pd.DataFrame):
-                prices = prices.iloc[:, 0]
-            prices.name = ticker
-            return prices.dropna()
-
-        except ImportError:
-            raise DataFetchError(
-                "yfinance is not installed. Run: pip install yfinance"
-            )
-        except Exception as e:
-            raise DataFetchError(f"Price fetch failed for {ticker}: {e}")
+# Moved to core/data/providers/prices.py; re-exported here for backward compatibility.
+from .providers.prices import PriceFetcher
 
 
 # ── Main DataFetcher ──────────────────────────────────────────────────────────
@@ -631,7 +186,7 @@ class DataFetcher:
         has_financials = fut_fin.result()
 
         # Determine badge
-        from config import MIN_TRADING_DAYS, MIN_PRICE_HISTORY_YEARS
+        from core.config import MIN_TRADING_DAYS, MIN_PRICE_HISTORY_YEARS
         min_days = MIN_TRADING_DAYS * MIN_PRICE_HISTORY_YEARS
 
         if not has_financials:

@@ -43,7 +43,7 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 
-from config import (
+from core.config import (
     DIAGNOSTIC_GREEN_MAX,
     DIAGNOSTIC_AMBER_MAX,
     SEVERITY_NONE,

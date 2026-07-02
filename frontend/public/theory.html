@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>OpenQuant · did the theory hold?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f4f4f0; --surface:#ffffff; --text:#1b1a17; --muted:#6c6a63; --faint:#a4a299;
+    --border:#e9e7e0; --track:#efeee8; --accent:#2f6fe0; --accent-2:#1b4fb0; --accent-soft:#ebf2fd;
+    --good:#2f8f5b; --good-soft:#e2f1e8; --lost:#c2410c; --lost-soft:#fbe7d8;
+    --shadow:0 1px 2px rgba(20,20,15,.04), 0 10px 30px rgba(20,20,15,.07);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#0f0f12; --surface:#17171c; --text:#ededf0; --muted:#9b9ba2; --faint:#65656d;
+      --border:#27272e; --track:#222228; --accent:#6f9bf0; --accent-2:#9bbcf6; --accent-soft:#19233c;
+      --good:#5cba84; --good-soft:#16291f; --lost:#f0935a; --lost-soft:#3a2614;
+      --shadow:0 1px 2px rgba(0,0,0,.3), 0 12px 32px rgba(0,0,0,.4); }
+  }
+  *{box-sizing:border-box} html,body{margin:0}
+  body{background:var(--bg); color:var(--text); padding:40px 18px 64px;
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif; line-height:1.5; -webkit-font-smoothing:antialiased;}
+  .wrap{max-width:600px; margin:0 auto;}
+  a{color:inherit; text-decoration:none;}
+
+  .eyebrow{font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--accent); margin-bottom:8px;}
+  h1{font-size:28px; font-weight:800; letter-spacing:-.02em; line-height:1.15; margin:0 0 12px;}
+  .lede{font-size:15px; color:var(--muted); margin:0 0 6px; max-width:54ch;}
+  .sub{font-size:12.5px; color:var(--faint);}
+
+  .stats{display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin:26px 0;}
+  @media (max-width:520px){ .stats{grid-template-columns:1fr;} }
+  .stat{background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:16px; box-shadow:var(--shadow);}
+  .stat .n{font-size:26px; font-weight:700; letter-spacing:-.02em; color:var(--lost);}
+  .stat .l{font-size:12.5px; color:var(--muted); margin-top:5px; line-height:1.45;}
+
+  .card{background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:22px; box-shadow:var(--shadow); margin:18px 0;}
+  .card h2{font-size:13px; font-weight:600; letter-spacing:.04em; text-transform:uppercase; color:var(--accent); margin:0 0 16px;}
+  .bar{margin-bottom:14px;}
+  .bar .blab{display:flex; justify-content:space-between; font-size:13px; color:var(--muted); margin-bottom:5px;}
+  .bar .blab b{color:var(--text); font-weight:600;}
+  .track{height:16px; background:var(--track); border-radius:8px; overflow:hidden;}
+  .fill{height:100%; border-radius:8px;}
+  .sp{font-size:12px; color:var(--faint); margin-top:4px;}
+
+  .lesson{background:var(--accent-soft); border:1px solid var(--border); border-radius:16px; padding:20px; margin:22px 0;}
+  .lesson p{margin:0; font-size:15px; line-height:1.6;}
+  .lesson b{color:var(--text);}
+
+  .src{font-size:12px; color:var(--faint); margin-top:8px; line-height:1.6;}
+  .foot{margin-top:34px; padding-top:18px; border-top:1px solid var(--border); font-size:12px; color:var(--faint);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav style="display:flex;align-items:center;gap:6px;font-size:13px;margin:0 0 24px;flex-wrap:wrap;">
+    <a href="app.html" style="font-weight:700;color:var(--text);text-decoration:none;margin-right:auto;">OpenQuant</a>
+    <a href="app.html" style="text-decoration:none;padding:5px 10px;border-radius:8px;color:var(--muted);">Map</a>
+    <a href="card1.html" style="text-decoration:none;padding:5px 10px;border-radius:8px;color:var(--muted);">Deal journey</a>
+    <a href="companion.html" style="text-decoration:none;padding:5px 10px;border-radius:8px;color:var(--muted);">53 cards</a>
+  </nav>
+
+  <div class="eyebrow">did the theory hold?</div>
+  <h1>We tested the valuation theory on 10 years of real returns.</h1>
+  <p class="lede">The course says a reverse-DCF reveals whether a stock is cheap or expensive. So we ran it on 50 big US stocks as of January 2014, then checked what actually happened by January 2024.</p>
+  <p class="sub">The honest answer: it barely worked, and not the way you would think.</p>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="n">44%</div>
+      <div class="l">of the stocks it called <b>cheap</b> actually beat the market. Worse than a coin flip.</div>
+    </div>
+    <div class="stat">
+      <div class="n">backwards</div>
+      <div class="l">the stocks it called <b>expensive</b> earned <b>more</b> (13.6%/yr) than the cheap ones (12.3%/yr).</div>
+    </div>
+    <div class="stat">
+      <div class="n">~4%</div>
+      <div class="l">of who won vs lost is explained by the model (R² = 0.04). Almost none.</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Realized return per verdict · 2014 → 2024</h2>
+    <div class="bar">
+      <div class="blab"><span>Called "undervalued" (25 stocks)</span><b>12.3%/yr</b></div>
+      <div class="track"><div class="fill" style="width:90%;background:var(--accent);"></div></div>
+    </div>
+    <div class="bar">
+      <div class="blab"><span>Called "overvalued" (6 stocks)</span><b>13.6%/yr</b></div>
+      <div class="track"><div class="fill" style="width:100%;background:var(--lost);"></div></div>
+    </div>
+    <div class="bar">
+      <div class="blab"><span>Called "fairly priced" (2 stocks)</span><b>8.8%/yr</b></div>
+      <div class="track"><div class="fill" style="width:64%;background:var(--faint);"></div></div>
+    </div>
+    <p class="sp">If the theory worked, the blue "undervalued" bar should be the tallest. It isn't.</p>
+  </div>
+
+  <div class="lesson">
+    <p><b>That is exactly the point.</b> A valuation is not a crystal ball. It tells you the <b>bet baked into a price</b> (the growth the market is already paying for), not what the stock will do next. The future depends on a thousand things a model cannot see.<br><br>
+    This is why OpenQuant <b>never</b> says "this stock is worth $X." It shows you the bet, with its honest limits, and lets <b>you</b> decide whether you believe it.</p>
+  </div>
+
+  <p class="src">Source: a reverse-DCF run on 50 large S&P 500 names, as of 31 Jan 2014, compared to realized total returns through Jan 2024. 33 had enough filing history to value; the rest the model could not touch. Full results in <code>backtest/</code>.</p>
+
+  <div class="foot">OpenQuant · learn → do → <b>check</b> · this is the "check".</div>
+</div>
+</body>
+</html>

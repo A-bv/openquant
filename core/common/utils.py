@@ -13,7 +13,7 @@ import numpy as np
 import pandas as pd
 from typing import Union
 
-from config import (
+from core.config import (
     DEFAULT_RISK_FREE_RATE,
     DEFAULT_TRADING_DAYS,
     BOOTSTRAP_RESAMPLES,

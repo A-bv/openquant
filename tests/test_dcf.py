@@ -329,7 +329,7 @@ class TestTerminalValue:
 
     def test_terminal_growth_capped_at_max(self):
         """terminal_growth_rate is capped at MAX_TERMINAL_GROWTH_RATE (3%)."""
-        from config import MAX_TERMINAL_GROWTH_RATE
+        from core.config import MAX_TERMINAL_GROWTH_RATE
         fcf = [1e9, 1.2e9, 1.4e9, 1.6e9, 1.8e9]
         analysis = ANALYSER.analyse(make_statements(fcf))
         wacc_result = make_wacc(wacc=0.10)

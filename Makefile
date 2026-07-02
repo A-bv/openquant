@@ -17,4 +17,4 @@ web:            ## run only the frontend on :5173
 	cd frontend && npm run dev
 
 test:           ## run the offline test suite (EPFL exam oracles included)
-	pytest -q --ignore=tests/test_edgar_live.py
+	pytest -q -m "not live"

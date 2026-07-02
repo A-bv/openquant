@@ -22,7 +22,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Optional
 
-from config import DEFAULT_TERMINAL_GROWTH_RATE
+from core.config import DEFAULT_TERMINAL_GROWTH_RATE
 from core.data import FinancialStatements
 from core.valuation.fcf import FCFAnalysis
 from core.valuation.wacc import WACCResult

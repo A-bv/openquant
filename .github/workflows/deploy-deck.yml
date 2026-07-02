@@ -1,19 +1,43 @@
-name: Deploy teaching deck
+name: Deploy the card pages to GitHub Pages
+
 on:
   push:
     branches: [main]
-    paths: ['frontend/public/companion.html']
+    paths:
+      - "frontend/public/companion.html"
+      - "frontend/public/app.html"
+      - "frontend/public/card1.html"
+      - "frontend/public/theory.html"
+      - "frontend/public/finance.js"
+      - "frontend/public/favicon.svg"
+      - "frontend/public/icons.svg"
   workflow_dispatch:
+
 permissions:
   contents: write
+
 jobs:
-  deploy:
+  publish:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: mkdir -p _site && cp frontend/public/companion.html _site/index.html
-      - uses: peaceiris/actions-gh-pages@v4
+
+      - name: Assemble the site (root stays the 53-card deck)
+        run: |
+          mkdir -p out
+          cp frontend/public/companion.html out/index.html
+          cp frontend/public/companion.html out/companion.html
+          cp frontend/public/app.html       out/app.html
+          cp frontend/public/card1.html     out/card1.html
+          cp frontend/public/theory.html    out/theory.html
+          cp frontend/public/finance.js     out/finance.js
+          cp frontend/public/favicon.svg    out/favicon.svg || true
+          cp frontend/public/icons.svg      out/icons.svg || true
+
+      - name: Publish to the gh-pages branch
+        uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./_site
+          publish_dir: ./out
           publish_branch: gh-pages
+          commit_message: "deploy: ${{ github.sha }}"
