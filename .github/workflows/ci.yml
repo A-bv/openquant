@@ -6,7 +6,8 @@ on:
   pull_request:
 
 jobs:
-  test:
+  parity:
+    name: Browser math == engine math
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -19,23 +20,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "24"
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
 
-      - name: Install Python dependencies
-        run: pip install -r requirements.txt
+      - name: Install the engine package and pytest
+        run: pip install pytest "openquant-engine @ git+https://github.com/A-bv/openquant-engine"
 
-      - name: Run the offline test suite (EPFL exam oracles + JS/Python parity)
-        run: python -m pytest -q -m "not live"
-
-      - name: Install frontend dependencies
-        working-directory: frontend
-        run: npm ci
-
-      - name: Lint the frontend
-        working-directory: frontend
-        run: npm run lint
-
-      - name: Build the frontend
-        working-directory: frontend
-        run: npm run build
+      - name: Run the parity suite (site/finance.js vs the engine)
+        run: python -m pytest -q tests/

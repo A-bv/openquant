@@ -1,10 +1,11 @@
 """
-Parity test: the browser math (frontend/public/finance.js) must agree with the
-proven Python engine (core/). This is the guardrail of the hybrid architecture —
-simple formulas are reimplemented in JS so the cards run with no server, and this
-test pins JS == Python so the two can never drift apart.
+Parity test: the browser math (site/finance.js) must agree with the proven
+Python engine, the openquant-engine package. This is the guardrail of the split
+architecture — simple formulas are reimplemented in JS so the cards run with no
+server, and this test pins JS == Python so the two can never drift apart.
 
-Runs finance.js through Node and compares to core/. Skipped if Node is absent.
+Runs finance.js through Node and compares it to the installed ``openquant``
+package (pip install openquant-engine). Skipped if Node is absent.
 """
 
 import json
@@ -16,11 +17,11 @@ import tempfile
 
 import pytest
 
-from core.valuation.dcf import DCFEngine
-from core.valuation.wacc import capm_cost_of_equity
+from openquant.valuation.dcf import DCFEngine
+from openquant.valuation.wacc import capm_cost_of_equity
 
 FINANCE_JS = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "..", "frontend", "public", "finance.js")
+    os.path.join(os.path.dirname(__file__), "..", "site", "finance.js")
 )
 
 pytestmark = pytest.mark.skipif(
