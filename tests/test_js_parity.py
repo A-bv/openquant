@@ -56,6 +56,29 @@ def _run_js(calls: dict) -> dict:
         os.unlink(tmp)
 
 
+def _run_js_throws(fn_name: str, fn_args: list) -> bool:
+    """True if calling finance.js `fn_name(*fn_args)` throws."""
+    with open(FINANCE_JS) as f:
+        src = f.read()
+    fd, tmp = tempfile.mkstemp(suffix=".cjs")
+    try:
+        with os.fdopen(fd, "w") as out:
+            out.write(src)
+        script = (
+            "const F=require(process.argv[1]);"
+            "const c=JSON.parse(process.argv[2]);"
+            "try{F[c[0]](...c[1]);process.stdout.write('ok');}"
+            "catch(e){process.stdout.write('threw');}"
+        )
+        res = subprocess.run(
+            ["node", "-e", script, tmp, json.dumps([fn_name, fn_args])],
+            capture_output=True, text=True, check=True,
+        )
+        return res.stdout == "threw"
+    finally:
+        os.unlink(tmp)
+
+
 def _engine() -> DCFEngine:
     # The formula methods are pure (use only their args), so bypass __init__.
     return DCFEngine.__new__(DCFEngine)
@@ -95,3 +118,31 @@ def test_js_matches_core_python():
     assert math.isclose(js["bondPrice"],         eng.npv(bond_cf, 0.04),                 rel_tol=1e-9)
     # EAR has no standalone core function; pin to its textbook closed form.
     assert math.isclose(js["ear"],               (1 + 0.18 / 12) ** 12 - 1,              rel_tol=1e-12)
+
+
+def test_js_edge_cases_match_python_failure_semantics():
+    """The edge behaviors must agree too: same wide IRR bracket, and both sides
+    must FAIL LOUDLY (throw/raise) instead of returning a silently wrong number."""
+    eng = _engine()
+
+    # IRR above 100% — the old JS bracket capped at 1.0 and returned garbage.
+    js = _run_js({"irr_high": ["irr", [[-100, 250]]]})
+    assert math.isclose(js["irr_high"], eng.irr([-100, 250]), rel_tol=1e-6)  # = 1.5
+    assert math.isclose(js["irr_high"], 1.5, rel_tol=1e-6)
+
+    # No real root (all-positive cash flows): Python raises, JS must throw.
+    assert _run_js_throws("irr", [[100, 100]])
+    with pytest.raises(ValueError):
+        eng.irr([100, 100])
+
+    # Growing annuity with rate == growth: closed form degenerates on both sides.
+    assert _run_js_throws("growingAnnuityPV", [100, 0.05, 0.05, 10])
+    with pytest.raises(ValueError):
+        eng.growing_annuity_pv(100, 0.05, 0.05, 10)
+
+    # YTM for an impossible price — above the zero-yield ceiling (coupons + face
+    # = 150), no positive yield can produce it: JS must throw, not return 0%.
+    assert _run_js_throws("ytm", [200, 5, 100, 10])
+    # ...while a deep-discount price inside the wide bracket still resolves.
+    js2 = _run_js({"ytm_deep": ["ytm", [1, 5, 100, 10]]})
+    assert 4.0 < js2["ytm_deep"] < 6.0  # a real ~450% yield, not the bracket edge
