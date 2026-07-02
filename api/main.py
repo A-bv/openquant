@@ -23,8 +23,12 @@ app = FastAPI(title="OpenQuant API", version="1.0.0")
 # Vercel deployments (override via ALLOWED_ORIGIN_REGEX for other hosts).
 _ALLOWED_ORIGIN_REGEX = os.getenv(
     "ALLOWED_ORIGIN_REGEX",
-    r"^https://openquant(-[a-z0-9]+)?(-[a-z0-9-]+)?\.vercel\.app$",
+    # This project's static hosts only: its Vercel deployments and its own
+    # GitHub Pages site — not all of github.io. Override for other hosts.
+    r"^https://(openquant(-[a-z0-9-]+)?\.vercel\.app|a-bv\.github\.io)$",
 )
+# No cookies or auth anywhere in this API, so credentials stay disabled —
+# credentialed CORS with pattern-matched origins is a foot-gun with no upside.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -34,9 +38,8 @@ app.add_middleware(
         "http://127.0.0.1:5173",
     ],
     allow_origin_regex=_ALLOWED_ORIGIN_REGEX,
-    allow_credentials=True,
     allow_methods=["GET", "POST", "OPTIONS"],
-    allow_headers=["Content-Type", "Authorization"],
+    allow_headers=["Content-Type"],
 )
 
 
