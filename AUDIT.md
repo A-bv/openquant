@@ -169,6 +169,21 @@ Self-contained pages are the stated design (deployable-anywhere); the cost is a
 count grows. `companion.html`'s 53 cards also still carry inline math not yet
 delegated to `finance.js` (planned P1; only `card1.html` is wired).
 
+### Discovered during the fix phase
+
+**F17 · Blanket `*.json`/`*.csv` gitignore kept the repo's own files out of git**
+BLOCK · [L0 · Broken→Works] · (Observed — `git ls-files "*.json"` returned empty)
+The repo as pushed contained **no JSON or CSV at all**: no `frontend/package.json`
+(a fresh clone could not `npm install`, let alone build), no lockfile, no
+`frontend/public/calibration.json`, no `vercel.json`, no
+`docs/openquant_workbook_formula_inventory.csv`, and none of
+`backtest/results/` — the evidence behind the "did the theory hold?" page
+existed only on this machine. Surfaced when CI failed to resolve the lockfile;
+the original audit's repo-ops pass checked `.gitignore` for `.DS_Store` but not
+for over-broad extension rules — recorded here as a miss.
+→ Fixed same day: ignore-by-location only (`data/cache/`), all missing files
+committed, `.claude/` local tooling ignored.
+
 ### Verified fine (no finding — checked, not skipped)
 
 - `theory.html` hardcoded numbers vs `backtest/results/calibration_summary.json`:
@@ -251,6 +266,7 @@ before its commit.
 | F12 wrong prod API fallback | **Fixed** | single `src/shared/api.js`; prod requires `VITE_API_URL`, fails loud. |
 | F13 Makefile/marker drift | **Fixed** | `make test` uses `-m "not live"`. |
 | F14 dead line | **Fixed** | removed (landed inside the F1 commit). |
+| F17 blanket gitignore hid repo files | **Fixed** | discovered mid-loop via the CI lockfile error; ignore-by-location now, all missing files (frontend manifest, lockfile, calibration data, backtest results) committed. |
 | F2 Money lab via API | **Open — planned** | next P1 slice: drive it from `finance.js`, then retire the endpoint. |
 | F15 658 kB bundle | **Accepted** | code-split only if the React app becomes a first-class deliverable. |
 | F16 CSS/nav duplication ×4 pages | **Accepted** | cost of the self-contained-pages design; revisit if page count grows. |
