@@ -1,0 +1,441 @@
+sheet,cell,nearby_label,formula,cached_value
+📅 TVM & Bonds,E5,FV = CF × (1+r)^n | 12 | Discount rate (r),=B6*(1+B4)^B5,1795.85632602213
+📅 TVM & Bonds,E6,PV = CF / (1+r)^n | 1000 | Years (n),=B6/(1+B4)^B5,556.837418177559
+📅 TVM & Bonds,F11,PV = CF / r | — | 30000,=C11/B11,375000
+📅 TVM & Bonds,F12,PV = CF / (r - g) | 0.03 | 30000,=C12/(B12-D12),600000
+📅 TVM & Bonds,G16,PV = CF/r × [1 - 1/(1+r)^N] | — | 30,=(C16/B16)*(1-1/(1+B16)^D16),94269.1446698832
+📅 TVM & Bonds,G17,PV = CF/(r-g) × [1 - ((1+g)/(1+r))^N] | 0.05 | 30,=(C17/( B17-E17))*(1-((1+E17)/(1+B17))^D17),150463.14700582
+📅 TVM & Bonds,E22,Annual coupon (CPN) | 0.1 | Coupon rate,=B22*B23,100
+📅 TVM & Bonds,E23,Bond price (PV) | 1000 | Face value,=B22*B24/B26*(1-1/(1+B25/B26)^(B24*B26))+B23/(1+B25/B26)^(B24*B26),233.68331630989
+📅 TVM & Bonds,C31,96.62 | 1 | YTM = (FV/Price)^(1/n) - 1,=(100/B31)^(1/A31)-1,0.0349824052991099
+📅 TVM & Bonds,C32,92.45 | 2 | YTM = (FV/Price)^(1/n) - 1,=(100/B32)^(1/A32)-1,0.0400316174417625
+📅 TVM & Bonds,C33,87.63 | 3 | YTM = (FV/Price)^(1/n) - 1,=(100/B33)^(1/A33)-1,0.0449986500942583
+📅 TVM & Bonds,C34,83.06 | 4,=(100/B34)^(1/A34)-1,0.0474951439397515
+📅 TVM & Bonds,C44,NWC = AR+Inv−AP,=(C40*B41+C40*B42-C40*B43),5040
+📅 TVM & Bonds,D44,NWC = AR+Inv−AP,=(D40*B41+D40*B42-D40*B43),5544
+📅 TVM & Bonds,E44,NWC = AR+Inv−AP,=(E40*B41+E40*B42-E40*B43),6098.4
+📅 TVM & Bonds,C45,ΔNWC (investment),=-C44,-5040
+📅 TVM & Bonds,D45,ΔNWC (investment),=(C44-D44),-504
+📅 TVM & Bonds,E45,ΔNWC (investment),=(D44-E44),-554.399999999999
+📅 TVM & Bonds,F45,,=E44,6098.4
+📅 TVM & Bonds,C57,6 | 1 | Terminal Price,"=IF(A57=$B$55,IF(ISNUMBER(B57),B57,0)*(1+$B$54)/($B$53-$B$54),"""")",
+📅 TVM & Bonds,D57,6 | 1 | Total CF,"=IF(ISNUMBER(B57),B57,0)+IF(ISNUMBER(C57),C57,0)",6
+📅 TVM & Bonds,E57,6 | 1 | PV of CF,"=IF(D57=0,"""",D57/(1+$B$53)^A57)",5.40540540540541
+📅 TVM & Bonds,C58,2 | Terminal Price,"=IF(A58=$B$55,IF(ISNUMBER(B58),B58,0)*(1+$B$54)/($B$53-$B$54),"""")",
+📅 TVM & Bonds,D58,2 | Total CF,"=IF(ISNUMBER(B58),B58,0)+IF(ISNUMBER(C58),C58,0)",0
+📅 TVM & Bonds,E58,2 | PV of CF,"=IF(D58=0,"""",D58/(1+$B$53)^A58)",
+📅 TVM & Bonds,C59,5 | 3 | Terminal Price,"=IF(A59=$B$55,IF(ISNUMBER(B59),B59,0)*(1+$B$54)/($B$53-$B$54),"""")",
+📅 TVM & Bonds,D59,5 | 3 | Total CF,"=IF(ISNUMBER(B59),B59,0)+IF(ISNUMBER(C59),C59,0)",5
+📅 TVM & Bonds,E59,5 | 3 | PV of CF,"=IF(D59=0,"""",D59/(1+$B$53)^A59)",3.65595690650475
+📅 TVM & Bonds,C60,2 | 4,"=IF(A60=$B$55,IF(ISNUMBER(B60),B60,0)*(1+$B$54)/($B$53-$B$54),"""")",22.6666666666667
+📅 TVM & Bonds,D60,2 | 4,"=IF(ISNUMBER(B60),B60,0)+IF(ISNUMBER(C60),C60,0)",24.6666666666667
+📅 TVM & Bonds,E60,2 | 4,"=IF(D60=0,"""",D60/(1+$B$53)^A60)",16.2486973622433
+📅 TVM & Bonds,C61,5,"=IF(A61=$B$55,IF(ISNUMBER(B61),B61,0)*(1+$B$54)/($B$53-$B$54),"""")",
+📅 TVM & Bonds,D61,5,"=IF(ISNUMBER(B61),B61,0)+IF(ISNUMBER(C61),C61,0)",0
+📅 TVM & Bonds,E61,5,"=IF(D61=0,"""",D61/(1+$B$53)^A61)",
+📅 TVM & Bonds,C62,6,"=IF(A62=$B$55,IF(ISNUMBER(B62),B62,0)*(1+$B$54)/($B$53-$B$54),"""")",
+📅 TVM & Bonds,D62,6,"=IF(ISNUMBER(B62),B62,0)+IF(ISNUMBER(C62),C62,0)",0
+📅 TVM & Bonds,E62,6,"=IF(D62=0,"""",D62/(1+$B$53)^A62)",
+📅 TVM & Bonds,C63,7,"=IF(A63=$B$55,IF(ISNUMBER(B63),B63,0)*(1+$B$54)/($B$53-$B$54),"""")",
+📅 TVM & Bonds,D63,7,"=IF(ISNUMBER(B63),B63,0)+IF(ISNUMBER(C63),C63,0)",0
+📅 TVM & Bonds,E63,7,"=IF(D63=0,"""",D63/(1+$B$53)^A63)",
+📅 TVM & Bonds,C64,8,"=IF(A64=$B$55,IF(ISNUMBER(B64),B64,0)*(1+$B$54)/($B$53-$B$54),"""")",
+📅 TVM & Bonds,D64,8,"=IF(ISNUMBER(B64),B64,0)+IF(ISNUMBER(C64),C64,0)",0
+📅 TVM & Bonds,E64,8,"=IF(D64=0,"""",D64/(1+$B$53)^A64)",
+📅 TVM & Bonds,C65,9,"=IF(A65=$B$55,IF(ISNUMBER(B65),B65,0)*(1+$B$54)/($B$53-$B$54),"""")",
+📅 TVM & Bonds,D65,9,"=IF(ISNUMBER(B65),B65,0)+IF(ISNUMBER(C65),C65,0)",0
+📅 TVM & Bonds,E65,9,"=IF(D65=0,"""",D65/(1+$B$53)^A65)",
+📅 TVM & Bonds,C66,10,"=IF(A66=$B$55,IF(ISNUMBER(B66),B66,0)*(1+$B$54)/($B$53-$B$54),"""")",
+📅 TVM & Bonds,D66,10,"=IF(ISNUMBER(B66),B66,0)+IF(ISNUMBER(C66),C66,0)",0
+📅 TVM & Bonds,E66,10,"=IF(D66=0,"""",D66/(1+$B$53)^A66)",
+📅 TVM & Bonds,E67,Stock Price P0,"=SUMIF(E57:E66,"">0"")",25.3100596741535
+📅 TVM & Bonds,B79,Years of contributions N | 0.07 | 0.05,=B75-B74,35
+📅 TVM & Bonds,B80,Growing Annuity Factor (GAF) | 0.07 | 0.05,=(1/(B78-B77))*(1-((1+B77)/(1+B78))^B79),24.1676894634269
+📅 TVM & Bonds,B81,FV at retirement (= nest egg) | 0.07,=B76*B80*(1+B78)^B79,928901.901064175
+📅 TVM & Bonds,B86,Years of retirement N_ret | 0.07 | 100,=B84-B75+1,36
+📅 TVM & Bonds,B87,Withdrawal per year C | 0.07 | 100,=B81*B85/(1-(1+B85)^(-B86)),71260.9970129538
+📅 TVM & Bonds,B97,Original contribution C1 | 5 | 15,=B93*B92/(((1+B92)^B95)-1),1503.69673843594
+📅 TVM & Bonds,B98,Remaining years N2 | 5 | 15,=B95-B96,10
+📅 TVM & Bonds,B99,FV of C1 contributions at yr N | 5,=B97/B92*(((1+B92)^B96)-1)*(1+B92)^B98,15180.0816351489
+📅 TVM & Bonds,B100,New contribution C2 (changed target),=(B94-B99)*B92/(((1+B92)^B98)-1),1807.16857131748
+📐 Rate & Spot Rates,D18,100 | 98.15 | 1,"=IF(B18="""","""",( C18/B18)^(1/A18)-1)",0.0188487009679061
+📐 Rate & Spot Rates,E18,100 | 98.15 | 1,"=IF(B18="""","""",1/(1+D18)^A18)",0.9815
+📐 Rate & Spot Rates,D19,100 | 94.61 | 2,"=IF(B19="""","""",( C19/B19)^(1/A19)-1)",0.0280908140388199
+📐 Rate & Spot Rates,E19,100 | 94.61 | 2,"=IF(B19="""","""",1/(1+D19)^A19)",0.9461
+📐 Rate & Spot Rates,D20,100 | 90.73 | 3,"=IF(B20="""","""",( C20/B20)^(1/A20)-1)",0.0329588710264825
+📐 Rate & Spot Rates,E20,100 | 90.73 | 3,"=IF(B20="""","""",1/(1+D20)^A20)",0.9073
+📐 Rate & Spot Rates,D21,100 | 4,"=IF(B21="""","""",( C21/B21)^(1/A21)-1)",
+📐 Rate & Spot Rates,E21,100 | 4,"=IF(B21="""","""",1/(1+D21)^A21)",
+📐 Rate & Spot Rates,D22,100 | 5,"=IF(B22="""","""",( C22/B22)^(1/A22)-1)",
+📐 Rate & Spot Rates,E22,100 | 5,"=IF(B22="""","""",1/(1+D22)^A22)",
+📐 Rate & Spot Rates,G27,"r₀,1 (spot rate itself) | Forward Rate",=D18,0.0188487009679061
+📐 Rate & Spot Rates,G28,"[(1+r₀,2)^2 / (1+r₀,1)^1]^(1/1) - 1 | Forward Rate","=IF(OR(D18="""",D19=""""),"""",((1+D19)^2/(1+D18)^1)^(1/(2-1))-1)",0.0374167635556497
+📐 Rate & Spot Rates,G29,"[(1+r₀,3)^3 / (1+r₀,2)^2]^(1/1) - 1 | Forward Rate","=IF(OR(D19="""",D20=""""),"""",((1+D20)^3/(1+D19)^2)^(1/(3-2))-1)",0.0427642455637602
+📐 Rate & Spot Rates,G30,"r₀,2 (spot rate itself)",=D19,0.0280908140388199
+📐 Rate & Spot Rates,G31,"r₀,3 (spot rate itself)",=D20,0.0329588710264825
+📐 Rate & Spot Rates,B38,1 | Cash Flow | 0.06,"=IF(1<$C$36,$A$36*$B$36,$A$36*$B$36+$A$36)",60
+📐 Rate & Spot Rates,C38,1 | Spot Rate | 3,=D18,0.0188487009679061
+📐 Rate & Spot Rates,D38,1 | PV of CF,"=IF(D18="""","""",B38/(1+D18)^A38)",58.89
+📐 Rate & Spot Rates,B39,2 | Cash Flow | 0.06,"=IF(2<$C$36,$A$36*$B$36,$A$36*$B$36+$A$36)",60
+📐 Rate & Spot Rates,C39,2 | Spot Rate | 3,=D19,0.0280908140388199
+📐 Rate & Spot Rates,D39,2 | PV of CF,"=IF(D19="""","""",B39/(1+D19)^A39)",56.766
+📐 Rate & Spot Rates,B40,3 | Cash Flow,"=IF(3<$C$36,$A$36*$B$36,$A$36*$B$36+$A$36)",1060
+📐 Rate & Spot Rates,C40,3 | Spot Rate,=D20,0.0329588710264825
+📐 Rate & Spot Rates,D40,3 | PV of CF,"=IF(D20="""","""",B40/(1+D20)^A40)",961.738
+📐 Rate & Spot Rates,D41,BOND PRICE,=SUM(D38:D40),1077.394
+📏 Duration & PI,B12,1 | Time (yrs) | 3,=A12/B9,0.5
+📏 Duration & PI,C12,1 | Cash Flow,=B6*B7/B9,40
+📏 Duration & PI,D12,1 | PV of CF,=C12/(1+B8/B9)^A12,38.0952380952381
+📏 Duration & PI,E12,1 | Weight (PV/Price),=D12/SUM(D12:D17),0.0401322263231395
+📏 Duration & PI,F12,Weight × Time,=E12*B12,0.0200661131615698
+📏 Duration & PI,B13,2 | Time (yrs) | 3,=A13/B9,1
+📏 Duration & PI,C13,2 | Cash Flow,=B6*B7/B9,40
+📏 Duration & PI,D13,2 | PV of CF,=C13/(1+B8/B9)^A13,36.281179138322
+📏 Duration & PI,E13,2 | Weight (PV/Price),=D13/SUM(D12:D17),0.0382211679267995
+📏 Duration & PI,F13,Weight × Time,=E13*B13,0.0382211679267995
+📏 Duration & PI,B14,3 | Time (yrs),=A14/B9,1.5
+📏 Duration & PI,C14,3 | Cash Flow,=B6*B7/B9,40
+📏 Duration & PI,D14,3 | PV of CF,=C14/(1+B8/B9)^A14,34.553503941259
+📏 Duration & PI,E14,3 | Weight (PV/Price),=D14/SUM(D12:D17),0.0364011123112377
+📏 Duration & PI,F14,Weight × Time,=E14*B14,0.0546016684668565
+📏 Duration & PI,B15,4,=A15/B9,2
+📏 Duration & PI,C15,4,=B6*B7/B9,40
+📏 Duration & PI,D15,4,=C15/(1+B8/B9)^A15,32.9080989916753
+📏 Duration & PI,E15,4,=D15/SUM(D12:D17),0.0346677260107025
+📏 Duration & PI,F15,,=E15*B15,0.0693354520214051
+📏 Duration & PI,B16,5,=A16/B9,2.5
+📏 Duration & PI,C16,5,=B6*B7/B9,40
+📏 Duration & PI,D16,5,=C16/(1+B8/B9)^A16,31.3410466587384
+📏 Duration & PI,E16,5,=D16/SUM(D12:D17),0.0330168819149548
+📏 Duration & PI,F16,,=E16*B16,0.082542204787387
+📏 Duration & PI,B17,6,=A17/B9,3
+📏 Duration & PI,C17,6,=B6*B7/B9+B6,1040
+📏 Duration & PI,D17,6,=C17/(1+B8/B9)^A17,776.064012502093
+📏 Duration & PI,E17,6,=D17/SUM(D12:D17),0.817560885513166
+📏 Duration & PI,F17,,=E17*B17,2.4526826565395
+📏 Duration & PI,D18,Bond Price,=SUM(D12:D17),949.243079327325
+📏 Duration & PI,F19,,=SUM(F12:F18),2.71744926290352
+📏 Duration & PI,F20,,=F19/(1+B8/B9),2.58804691705097
+📏 Duration & PI,F21,,=-F20*D18*0.0001,-0.245668562498505
+📏 Duration & PI,D26,852.55 | 5000 | Project A,=C26/B26,0.17051
+📏 Duration & PI,D27,7296.79 | 100000 | Project B,=C27/B27,0.0729679
+📏 Duration & PI,D28,5000 | 20000 | Project C,=C28/B28,0.25
+📏 Duration & PI,D29,4500 | 15000 | Project D,=C29/B29,0.3
+📏 Duration & PI,E35,3600 | 3600 | -5000,=IRR(B35:D35),0.281737489744233
+📏 Duration & PI,F35,3600 | 3600 | -5000,"=NPV(0.15,C35:D35)+B35",852.551984877127
+📏 Duration & PI,E36,66000 | 66000 | -100000,=IRR(B36:D36),0.206869431557515
+📏 Duration & PI,F36,66000 | 66000 | -100000,"=NPV(0.15,C36:D36)+B36",7296.78638941399
+📏 Duration & PI,E37,62400 | 62400 | -95000,=IRR(B37:D37),0.202893746930716
+📏 Duration & PI,F37,62400 | 62400 | -95000,"=NPV(0.15,C37:D37)+B37",6444.23440453687
+📏 Duration & PI,E38,Crossover rate IRR+ (choose B if r < IRR+),=IRR(B37:D37),0.202893746930716
+📊 Stats Basics,D6,50 | 45 | 1,=B6*C6/100,22.5
+📊 Stats Basics,E6,50 | 45 | 1,=C6/100*(B6-$B$16)^2,612.5
+📊 Stats Basics,D7,50 | -25 | 2,=B7*C7/100,-12.5
+📊 Stats Basics,E7,50 | -25 | 2,=C7/100*(B7-$B$16)^2,612.5
+📊 Stats Basics,D8,0 | 0 | 3,=B8*C8/100,0
+📊 Stats Basics,E8,0 | 0 | 3,=C8/100*(B8-$B$16)^2,0
+📊 Stats Basics,D9,0 | 0 | 4,=B9*C9/100,0
+📊 Stats Basics,E9,0 | 0 | 4,=C9/100*(B9-$B$16)^2,0
+📊 Stats Basics,D10,0 | 0 | 5,=B10*C10/100,0
+📊 Stats Basics,E10,0 | 0 | 5,=C10/100*(B10-$B$16)^2,0
+📊 Stats Basics,D11,0 | 0 | 6,=B11*C11/100,0
+📊 Stats Basics,E11,0 | 0 | 6,=C11/100*(B11-$B$16)^2,0
+📊 Stats Basics,D12,0 | 0 | 7,=B12*C12/100,0
+📊 Stats Basics,E12,0 | 0 | 7,=C12/100*(B12-$B$16)^2,0
+📊 Stats Basics,D13,0 | 0 | 8,=B13*C13/100,0
+📊 Stats Basics,E13,0 | 0 | 8,=C13/100*(B13-$B$16)^2,0
+📊 Stats Basics,D14,0 | 0 | 9,=B14*C14/100,0
+📊 Stats Basics,E14,0 | 0 | 9,=C14/100*(B14-$B$16)^2,0
+📊 Stats Basics,B16,E[R] = Expected Return | 0 | 0,"=SUMPRODUCT(B6:B14,C6:C14)/100",10
+📊 Stats Basics,B17,Var(R) = Variance | 0,=SUM(E6:E14),1225
+📊 Stats Basics,B18,SD(R) = Std Deviation (σ),=SQRT(B17),35
+📊 Stats Basics,F22,Average (mean R) | 0.23 | S&P 500,=AVERAGE(B22:B30),0.113888888888889
+📊 Stats Basics,G22,Average (mean R) | Short6,=AVERAGE(C24:C28),0.06
+📊 Stats Basics,F23,Variance | 0.334 | S&P 500,=VAR(B22:B30),0.0423936111111111
+📊 Stats Basics,G23,Variance | Short6,=VAR(C24:C28),0.0105
+📊 Stats Basics,F24,Std Deviation (σ) | 0.09 | 0.286,=STDEV(B22:B30),0.205897088641659
+📊 Stats Basics,G24,Std Deviation (σ) | 0.09 | Short6,=STDEV(C24:C28),0.102469507659596
+📊 Portfolio Theory,D5,30 | 200 | North Air,=B5*C5,6000
+📊 Portfolio Theory,E5,30 | 200 | North Air,=D5/SUM(D5:D7),0.6
+📊 Portfolio Theory,D6,40 | 100 | West Air,=B6*C6,4000
+📊 Portfolio Theory,E6,40 | 100 | West Air,=D6/SUM(D5:D7),0.4
+📊 Portfolio Theory,D7,0 | 0 | Tex Oil,=B7*C7,0
+📊 Portfolio Theory,E7,0 | 0 | Tex Oil,=D7/SUM(D5:D7),0
+📊 Portfolio Theory,D8,TOTAL,=SUM(D5:D7),10000
+📊 Portfolio Theory,E8,TOTAL,=SUM(E5:E7),1
+📊 Portfolio Theory,B21,Average Return E[R] | North Air,=AVERAGE(B12: B17),0.1
+📊 Portfolio Theory,C21,Average Return E[R] | West Air,=AVERAGE(C12: C17),0.1
+📊 Portfolio Theory,D21,Average Return E[R] | Tex Oil,=AVERAGE(D12: D17),0.1
+📊 Portfolio Theory,B22,Variance VAR.S | North Air,=VAR(B12:B17),0.018
+📊 Portfolio Theory,C22,Variance VAR.S | West Air,=VAR(C12:C17),0.018
+📊 Portfolio Theory,D22,Variance VAR.S | Tex Oil,=VAR(D12:D17),0.018
+📊 Portfolio Theory,B23,Std Dev SD(R) | North Air,=SQRT(B22),0.134164078649987
+📊 Portfolio Theory,C23,Std Dev SD(R) | West Air,=SQRT(C22),0.134164078649987
+📊 Portfolio Theory,D23,Std Dev SD(R) | Tex Oil,=SQRT(D22),0.134164078649987
+📊 Portfolio Theory,B39,Portfolio return E[Rp],=E5*B21+E6*B21,0.1
+📊 Portfolio Theory,B40,Portfolio variance Var(p),"=E5^2*B22+E6^2*C22+2*E5*E6*COVAR(B12:B17,C12:C17)",0.013824
+📊 Portfolio Theory,B41,Portfolio SD σ(p),=SQRT(B40),0.117575507653593
+📊 Adv Portfolio,B9,ω* (weight in Y for min variance) | 0.3 | 0.24,=(C7^2 - B8*B7*C7) / (B7^2 + C7^2 - 2*B8*B7*C7),0.2
+📊 Adv Portfolio,B10,1-ω* (weight in Z) | 0.3 | 0.24,=1-B9,0.8
+📊 Adv Portfolio,B13,E[Rp] at min-var weights,=B8*B6+(1-B8)*C6,0.236
+📊 Adv Portfolio,B14,Var(Rp) at min-var weights,=B8^2*B7^2+(1-B8)^2*C7^2+2*B8*(1-B8)*B8*B7*C7,0.020745
+📊 Adv Portfolio,B15,SD(Rp) σp,=SQRT(B14),0.144031246609894
+📊 Adv Portfolio,B21,x* = weight in Asset 1 (zero-risk) | 0.24 | 0.06,=C19/(B19+C19),0
+📊 Adv Portfolio,B29,Systematic Variance β²σ²M | 0.31 | 1.3,=B27^2*B28^2,0.162409
+📊 Adv Portfolio,C29,Systematic Variance β²σ²M | 0.31 | 0.9,=C27^2*C28^2,0.077841
+📊 Adv Portfolio,B30,Idiosyncratic Variance σ²ε | 0.31 | 1.3,=B26-B29,0.207591
+📊 Adv Portfolio,C30,Idiosyncratic Variance σ²ε | 0.31 | 0.9,=C26-C29,0.182159
+📊 Adv Portfolio,B31,Idiosyncratic SD σε | 0.31,=SQRT(B30),0.455621553484907
+📊 Adv Portfolio,C31,Idiosyncratic SD σε | 0.31,=SQRT(C30),0.426800890345838
+📊 Adv Portfolio,B35,Sharpe Ratio = (R̄−Rf)/σ_total | 0.25 | 0.05,=(B34-B33)/SQRT(B26),0.328797974610715
+📊 Adv Portfolio,C35,Sharpe Ratio = (R̄−Rf)/σ_total | 0.16 | (same for both),=(C34-B33)/SQRT(C26),0.215727748652002
+📊 Adv Portfolio,B43,Capital Gain Rate | 2 | 22.67,=(B41-B40)/B40,0.0197930724246514
+📊 Adv Portfolio,B44,Dividend Yield | 2 | 22.67,=B42/B40,0.0899685110211426
+📊 Adv Portfolio,B45,Total Return rE | 2,=B44+B43,0.109761583445794
+📈 CAPM,B12,Market Risk Premium (E[Rm] − Rf) | 0.833,=B5-B4,0.06
+📈 CAPM,B13,Risk Premium on Security i β×(E[Rm]−Rf),=B7*B12,0.04998
+📈 CAPM,B14,Expected Return E[Ri] (CAPM),=B4+B13,0.08998
+📈 CAPM,B17,Sharpe ratio Sp,=(B5-B4)/B6,0.375
+📈 CAPM,B18,E[Rp] on CML (at x% in market),=B4+B17*B9*B6,0.08998
+📈 CAPM,B19,SD(Rp) on CML (at x% in market),=B9*B6,0.13328
+📈 CAPM,B24,0 | Required Return E[Ri],=B4+A24*(B5-B4),0.04
+📈 CAPM,B25,0.5 | Required Return E[Ri],=B4+A25*(B5-B4),0.07
+📈 CAPM,B26,1 | Required Return E[Ri],=B4+A26*(B5-B4),0.1
+📈 CAPM,B27,1.5,=B4+A27*(B5-B4),0.13
+📈 CAPM,B28,2,=B4+A28*(B5-B4),0.16
+🏦 WACC,B14,D/E ratio | 0.052,=B7/B8,0.666666666666667
+🏦 WACC,B15,Debt ratio D/(D+E),=B7/( B7+B8),0.4
+🏦 WACC,B16,Equity ratio E/(D+E),=B8/( B7+B8),0.6
+🏦 WACC,B17,Cost of equity rE (CAPM),=B4+B9*(B5-B4),0.10542
+🏦 WACC,B18,Cost of debt after-tax rD(1-τ),=B11*(1-B6),0.03328
+🏦 WACC,B19,Beta unlevered βA,=(B8/(B8+B7*(1-B6)))*B9+(B7*(1-B6)/(B8+B7*(1-B6)))*B10,0.810981308411215
+🏦 WACC,B20,WACC (levered),=B15*B18*(1-B6)+B16*B17,0.07177168
+🏛 APV & Distress,B9,APV = Levered firm value,=B6+B7-B8,0
+🏛 APV & Distress,B21,1 | Debt Outstanding | 4,=B15*(1-B16)^(1-1),12000
+🏛 APV & Distress,C21,1 | Interest,=B21*B17,1200
+🏛 APV & Distress,D21,1 | Tax Saving,=C21*B18,420
+🏛 APV & Distress,E21,1 | PV of Tax Saving,=D21/(1+B17)^A21,381.818181818182
+🏛 APV & Distress,B22,2 | Debt Outstanding | 4,=B15*(1-B16)^(2-1),9000
+🏛 APV & Distress,C22,2 | Interest,=B22*B17,900
+🏛 APV & Distress,D22,2 | Tax Saving,=C22*B18,315
+🏛 APV & Distress,E22,2 | PV of Tax Saving,=D22/(1+B17)^A22,260.330578512397
+🏛 APV & Distress,B23,3 | Debt Outstanding,=B15*(1-B16)^(3-1),6750
+🏛 APV & Distress,C23,3 | Interest,=B23*B17,675
+🏛 APV & Distress,D23,3 | Tax Saving,=C23*B18,236.25
+🏛 APV & Distress,E23,3 | PV of Tax Saving,=D23/(1+B17)^A23,177.498121712998
+🏛 APV & Distress,B24,4,=B15*(1-B16)^(4-1),5062.5
+🏛 APV & Distress,C24,4,=B24*B17,506.25
+🏛 APV & Distress,D24,4,=C24*B18,177.1875
+🏛 APV & Distress,E24,4,=D24/(1+B17)^A24,121.021446622498
+🏛 APV & Distress,E25,PVTS Total,=SUM(E21:E24),940.668328666075
+🏛 APV & Distress,B34,1 | Prob of Default | 4,=(1-B30)^(1-1)*B30,0.05
+🏛 APV & Distress,D34,9150/(1+rU)^2+11100/(1+rU)^3+14850/(1+rU)^4 | 1 | PV of lost FCF ($000),=9150/(1+$B$31)^2+11100/(1+$B$31)^3+14850/(1+$B$31)^4,19939.2361111111
+🏛 APV & Distress,E34,9150/(1+rU)^2+11100/(1+rU)^3+14850/(1+rU)^4 | 1 | Prob-weighted PV ($000),=B34*D34,996.961805555556
+🏛 APV & Distress,B35,2 | Prob of Default | 4,=(1-B30)^(2-1)*B30,0.0475
+🏛 APV & Distress,D35,11100/(1+rU)^3+14850/(1+rU)^4 | 2 | PV of lost FCF ($000),=11100/(1+$B$31)^3+14850/(1+$B$31)^4,13585.0694444444
+🏛 APV & Distress,E35,11100/(1+rU)^3+14850/(1+rU)^4 | 2 | Prob-weighted PV ($000),=B35*D35,645.290798611111
+🏛 APV & Distress,B36,3 | Prob of Default,=(1-B30)^(3-1)*B30,0.045125
+🏛 APV & Distress,D36,14850/(1+rU)^4 | 3 | PV of lost FCF ($000),=14850/(1+$B$31)^4,7161.45833333333
+🏛 APV & Distress,E36,14850/(1+rU)^4 | 3 | Prob-weighted PV ($000),=B36*D36,323.160807291667
+🏛 APV & Distress,E37,PVBC Total,=SUM(E34:E36),1965.41341145833
+🏛 APV & Distress,B40,PVTS,=E25,940.668328666075
+🏛 APV & Distress,B41,PVBC,=E39,0
+🏛 APV & Distress,B42,Net benefit PVTS − PVBC,=B40-B41,940.668328666075
+🏛 APV & Distress,B43,Decision,"=IF(B42>0,""✅ Issue debt: tax shield exceeds bankruptcy costs"",""❌ Avoid debt: bankruptcy costs exceed tax shield"")",✅ Issue debt: tax shield exceeds bankruptcy costs
+💼 DCF Valuation,D10,564 | 518 | Sales,=C10*(1+D11),609.12
+💼 DCF Valuation,E10,564 | 518 | Sales,=D10*(1+E11),651.7584
+💼 DCF Valuation,F10,564 | 518 | Year 4,=E10*(1+F11),690.863904
+💼 DCF Valuation,G10,564 | Year 5,=F10*(1+G11),725.4070992
+💼 DCF Valuation,H10,Year 6,=G10*(1+H11),754.423383168
+💼 DCF Valuation,C13,EBIT | 0.09 | 0.09,=C10*C12,50.76
+💼 DCF Valuation,D13,EBIT | 0.09 | 0.08,=D10*D12,54.8208
+💼 DCF Valuation,E13,EBIT | 0.09 | 0.07,=E10*E12,58.658256
+💼 DCF Valuation,F13,0.09 | 0.06,=F10*F12,62.17775136
+💼 DCF Valuation,G13,0.09 | 0.05,=G10*G12,65.286638928
+💼 DCF Valuation,H13,0.09 | 0.04,=H10*H12,67.89810448512
+💼 DCF Valuation,C14,Income tax (37%) | 0.09 | 0.09,=-C13*$B$6,-18.7812
+💼 DCF Valuation,D14,Income tax (37%) | 0.09 | 0.08,=-D13*$B$6,-20.283696
+💼 DCF Valuation,E14,Income tax (37%) | 0.09 | 0.07,=-E13*$B$6,-21.70355472
+💼 DCF Valuation,F14,0.09 | 0.06,=-F13*$B$6,-23.0057680032
+💼 DCF Valuation,G14,0.09 | 0.05,=-G13*$B$6,-24.15605640336
+💼 DCF Valuation,H14,0.09 | 0.04,=-H13*$B$6,-25.1222986594944
+💼 DCF Valuation,C15,ΔNWC (10% ΔSales) | 0.09,=-(C10-B10)*0.1,-4.6
+💼 DCF Valuation,D15,ΔNWC (10% ΔSales) | 0.09,=-(D10-C10)*0.1,-4.512
+💼 DCF Valuation,E15,ΔNWC (10% ΔSales) | 0.09,=-(E10-D10)*0.1,-4.26384
+💼 DCF Valuation,F15,0.09,=-(F10-E10)*0.1,-3.9105504
+💼 DCF Valuation,G15,0.09,=-(G10-F10)*0.1,-3.45431952
+💼 DCF Valuation,H15,0.09,=-(H10-G10)*0.1,-2.9016283968
+💼 DCF Valuation,C16,Free Cash Flow,=C13+C14+C15,27.3788
+💼 DCF Valuation,D16,Free Cash Flow,=D13+D14+D15,30.025104
+💼 DCF Valuation,E16,Free Cash Flow,=E13+E14+E15,32.69086128
+💼 DCF Valuation,F16,,=F13+F14+F15,35.2614329568
+💼 DCF Valuation,G16,,=G13+G14+G15,37.67626300464
+💼 DCF Valuation,H16,,=H13+H14+H15,39.8741774288256
+💼 DCF Valuation,B21,WACC | Year 1,=$B$4,0.11
+💼 DCF Valuation,C21,WACC | Year 2,=$B$4,0.11
+💼 DCF Valuation,D21,WACC | Year 3,=$B$4,0.11
+💼 DCF Valuation,E21,WACC | Year 4,=$B$4,0.11
+💼 DCF Valuation,F21,Year 5,=$B$4,0.11
+💼 DCF Valuation,G21,Year 6,=$B$4,0.11
+💼 DCF Valuation,B22,FCF | Year 1,=C16,27.3788
+💼 DCF Valuation,C22,FCF | Year 2,=D16,30.025104
+💼 DCF Valuation,D22,FCF | Year 3,=E16,32.69086128
+💼 DCF Valuation,E22,FCF | Year 4,=F16,35.2614329568
+💼 DCF Valuation,F22,Year 5,=G16,37.67626300464
+💼 DCF Valuation,G22,Year 6,=H16,39.8741774288256
+💼 DCF Valuation,G23,Year 6,=G22*(1+$B$5)/(($B$4-$B$5)),592.416350371123
+💼 DCF Valuation,B24,PV of FCF,=(B22+B23)/(1+$B$4)^1,24.6655855855856
+💼 DCF Valuation,C24,PV of FCF,=(C22+C23)/(1+$B$4)^2,24.3690479668858
+💼 DCF Valuation,D24,PV of FCF,=(D22+D23)/(1+$B$4)^3,23.9032760152409
+💼 DCF Valuation,E24,PV of FCF,=(E22+E23)/(1+$B$4)^4,23.2277980813815
+💼 DCF Valuation,F24,,=(F22+F23)/(1+$B$4)^5,22.3590283163872
+💼 DCF Valuation,G24,,=(G22+G23)/(1+$B$4)^6,338.048336433988
+💼 DCF Valuation,B25,Firm Value V0,=SUM(B24:G24),456.573072399469
+💼 DCF Valuation,B31,Share price P0 | 21 | 3,=(B25+B28-B29)/B30,26.3606224952128
+🎬 Disney DCF,B9,EBIT | 0.267 | 0.1,=B6*B8,6629.076
+🎬 Disney DCF,C9,EBIT | 0.267 | 0.1,=C6*C8,7292.037
+🎬 Disney DCF,D9,EBIT | 0.267 | 0.1,=D6*D8,8021.214
+🎬 Disney DCF,E9,EBIT | 0.267 | 0.1,=E6*E8,8823.282
+🎬 Disney DCF,F9,0.267 | 0.1 | 36350,=F6*F8,9705.45
+🎬 Disney DCF,G9,0.267 | 0.09 | 38105,=G6*G8,10174.035
+🎬 Disney DCF,H9,0.277 | 0.08 | 39630,=H6*H8,10977.51
+🎬 Disney DCF,I9,0.288 | 0.07 | 40891,=I6*I8,11776.608
+🎬 Disney DCF,J9,0.299 | 0.06 | 41850,=J6*J8,12513.15
+🎬 Disney DCF,K9,0.309 | 0.05 | 42479,=K6*K8,13126.011
+🎬 Disney DCF,B10,Tax | 0.267 | 0.1,=-B9*$E$4,-2386.46736
+🎬 Disney DCF,C10,Tax | 0.267 | 0.1,=-C9*$E$4,-2625.13332
+🎬 Disney DCF,D10,Tax | 0.267 | 0.1,=-D9*$E$4,-2887.63704
+🎬 Disney DCF,E10,Tax | 0.267 | 0.1,=-E9*$E$4,-3176.38152
+🎬 Disney DCF,F10,0.267 | 0.1,=-F9*$E$4,-3493.962
+🎬 Disney DCF,G10,0.267 | 0.09,=-G9*$E$4,-3662.6526
+🎬 Disney DCF,H10,0.277 | 0.08,=-H9*$E$4,-3951.9036
+🎬 Disney DCF,I10,0.288 | 0.07,=-I9*$E$4,-4239.57888
+🎬 Disney DCF,J10,0.299 | 0.06,=-J9*$E$4,-4504.734
+🎬 Disney DCF,K10,0.309 | 0.05,=-K9*$E$4,-4725.36396
+🎬 Disney DCF,B14,Free CF | -102 | -2958,=B9+B10+B11+B12+B13,2316.60864
+🎬 Disney DCF,C14,Free CF | -112 | -3254,=C9+C10+C11+C12+C13,2547.90368
+🎬 Disney DCF,D14,Free CF | -124 | -3578,=D9+D10+D11+D12+D13,2803.57696
+🎬 Disney DCF,E14,Free CF | -137 | -3936,=E9+E10+E11+E12+E13,3082.90048
+🎬 Disney DCF,F14,-150 | -4331 | 1660,=F9+F10+F11+F12+F13,3390.488
+🎬 Disney DCF,G14,-165 | -4763 | 1826,=G9+G10+G11+G12+G13,3409.3824
+🎬 Disney DCF,H14,-88 | -5073 | 1991,=H9+H10+H11+H12+H13,3855.6064
+🎬 Disney DCF,I14,-76 | -5250 | 2150,=I9+I10+I11+I12+I13,4361.02912
+🎬 Disney DCF,J14,-63 | -5348 | 2300,=J9+J10+J11+J12+J13,4897.416
+🎬 Disney DCF,K14,-48 | -5348 | 2438,=K9+K10+K11+K12+K13,5442.64704
+🎬 Disney DCF,B19,Terminal Value (Y10) | 0.04,=K14*(1+B18)/(B15-B18),99130.5240210158
+🎬 Disney DCF,B24,Share price P0 ($) | 1350.26 | 13550,=(B20+B21-B22)/B23,91.797135366522
+📐 WB Intrinsic Value,C8,15.77 | 2004 | YoY Growth,=B8/B7-1,0.159558823529412
+📐 WB Intrinsic Value,C9,17.87 | 2005 | YoY Growth,=B9/B8-1,0.133164235890932
+📐 WB Intrinsic Value,C10,19.52 | 2006,=B10/B9-1,0.0923335198656967
+📐 WB Intrinsic Value,C11,22.29 | 2007,=B11/B10-1,0.141905737704918
+📐 WB Intrinsic Value,C12,22.21 | 2008,=B12/B11-1,-0.00358905338716908
+📐 WB Intrinsic Value,C13,23.39 | 2009,=B13/B12-1,0.0531292210715895
+📐 WB Intrinsic Value,C14,29.49 | 2010,=B14/B13-1,0.260795211628901
+📐 WB Intrinsic Value,C15,32.61 | 2011,=B15/B14-1,0.105798575788403
+📐 WB Intrinsic Value,C16,36.84 | 2012,=B16/B15-1,0.129714811407544
+📐 WB Intrinsic Value,C17,38.65 | 2013,=B17/B16-1,0.0491313789359391
+📐 WB Intrinsic Value,B18,CAGR (10 years) | 38.65 | 36.84,=(B17/B7)^(1/(A17-A7))-1,0.110097332291565
+📐 WB Intrinsic Value,B21,Current BVPS (latest),=B18,0.110097332291565
+📐 WB Intrinsic Value,B22,Growth rate to use,=B18,0.110097332291565
+📐 WB Intrinsic Value,B26,Future BVPS (projected) | 0.1 | 1.5,=B21*(1+B22)^B23,0.312886903902132
+📐 WB Intrinsic Value,B27,Future Stock Price (BVPS × P/B) | 0.1 | 1.5,=B26*B24,0.469330355853198
+📐 WB Intrinsic Value,B28,Intrinsic Value TODAY (PV) | 0.1,=B27/( 1+B25)^B23,0.180947169224774
+📐 WB Intrinsic Value,D32,15 | 0 | Next Year,=B32*C32,0
+📐 WB Intrinsic Value,D33,15 | 0 | In 2 Years,=B33*C33,0
+📉 Derivatives Calc,B11,Forward Price F = S × e^((r+d-δ)×τ) | 0 | 0,=B6*EXP((B7+B9-B10)*B8),9.70095735796168
+📉 Derivatives Calc,B22,Storage payment per period | 4 | 0.24,=B20/B21,0.06
+📉 Derivatives Calc,B23,Number of advance payments | 4 | 0.24,=INT(B19*B21),3
+📉 Derivatives Calc,B24,PV of storage (advance payments) | 4,"=B22*SUMPRODUCT(EXP(-B18*(ROW(INDIRECT(""1:""&B23))-1)/B21))",0.175592360191743
+📉 Derivatives Calc,B25,Futures Price F = (S + PV_storage) × e^(r×τ),=(B17+B24)*EXP(B18*B19),9.89022558002879
+📉 Derivatives Calc,B35,Forward rate F ($/FC) = S×e^((rd-rf)×τ) | 1000000 | 0.25,=B30*EXP((B31-B32)*B33),1.0050125208594
+📉 Derivatives Calc,B36,Locked-in USD receipt | 1000000 | 0.25,=B35*B34,1005012.5208594
+📉 Derivatives Calc,B45,0 | Long Call Payoff | 2,"=MAX(A45-$B$41,0)",0
+📉 Derivatives Calc,C45,0 | Long Call Profit,=B45-$B$42,-3
+📉 Derivatives Calc,D45,0 | Short Call Payoff,"=-MAX(A45-$B$41,0)",0
+📉 Derivatives Calc,E45,0 | Short Call Profit,=D45+$B$42,3
+📉 Derivatives Calc,F45,Long Put Payoff,"=MAX($B$41-A45,0)",20
+📉 Derivatives Calc,G45,Long Put Profit,=F45-$B$43,18
+📉 Derivatives Calc,H45,Short Put Payoff,"=-MAX($B$41-A45,0)",-20
+📉 Derivatives Calc,I45,Short Put Profit,=H45+$B$43,-18
+📉 Derivatives Calc,B46,5 | Long Call Payoff | 2,"=MAX(A46-$B$41,0)",0
+📉 Derivatives Calc,C46,5 | Long Call Profit,=B46-$B$42,-3
+📉 Derivatives Calc,D46,5 | Short Call Payoff,"=-MAX(A46-$B$41,0)",0
+📉 Derivatives Calc,E46,5 | Short Call Profit,=D46+$B$42,3
+📉 Derivatives Calc,F46,Long Put Payoff,"=MAX($B$41-A46,0)",15
+📉 Derivatives Calc,G46,Long Put Profit,=F46-$B$43,13
+📉 Derivatives Calc,H46,Short Put Payoff,"=-MAX($B$41-A46,0)",-15
+📉 Derivatives Calc,I46,Short Put Profit,=H46+$B$43,-13
+📉 Derivatives Calc,B47,10 | Long Call Payoff,"=MAX(A47-$B$41,0)",0
+📉 Derivatives Calc,C47,10 | Long Call Profit,=B47-$B$42,-3
+📉 Derivatives Calc,D47,10 | Short Call Payoff,"=-MAX(A47-$B$41,0)",0
+📉 Derivatives Calc,E47,10 | Short Call Profit,=D47+$B$42,3
+📉 Derivatives Calc,F47,Long Put Payoff,"=MAX($B$41-A47,0)",10
+📉 Derivatives Calc,G47,Long Put Profit,=F47-$B$43,8
+📉 Derivatives Calc,H47,Short Put Payoff,"=-MAX($B$41-A47,0)",-10
+📉 Derivatives Calc,I47,Short Put Profit,=H47+$B$43,-8
+📉 Derivatives Calc,B48,15,"=MAX(A48-$B$41,0)",0
+📉 Derivatives Calc,C48,15,=B48-$B$42,-3
+📉 Derivatives Calc,D48,15,"=-MAX(A48-$B$41,0)",0
+📉 Derivatives Calc,E48,15,=D48+$B$42,3
+📉 Derivatives Calc,F48,,"=MAX($B$41-A48,0)",5
+📉 Derivatives Calc,G48,,=F48-$B$43,3
+📉 Derivatives Calc,H48,,"=-MAX($B$41-A48,0)",-5
+📉 Derivatives Calc,I48,,=H48+$B$43,-3
+📉 Derivatives Calc,B49,18,"=MAX(A49-$B$41,0)",0
+📉 Derivatives Calc,C49,18,=B49-$B$42,-3
+📉 Derivatives Calc,D49,18,"=-MAX(A49-$B$41,0)",0
+📉 Derivatives Calc,E49,18,=D49+$B$42,3
+📉 Derivatives Calc,F49,,"=MAX($B$41-A49,0)",2
+📉 Derivatives Calc,G49,,=F49-$B$43,0
+📉 Derivatives Calc,H49,,"=-MAX($B$41-A49,0)",-2
+📉 Derivatives Calc,I49,,=H49+$B$43,0
+📉 Derivatives Calc,B50,20,"=MAX(A50-$B$41,0)",0
+📉 Derivatives Calc,C50,20,=B50-$B$42,-3
+📉 Derivatives Calc,D50,20,"=-MAX(A50-$B$41,0)",0
+📉 Derivatives Calc,E50,20,=D50+$B$42,3
+📉 Derivatives Calc,F50,,"=MAX($B$41-A50,0)",0
+📉 Derivatives Calc,G50,,=F50-$B$43,-2
+📉 Derivatives Calc,H50,,"=-MAX($B$41-A50,0)",0
+📉 Derivatives Calc,I50,,=H50+$B$43,2
+📉 Derivatives Calc,B51,22,"=MAX(A51-$B$41,0)",2
+📉 Derivatives Calc,C51,22,=B51-$B$42,-1
+📉 Derivatives Calc,D51,22,"=-MAX(A51-$B$41,0)",-2
+📉 Derivatives Calc,E51,22,=D51+$B$42,1
+📉 Derivatives Calc,F51,,"=MAX($B$41-A51,0)",0
+📉 Derivatives Calc,G51,,=F51-$B$43,-2
+📉 Derivatives Calc,H51,,"=-MAX($B$41-A51,0)",0
+📉 Derivatives Calc,I51,,=H51+$B$43,2
+📉 Derivatives Calc,B52,25,"=MAX(A52-$B$41,0)",5
+📉 Derivatives Calc,C52,25,=B52-$B$42,2
+📉 Derivatives Calc,D52,25,"=-MAX(A52-$B$41,0)",-5
+📉 Derivatives Calc,E52,25,=D52+$B$42,-2
+📉 Derivatives Calc,F52,,"=MAX($B$41-A52,0)",0
+📉 Derivatives Calc,G52,,=F52-$B$43,-2
+📉 Derivatives Calc,H52,,"=-MAX($B$41-A52,0)",0
+📉 Derivatives Calc,I52,,=H52+$B$43,2
+📉 Derivatives Calc,B53,30,"=MAX(A53-$B$41,0)",10
+📉 Derivatives Calc,C53,30,=B53-$B$42,7
+📉 Derivatives Calc,D53,30,"=-MAX(A53-$B$41,0)",-10
+📉 Derivatives Calc,E53,30,=D53+$B$42,-7
+📉 Derivatives Calc,F53,,"=MAX($B$41-A53,0)",0
+📉 Derivatives Calc,G53,,=F53-$B$43,-2
+📉 Derivatives Calc,H53,,"=-MAX($B$41-A53,0)",0
+📉 Derivatives Calc,I53,,=H53+$B$43,2
+📉 Derivatives Calc,B54,35,"=MAX(A54-$B$41,0)",15
+📉 Derivatives Calc,C54,35,=B54-$B$42,12
+📉 Derivatives Calc,D54,35,"=-MAX(A54-$B$41,0)",-15
+📉 Derivatives Calc,E54,35,=D54+$B$42,-12
+📉 Derivatives Calc,F54,,"=MAX($B$41-A54,0)",0
+📉 Derivatives Calc,G54,,=F54-$B$43,-2
+📉 Derivatives Calc,H54,,"=-MAX($B$41-A54,0)",0
+📉 Derivatives Calc,I54,,=H54+$B$43,2
+📉 Derivatives Calc,B55,40,"=MAX(A55-$B$41,0)",20
+📉 Derivatives Calc,C55,40,=B55-$B$42,17
+📉 Derivatives Calc,D55,40,"=-MAX(A55-$B$41,0)",-20
+📉 Derivatives Calc,E55,40,=D55+$B$42,-17
+📉 Derivatives Calc,F55,,"=MAX($B$41-A55,0)",0
+📉 Derivatives Calc,G55,,=F55-$B$43,-2
+📉 Derivatives Calc,H55,,"=-MAX($B$41-A55,0)",0
+📉 Derivatives Calc,I55,,=H55+$B$43,2
+📉 Derivatives Calc,B66,PV of strike K×e^(-rT) | 1.5 | 1,=B62*EXP(-B63*B64),18.835290671685
+📉 Derivatives Calc,B67,Minimum call price ct = pt + St - PV(K) | 1.5 | 1,=B65+B61-B66,0.664709328315027
