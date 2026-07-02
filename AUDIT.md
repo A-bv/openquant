@@ -229,3 +229,33 @@ extraction with offline fixtures + self-check, a written architecture decision
   (render.yaml + Procfile ready; CORS prep done).
 - Multi-agent adversarial audit pass — unavailable this session (subagent limit,
   resets 16:10 Europe/Paris); this audit is the inline single-agent pass.
+
+## Resolution log (2026-07-02, same day)
+
+Worked top-down from the ranked queue; every fix verified against the full
+offline suite (now **193 passed**), eslint (clean) and `vite build` (passes)
+before its commit.
+
+| Finding | Status | Commit / note |
+|---|---|---|
+| F1 config → core/ | **Fixed** | "Make the finance engine self-contained". Caveat: this commit also absorbed the F5 and F14 one-liners (an over-broad `git add core/data`); history is 1 commit short of one-per-fix, content is correct. |
+| F3 IRR silent wrong answers | **Fixed** | JS brackets [-99%, 1000%] and throws on no root, mirroring Python; edge parity tests added (high IRR, no root, impossible YTM). |
+| F4 r==g divergence | **Fixed** | JS now throws like Python raises; pinned on both sides. |
+| F5 error double-wrap | **Fixed** | typed errors pass through (landed inside the F1 commit). |
+| F6 false README | **Fixed** | README rewritten; every claim checked against the repo as it is today. |
+| F7 zero CI | **Fixed** | `.github/workflows/ci.yml` (pytest + parity + eslint + build); `deploy-deck.yml` created, making the deploy claim true instead of deleted. |
+| F8 missing LICENSE | **Fixed** | MIT LICENSE added. |
+| F9 CORS foot-gun | **Fixed** | origins narrowed to the project's own hosts; credentials dropped. |
+| F10 docs sprawl | **Fixed** | 5 drafts (76 KB) moved to `docs/archive/`. |
+| F11 unpinned deps | **Fixed** | pinned to the exact versions the suite passes against. |
+| F12 wrong prod API fallback | **Fixed** | single `src/shared/api.js`; prod requires `VITE_API_URL`, fails loud. |
+| F13 Makefile/marker drift | **Fixed** | `make test` uses `-m "not live"`. |
+| F14 dead line | **Fixed** | removed (landed inside the F1 commit). |
+| F2 Money lab via API | **Open — planned** | next P1 slice: drive it from `finance.js`, then retire the endpoint. |
+| F15 658 kB bundle | **Accepted** | code-split only if the React app becomes a first-class deliverable. |
+| F16 CSS/nav duplication ×4 pages | **Accepted** | cost of the self-contained-pages design; revisit if page count grows. |
+
+Ongoing (updated): `theory.html` + `finance.js` published to gh-pages this
+session (CDN propagation pending at last check). Render deploy still awaits the
+user's account. The multi-agent adversarial pass remains to be re-run when the
+subagent limit resets.
