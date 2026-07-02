@@ -19,7 +19,7 @@ from typing import Optional
 
 import pandas as pd
 
-from config import CACHE_DIR, CACHE_TTL_RECENT_SECONDS
+from core.config import CACHE_DIR, CACHE_TTL_RECENT_SECONDS
 
 logger = logging.getLogger(__name__)
 

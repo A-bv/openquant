@@ -29,7 +29,7 @@ from typing import Optional, Sequence, Union
 import numpy as np
 import pandas as pd
 
-from config import DEFAULT_TRADING_DAYS, DEFAULT_RISK_FREE_RATE
+from core.config import DEFAULT_TRADING_DAYS, DEFAULT_RISK_FREE_RATE
 from core.common import annualise_returns_series, sharpe_from_stats
 
 Matrix = Union[pd.DataFrame, np.ndarray]

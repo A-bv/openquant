@@ -33,7 +33,7 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 
-from config import (
+from core.config import (
     FORECAST_HORIZON_YEARS,
     DEFAULT_TERMINAL_GROWTH_RATE,
     MAX_TERMINAL_GROWTH_RATE,

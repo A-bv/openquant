@@ -25,7 +25,7 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 
-from config import (
+from core.config import (
     FORECAST_HORIZON_YEARS,
     SCENARIO_CONSERVATIVE_GROWTH_MULT,
     SCENARIO_OPTIMISTIC_GROWTH_MULT,

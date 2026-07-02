@@ -14,7 +14,7 @@ from typing import Optional
 import pandas as pd
 import requests
 
-from config import EDGAR_SUBMISSIONS_URL, EDGAR_FACTS_URL
+from core.config import EDGAR_SUBMISSIONS_URL, EDGAR_FACTS_URL
 
 from ..errors import DataFetchError
 
@@ -253,5 +253,3 @@ class EDGARClient:
         # in 2019). Always preferring the newest series avoids silently
         # returning stale data from a retired tag.
         return max(candidates, key=lambda s: s.index.max())
-
-        return None

@@ -13,7 +13,7 @@ from datetime import datetime, timedelta
 
 import pandas as pd
 
-from config import BETA_LOOKBACK_YEARS
+from core.config import BETA_LOOKBACK_YEARS
 
 from ..errors import DataFetchError
 
@@ -61,6 +61,8 @@ class PriceFetcher:
             prices.name = ticker
             return prices.dropna()
 
+        except DataFetchError:
+            raise  # already typed — don't re-wrap our own error
         except ImportError:
             raise DataFetchError(
                 "yfinance is not installed. Run: pip install yfinance"

@@ -26,7 +26,7 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
-from config import (
+from core.config import (
     DEFAULT_RISK_FREE_RATE,
     DEFAULT_MARKET_RISK_PREMIUM,
     DEFAULT_TRADING_DAYS,

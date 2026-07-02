@@ -32,7 +32,7 @@ import numpy as np
 import pandas as pd
 import requests
 
-from config import (
+from core.config import (
     EDGAR_BASE_URL,
     EDGAR_SUBMISSIONS_URL,
     EDGAR_FACTS_URL,
@@ -186,7 +186,7 @@ class DataFetcher:
         has_financials = fut_fin.result()
 
         # Determine badge
-        from config import MIN_TRADING_DAYS, MIN_PRICE_HISTORY_YEARS
+        from core.config import MIN_TRADING_DAYS, MIN_PRICE_HISTORY_YEARS
         min_days = MIN_TRADING_DAYS * MIN_PRICE_HISTORY_YEARS
 
         if not has_financials:
