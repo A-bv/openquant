@@ -1,95 +1,69 @@
 # OpenQuant
 
 [![CI](https://github.com/A-bv/openquant/actions/workflows/ci.yml/badge.svg)](https://github.com/A-bv/openquant/actions/workflows/ci.yml)
+[![Live site](https://img.shields.io/badge/live-a--bv.github.io%2Fopenquant-2ea44f)](https://a-bv.github.io/openquant/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-OpenQuant is a hands-on way into the decisions at the heart of corporate finance:
-what something is worth, how much return to demand for its risk, which projects
-to back, how to finance them, and how derivatives shift risk around.
+Corporate finance you can actually act on: the whole theory as **interactive
+cards**, guided **decision journeys**, and one honest question — *did the
+theory hold on ten years of real returns?*
 
-It never claims the impossible. No screen says "this stock is worth $X". It
-shows the bet baked into a price, with its honest limit, and lets you decide
-whether you believe it.
+Everything runs in your browser. There is no server, no account, no install:
+every page below is a plain link.
 
-## Try it (no install, plain links)
+## Try it
 
 | Page | What it is |
 |---|---|
 | **[The 53 cards](https://a-bv.github.io/openquant/)** | The whole theory as a deck of interactive cards: one idea, one picture, one live formula each |
 | **[Should I take this deal?](https://a-bv.github.io/openquant/card1.html)** | A 4-step decision journey: a lump sum now versus payments over time, and the one rate that flips the answer |
-| **[Did the theory hold?](https://a-bv.github.io/openquant/theory.html)** | The valuation theory run on 50 real stocks, 2014 to 2024, against what actually happened |
-| **[Project map](https://a-bv.github.io/openquant/app.html)** | Everything built so far, in one page |
+| **[Did the theory hold?](https://a-bv.github.io/openquant/theory.html)** | The valuation theory run on 50 real stocks, 2014 → 2024, against what actually happened |
+| **[Project map](https://a-bv.github.io/openquant/app.html)** | Everything in one page |
 
 ## The honest result
 
-The check page above is the project's spine. A reverse-DCF was run on 50 large
-US stocks as of January 2014 and compared with realized returns through
-January 2024. The stocks it called cheap beat the market less than half the
-time, and the ones it called expensive earned more. That is the point: a
-valuation is not a crystal ball. It tells you what growth the market is already
-paying for, not what happens next.
+The theory says a valuation reveals whether a stock is cheap. So it was run on
+50 large US stocks as of January 2014 and checked against reality in 2024: the
+stocks it called *cheap* beat the market **less than half the time**, and the
+ones it called *expensive* earned more. That is the site's whole stance — a
+valuation tells you **the bet baked into a price**, never the future. No page
+here ever claims "this stock is worth $X".
 
-## How it is built
+## How it works
 
-One rule decides where code runs:
+- Every page in [`site/`](site/) is a **self-contained HTML file**. Open it
+  locally or serve it from any static host; it works the same.
+- The math lives in one shared file, [`site/finance.js`](site/finance.js), and
+  is **parity-tested against a real Python finance engine**: the only test in
+  this repo ([`tests/test_js_parity.py`](tests/test_js_parity.py)) runs the
+  browser formulas through Node and checks they give *exactly* the same answers
+  as [**openquant-engine**](https://github.com/A-bv/openquant-engine) — the
+  sister repo where the engine, its 191 exam-pinned tests, the API and the
+  live-ticker labs live. Where Python raises, the browser throws. Neither side
+  can drift silently.
+- Pushing to `main` republishes the site automatically
+  ([`deploy-deck.yml`](.github/workflows/deploy-deck.yml)).
 
-- **Needs live market data** → one small FastAPI service (`api/`), which exists
-  to showcase a full Python stack on the single feature that truly needs a
-  server: valuing a real ticker from its SEC filings and prices.
-- **Everything else** → plain client-side pages that work from a link with no
-  server, like the deck.
-
-![OpenQuant architecture](docs/openquant-architecture.svg)
-
-- **`core/`** — the finance engine in plain Python, self-contained (its config
-  lives inside the package). No web code.
-- **`core/data/`** — the data layer: one module per source (SEC EDGAR for
-  filings, yfinance for prices), a file cache, offline sample data, and a
-  functional interface (`get_fundamentals`, `get_prices`, ...).
-- **`api/`** — a thin FastAPI layer that serves `core/` to the React app.
-- **`frontend/public/`** — the self-contained card pages listed above, plus
-  `finance.js`, the shared browser math.
-- **`frontend/src/`** — the React app for the live-data labs (Money, Stock,
-  Portfolio).
-- **`backtest/`** — the 2014→2024 study behind the check page.
-
-## Trusted numbers
-
-- **193 offline tests** pin the engine to worked answers from two finance exams
-  (`tests/test_epfl_exam1.py`, `test_epfl_exam2.py`), so every formula matches
-  the course it teaches.
-- **A JS/Python parity test** (`tests/test_js_parity.py`) runs the browser math
-  through Node and checks it gives exactly the same answers as `core/`,
-  including the failure cases: where Python raises, the browser throws. The two
-  implementations cannot drift apart silently.
-- CI runs all of it, plus the frontend lint and build, on every push.
-
-## Running it locally
-
-You need Python and Node. From the project root:
-
-```bash
-make install     # install the Python and frontend packages
-make dev         # run the API (:8000) and the app (:5173) together
-make test        # run the offline test suite
+```
+site/        the product: 53-card deck, journeys, the honest check, shared math
+tests/       one suite: browser math == engine math
+docs/        the product plan, course notes, and the archive
 ```
 
-The card pages need none of this; they are already live at the links above.
-Locally they are served at `http://localhost:5173/companion.html`,
-`/card1.html`, `/theory.html` and `/app.html`.
+## Run it locally
 
-## Deploying
+```bash
+make serve        # http://localhost:5173 — plain static serving, nothing else
+```
 
-- **Card pages**: `.github/workflows/deploy-deck.yml` publishes
-  `frontend/public/` to GitHub Pages when those files change on `main`
-  (root stays the 53-card deck).
-- **API**: `render.yaml` and `Procfile` describe the service for Render.
-  Production builds of the React app must set `VITE_API_URL` to the deployed
-  API address.
+To run the parity suite: `pip install "openquant-engine @ git+https://github.com/A-bv/openquant-engine" pytest`
+then `make test`.
 
-## Docs
+## The numbers behind the "did it hold?" page
 
-`docs/PRODUCT_PLAN.md` is the source of truth for where the product is going.
-`docs/openquant_deliverables.md` is the backlog of concrete results. Historical
-working drafts live in `docs/archive/`. The current audit lives in `AUDIT.md`.
+They come from the backtest committed in the engine repo
+([`backtest/`](https://github.com/A-bv/openquant-engine/tree/main/backtest)),
+run on SEC EDGAR filings and market prices. Nothing on the page is illustrative;
+every figure traces to that study.
 
-MIT licensed. The finance follows Berk and DeMarzo, *Corporate Finance*.
+MIT licensed. The finance follows Berk & DeMarzo, *Corporate Finance*.
