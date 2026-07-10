@@ -4,9 +4,16 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>OpenQuant — everything built so far</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  /* Self-hosted Inter (variable, latin) — no network, works fully offline. */
+  @font-face {
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 400 800;
+    font-display: swap;
+    src: url('fonts/inter-latin.woff2') format('woff2');
+  }
+</style>
 <style>
   :root{
     --bg:#f4f4f0; --surface:#ffffff; --text:#1b1a17; --muted:#6c6a63; --faint:#a4a299;
