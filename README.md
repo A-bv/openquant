@@ -32,7 +32,11 @@ here ever claims "this stock is worth $X".
 ## How it works
 
 - Every page in [`site/`](site/) is a **self-contained HTML file**. Open it
-  locally or serve it from any static host; it works the same.
+  locally or serve it from any static host; it works the same. Fonts and the
+  math are bundled, so the pages render fully offline — the one exception is
+  formula *typesetting* on the two deck pages ([`companion.html`](site/companion.html)
+  and [`card1.html`](site/card1.html)), which pull [KaTeX](https://katex.org)
+  from a CDN; without a connection the formulas fall back to plain text.
 - The math lives in one shared file, [`site/finance.js`](site/finance.js), and
   is **parity-tested against a real Python finance engine**: the only test in
   this repo ([`tests/test_js_parity.py`](tests/test_js_parity.py)) runs the
