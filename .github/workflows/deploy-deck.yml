@@ -20,6 +20,7 @@ jobs:
         run: |
           mkdir -p out
           cp site/*.html site/*.js site/*.svg out/
+          cp -r site/fonts out/fonts
           cp site/companion.html out/index.html
 
       - name: Publish to the gh-pages branch
