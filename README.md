@@ -60,8 +60,9 @@ docs/        the product plan, course notes, and the archive
 make serve        # http://localhost:5173 — plain static serving, nothing else
 ```
 
-To run the parity suite: `pip install "openquant-engine @ git+https://github.com/A-bv/openquant-engine" pytest`
-then `make test`.
+To run the parity suite: `pip install "openquant-engine @ git+https://github.com/A-bv/openquant-engine@7ab97a8" pytest`
+then `make test`. The engine is pinned to a commit (CI uses the same one) so the
+check is reproducible; bump the ref when you want the newer engine.
 
 ## The numbers behind the "did it hold?" page
 

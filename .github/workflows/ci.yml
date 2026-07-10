@@ -21,7 +21,9 @@ jobs:
           node-version: "24"
 
       - name: Install the engine package and pytest
-        run: pip install pytest "openquant-engine @ git+https://github.com/A-bv/openquant-engine"
+        # Pinned to a commit (the engine repo has no tags yet) so the parity
+        # check is reproducible and an upstream change can't break CI silently.
+        run: pip install pytest "openquant-engine @ git+https://github.com/A-bv/openquant-engine@7ab97a8bf6ca3c327bc80743e032f894b6d81522"
 
       - name: Run the parity suite (site/finance.js vs the engine)
         run: python -m pytest -q tests/
