@@ -46,6 +46,7 @@
   .tile{background:var(--surface); border:1px solid var(--border); border-radius:13px; padding:13px 14px; cursor:pointer;
     transition:border-color .15s, transform .12s; display:flex; flex-direction:column; gap:7px; min-height:62px;}
   .tile:hover{border-color:var(--accent); transform:translateY(-1px);}
+  a:focus-visible, button:focus-visible, input:focus-visible{outline:3px solid var(--accent);outline-offset:3px;}
   .tile .tt{font-size:13.5px; font-weight:600; line-height:1.3;}
   .tile .ts{display:flex; align-items:center; gap:5px; font-size:11px; color:var(--good);}
   .tile.soon{cursor:default; opacity:.6;}
@@ -96,20 +97,22 @@
   .foot{text-align:center; font-size:11px; color:var(--faint); margin-top:24px;}
   svg text{font-family:'Inter',sans-serif;}
   @media (max-width:430px){ body{padding:20px 12px 48px;} .card{padding:20px 16px;} .hero .big{font-size:34px;} }
+  @media (prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important;}}
 </style>
 </head>
 <body>
-<div class="wrap"><nav style="display:flex;align-items:center;gap:6px;font-size:13px;margin:0 0 18px;flex-wrap:wrap;"><a href="app.html" style="font-weight:700;color:var(--text);text-decoration:none;margin-right:auto;">OpenQuant</a><a href="app.html" style="text-decoration:none;padding:5px 10px;border-radius:8px;color:var(--muted);">Map</a><a href="card1.html" style="text-decoration:none;padding:5px 10px;border-radius:8px;color:var(--muted);">Deal journey</a><a href="companion.html" style="text-decoration:none;padding:5px 10px;border-radius:8px;color:var(--accent);font-weight:600;">53 cards</a></nav><div id="app"></div>
+<div class="wrap"><nav aria-label="Primary" style="display:flex;align-items:center;gap:6px;font-size:13px;margin:0 0 18px;flex-wrap:wrap;"><a href="companion.html" style="font-weight:700;color:var(--text);text-decoration:none;margin-right:auto;">OpenQuant</a><a href="app.html" style="text-decoration:none;padding:5px 10px;border-radius:8px;color:var(--muted);">Map</a><a href="card1.html" style="text-decoration:none;padding:5px 10px;border-radius:8px;color:var(--muted);">Deal journey</a><a href="theory.html" style="text-decoration:none;padding:5px 10px;border-radius:8px;color:var(--muted);">Reality check</a><a href="companion.html" aria-current="page" style="text-decoration:none;padding:5px 10px;border-radius:8px;color:var(--accent);font-weight:600;">53 cards</a></nav><main id="app"></main>
   <div class="foot">OpenQuant · the EPFL <i>Principles of Finance</i> course, one card at a time</div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js" crossorigin="anonymous"></script>
+<script src="finance.js"></script>
 <script>
 (function(){
   var app=document.getElementById('app');
   function money(v){return '$'+Math.round(v).toLocaleString('en-US');}
   function pct(v){return Math.round(v*100)+'%';}
-  function K(el,tex){ if(window.katex&&el) katex.render(tex,el,{throwOnError:false,displayMode:true}); }
+  function K(el,tex){ if(!el)return; if(window.katex)katex.render(tex,el,{throwOnError:false,displayMode:true}); else el.textContent=tex; }
   function q(root,r){return root.querySelector('[data-r="'+r+'"]');}
   var TH=166;
 
@@ -132,7 +135,7 @@
       inputs:[{k:'n',label:'how many years until you get it',min:1,max:30,step:1,val:10,unit:'yr'},{k:'r',label:'your rate (what you could earn meanwhile)',min:1,max:12,step:0.5,val:5,unit:'%'}],
       viz:splitBarHTML(), fgen:"\\text{today} \\;=\\; \\dfrac{\\text{future amount}}{(1+r)^{\\,n}}",
       explain:'Each year of waiting divides the value by (1 + your rate). Wait longer, or earn more elsewhere, and the future promise is worth less today.',
-      update:function(v,root){var fv=100,val=fv/Math.pow(1+v.r/100,v.n),loss=fv-val,f=val/fv;
+      update:function(v,root){var fv=100,val=Finance.pv(fv,v.r/100,v.n),loss=fv-val,f=val/fv;
         q(root,'ans').textContent=money(val); var c=q(root,'chip'); c.className='chip lost'; c.textContent=money(loss)+' lost to waiting';
         q(root,'note').textContent="$100 paid to you in "+v.n+" years is really worth this much now";
         q(root,'kept').style.height=(f*TH)+'px'; q(root,'lost').style.height=((1-f)*TH)+'px';
@@ -145,7 +148,7 @@
       inputs:[{k:'n',label:'years it grows',min:1,max:30,step:1,val:10,unit:'yr'},{k:'r',label:'yearly return it earns',min:1,max:12,step:0.5,val:5,unit:'%'}],
       viz:twoBarHTML('today','in N years'), fgen:"\\text{future} \\;=\\; \\text{today}\\times(1+r)^{\\,n}",
       explain:'This is the opposite of bringing money back to today: each year you multiply by (1 + return). Even small returns add up into a big gap over time.',
-      update:function(v,root){var pv=100,fv=pv*Math.pow(1+v.r/100,v.n),gain=fv-pv;
+      update:function(v,root){var pv=100,fv=Finance.fv(pv,v.r/100,v.n),gain=fv-pv;
         q(root,'ans').textContent=money(fv); var c=q(root,'chip'); c.className='chip good'; c.textContent='+'+money(gain)+' earned';
         q(root,'note').textContent="$100 kept today grows into this in "+v.n+" years";
         q(root,'av').textContent=money(pv); q(root,'bv').textContent=money(fv);
@@ -162,7 +165,7 @@
         +'<div class="explain" style="text-align:center;">the same payment, every year, forever, yet worth a set amount now</div>',
       fgen:"\\text{value} \\;=\\; \\dfrac{C}{r}",
       explain:'Payments far in the future are worth almost nothing today, so even an endless stream adds up to a set number: the payment divided by your rate.',
-      update:function(v,root){var c0=1000,val=c0/(v.r/100);
+      update:function(v,root){var c0=1000,val=Finance.perpetuity(c0,v.r/100);
         q(root,'ans').textContent=money(val); var c=q(root,'chip'); c.className='chip info'; c.textContent='$1,000 / year forever';
         q(root,'note').textContent="getting $1,000 every year forever is worth this much to you today";
         K(q(root,'fnum'),"\\dfrac{1000}{"+(v.r/100).toFixed(3)+"}="+Math.round(val));}},
@@ -179,7 +182,7 @@
       explain:'Like a plain perpetuity, but each payment is a little larger than the last. The closer growth gets to your rate, the more it is worth, and if growth reaches your rate the simple formula breaks down.',
       update:function(v,root){var spread=(v.r-v.g)/100;
         if(spread<=0){q(root,'ans').textContent='∞'; var c0=q(root,'chip'); c0.className='chip lost'; c0.textContent='growth cannot beat your rate'; q(root,'note').textContent='if growth matches or beats your rate, the value runs away to infinity'; K(q(root,'fnum'),'1000 / ('+v.r+'\\% - '+v.g+'\\%) \\to \\infty'); return;}
-        var val=1000/spread;
+        var val=Finance.growingPerpetuity(1000,v.r/100,v.g/100);
         q(root,'ans').textContent=money(val); var c=q(root,'chip'); c.className='chip info'; c.textContent='$1,000/yr, +'+v.g+'% a year';
         q(root,'note').textContent='a $1,000 payment growing '+v.g+'% a year forever is worth this much to you today';
         K(q(root,'fnum'),"\\dfrac{1000}{"+spread.toFixed(3)+"}="+Math.round(val));}},
@@ -191,10 +194,9 @@
       viz:hbar('irr','var(--accent)','the yearly rate it earns (IRR)')+hbar('hur','var(--track)','the 10% hurdle to beat'),
       fgen:"0 \\;=\\; -\\,\\text{cost} \\;+\\; \\textstyle\\sum \\dfrac{C}{(1+\\text{IRR})^{t}}",
       explain:'The IRR is the rate that makes the discounted cash exactly equal the cost, so the project neither creates nor destroys value. Above your hurdle it is worth doing; below it, walk away.',
-      update:function(v,root){var X=20000,C=v.c,N=v.n,hurdle=10;
-        var f=function(r){var s=-X; for(var t=1;t<=N;t++){s+=C/Math.pow(1+r,t);} return s;};
-        var lo=-0.99,hi=3.0; for(var i=0;i<80;i++){var m=(lo+hi)/2; if(f(m)>0) lo=m; else hi=m;}
-        var irp=((lo+hi)/2)*100, mx=Math.max(irp,hurdle,1);
+      update:function(v,root){var X=20000,C=v.c,N=v.n,hurdle=10,cashflows=[-X];
+        for(var t=1;t<=N;t++)cashflows.push(C);
+        var irp=Finance.irr(cashflows)*100, mx=Math.max(irp,hurdle,1);
         q(root,'ans').textContent=irp.toFixed(1)+'%'; var c=q(root,'chip'); c.className='chip '+(irp>=hurdle?'good':'lost'); c.textContent=irp>=hurdle?'beats the 10% hurdle':'below the 10% hurdle';
         q(root,'note').textContent='paying $20,000 for '+money(C)+' a year over '+N+' years earns about '+irp.toFixed(1)+'% a year';
         q(root,'irrval').textContent=irp.toFixed(1)+'%'; q(root,'hurval').textContent='10%';
@@ -208,7 +210,7 @@
       viz:'<div data-r="bars" style="display:flex;align-items:flex-end;gap:4px;height:104px;justify-content:center;"></div><div class="explain" style="text-align:center;" data-r="sumnote"></div>',
       fgen:"PV \\;=\\; \\dfrac{C}{r}\\left(1-\\dfrac{1}{(1+r)^{n}}\\right)",
       explain:'Each bar is one payment brought back to today (smaller the further out it is). Add them all up and that is what the whole stream is worth now.',
-      update:function(v,root){var r=v.r/100, c0=1000, pv=c0/r*(1-1/Math.pow(1+r,v.n));
+      update:function(v,root){var r=v.r/100, c0=1000, pv=Finance.annuityPV(c0,r,v.n);
         q(root,'ans').textContent=money(pv); var c=q(root,'chip'); c.className='chip info'; c.textContent=money(c0*v.n)+' on paper';
         q(root,'note').textContent="$1,000 a year for "+v.n+" years is worth this much today";
         var shown=Math.min(v.n,16), bars='';
@@ -224,7 +226,9 @@
       viz:hbar('cost','var(--lost)','what it costs today')+hbar('ben','var(--good)','what it returns, valued today'),
       fgen:"\\text{NPV} \\;=\\; \\underbrace{\\textstyle\\sum \\dfrac{C}{(1+r)^t}}_{\\text{benefits today}} \\;-\\; \\text{cost}",
       explain:'Bring every future payment back to today, add them up, and subtract the cost. Positive creates value; negative destroys it.',
-      update:function(v,root){var r=v.r/100, X=20000, n=6, pvB=v.c/r*(1-1/Math.pow(1+r,n)), npv=pvB-X, mx=Math.max(pvB,X);
+      update:function(v,root){var r=v.r/100, X=20000, n=6, cashflows=[-X], pvB;
+        for(var t=1;t<=n;t++)cashflows.push(v.c);
+        var npv=Finance.npv(r,cashflows); pvB=npv+X; var mx=Math.max(pvB,X);
         q(root,'ans').textContent=(npv>=0?'+':'−')+money(Math.abs(npv)); var c=q(root,'chip'); c.className='chip '+(npv>=0?'good':'lost'); c.textContent=npv>=0?'worth doing':'destroys value';
         q(root,'note').textContent=npv>=0?"after covering the cost you are ahead by this much, in today’s money":"the cost outweighs what it is worth today";
         q(root,'costval').textContent=money(X); q(root,'benval').textContent=money(pvB);
@@ -238,7 +242,7 @@
       viz:hbar('real','var(--accent)','your real risk')+hbar('ind','var(--good)','if they were truly independent'),
       fgen:"\\text{real bets} \\;=\\; \\dfrac{n}{1+(n-1)\\,\\rho}",
       explain:'When your stocks move together a lot, owning more hardly helps. Many of them act like just a few real bets, so your risk stays high.',
-      update:function(v,root){var rho=v.rho/100, sig=0.35, eff=v.n/(1+(v.n-1)*rho), pVol=sig*Math.sqrt((1+(v.n-1)*rho)/v.n), iVol=sig/Math.sqrt(v.n), mx=sig;
+      update:function(v,root){var rho=v.rho/100, sig=0.35, eff=Finance.effectiveBets(v.n,rho), pVol=sig*Math.sqrt((1+(v.n-1)*rho)/v.n), iVol=sig/Math.sqrt(v.n), mx=sig;
         q(root,'ans').textContent=v.n+' → '+eff.toFixed(1)+' bets'; var c=q(root,'chip'); c.className='chip info'; c.textContent='risk '+pct(pVol);
         q(root,'note').textContent="in risk terms your "+v.n+(v.n===1?" stock acts":" stocks act")+" like only "+eff.toFixed(1)+" independent bets";
         q(root,'realval').textContent=pct(pVol); q(root,'indval').textContent=pct(iVol);
@@ -252,7 +256,7 @@
       viz:'<svg data-r="svg" viewBox="0 0 320 170" width="100%" style="max-width:340px;display:block;margin:0 auto;"></svg>',
       fgen:"\\text{fair return} \\;=\\; r_f + \\beta\\,(\\text{market premium})",
       explain:'Only the risk you cannot spread away earns extra return. A stock that moves twice as hard as the market should pay you a bigger return.',
-      update:function(v,root){var rf=4,mrp=6,req=rf+v.beta*mrp;
+      update:function(v,root){var rf=4,mrp=6,req=Finance.capm(rf,v.beta,mrp);
         q(root,'ans').textContent=req.toFixed(1)+'%'; var c=q(root,'chip'); c.className='chip info'; c.textContent='lowest return to ask for';
         q(root,'note').textContent="for this much risk, ask for at least "+req.toFixed(1)+"% a year before buying";
         var maxY=22, x0=42,x1=300,y0=148,y1=18, bx=function(b){return x0+(b/2.5)*(x1-x0);}, by=function(r){return y0-(r/maxY)*(y0-y1);};
@@ -316,7 +320,7 @@
       viz:twoBarHTML('quoted (APR)','real (EAR)'),
       fgen:"\\text{EAR} \\;=\\; \\left(1+\\dfrac{\\text{APR}}{k}\\right)^{k} - 1",
       explain:'The more often interest is added, the more you really pay or earn. Always line up offers on their EAR, not their APR.',
-      update:function(v,root){var ear=Math.pow(1+v.apr/100/v.k,v.k)-1, earp=ear*100, mx=Math.max(v.apr,earp);
+      update:function(v,root){var ear=Finance.ear(v.apr/100,v.k), earp=ear*100, mx=Math.max(v.apr,earp);
         q(root,'ans').textContent=earp.toFixed(2)+'%'; var c=q(root,'chip'); c.className='chip lost'; c.textContent='+'+(earp-v.apr).toFixed(2)+'% hidden';
         q(root,'note').textContent='a '+v.apr+'% APR is really '+earp.toFixed(2)+'% a year once compounding is counted';
         q(root,'av').textContent=v.apr+'%'; q(root,'bv').textContent=earp.toFixed(2)+'%';
@@ -330,7 +334,7 @@
       viz:hbar('prin','var(--accent)','the amount you borrowed')+hbar('int','var(--lost)','interest you pay on top'),
       fgen:"\\text{payment} \\;=\\; \\dfrac{P\\,r}{1-(1+r)^{-N}}",
       explain:'A lower rate or a shorter term means far less interest. Stretch the loan longer and the total interest climbs fast.',
-      update:function(v,root){var P=20000, mr=v.r/100/12, N=v.n*12, pay=P*mr/(1-Math.pow(1+mr,-N)), total=pay*N, interest=total-P, mx=total;
+      update:function(v,root){var P=20000, mr=v.r/100/12, N=v.n*12, pay=Finance.loanPayment(P,mr,N), total=pay*N, interest=total-P, mx=total;
         q(root,'ans').textContent=money(pay)+'/mo'; var c=q(root,'chip'); c.className='chip lost'; c.textContent=money(interest)+' total interest';
         q(root,'note').textContent='you pay '+money(pay)+' a month, '+money(total)+' in all';
         q(root,'prinval').textContent=money(P); q(root,'intval').textContent=money(interest);
@@ -391,7 +395,7 @@
       viz:twoBarHTML('its price','its $100 face'),
       fgen:"\\text{price} \\;=\\; \\textstyle\\sum \\dfrac{\\text{coupon}}{(1+y)^t} + \\dfrac{100}{(1+y)^N}",
       explain:'If the coupon beats the rate you require, the bond is worth more than $100 (a premium). If it is below, the bond trades for less (a discount).',
-      update:function(v,root){var y=v.y/100, n=10, price=v.cpn/y*(1-1/Math.pow(1+y,n))+100/Math.pow(1+y,n), mx=Math.max(price,100);
+      update:function(v,root){var y=v.y/100, n=10, price=Finance.bondPrice(v.cpn,100,y,n), mx=Math.max(price,100);
         q(root,'ans').textContent=money(price); var c=q(root,'chip'); c.className='chip '+(price>100.5?'good':price<99.5?'lost':'info'); c.textContent=price>100.5?'above face (premium)':price<99.5?'below face (discount)':'about face value';
         q(root,'note').textContent='at a '+v.y+'% required return this bond is worth '+money(price);
         q(root,'av').textContent=money(price); q(root,'bv').textContent='$100';
@@ -405,8 +409,7 @@
       viz:hbar('cpn','var(--accent)','coupon rate it prints')+hbar('ytm','var(--good)','your real return (yield to maturity)'),
       fgen:"\\text{price} \\;=\\; \\textstyle\\sum \\dfrac{5}{(1+y)^t} + \\dfrac{100}{(1+y)^{10}}",
       explain:'Buy below face and your real return beats the coupon, because you also gain as the price rises to $100. Buy above face and it is the reverse.',
-      update:function(v,root){var n=10,cpn=5,lo=0.0001,hi=0.6,f=function(y){return cpn/y*(1-1/Math.pow(1+y,n))+100/Math.pow(1+y,n)-v.price;};
-        for(var i=0;i<60;i++){var m=(lo+hi)/2; if(f(m)>0) lo=m; else hi=m;} var y=(lo+hi)/2, yp=y*100, mx=Math.max(5,yp);
+      update:function(v,root){var n=10,cpn=5,y=Finance.ytm(v.price,cpn,100,n),yp=y*100,mx=Math.max(5,yp);
         q(root,'ans').textContent=yp.toFixed(2)+'%'; var c=q(root,'chip'); c.className='chip info'; c.textContent='real return if held to the end';
         q(root,'note').textContent='buying at '+money(v.price)+' earns '+yp.toFixed(2)+'% a year to maturity';
         q(root,'cpnval').textContent='5%'; q(root,'ytmval').textContent=yp.toFixed(2)+'%';
@@ -435,7 +438,7 @@
       explain:'The closer growth gets to your required return, the more the price shoots up, because the dividends are expected to keep growing nearly as fast as you discount them.',
       update:function(v,root){var spread=(v.r-v.g)/100;
         if(spread<=0){q(root,'ans').textContent='∞'; var c0=q(root,'chip'); c0.className='chip lost'; c0.textContent='growth cannot beat your return'; q(root,'note').textContent='if growth matches or beats your required return, the simple formula breaks down'; q(root,'valval').textContent='∞'; q(root,'valbar').style.width='100%'; K(q(root,'fnum'),'2 / ('+v.r+'\\% - '+v.g+'\\%) \\to \\infty'); return;}
-        var price=2/spread;
+        var price=Finance.ddm(2,v.r/100,v.g/100);
         q(root,'ans').textContent=money(price); var c=q(root,'chip'); c.className='chip info'; c.textContent='value of one share';
         q(root,'note').textContent='a $2 dividend growing '+v.g+'% a year, at a '+v.r+'% required return, is worth '+money(price);
         q(root,'valval').textContent=money(price); q(root,'valbar').style.width=Math.min(price/100*100,100)+'%';
@@ -849,7 +852,7 @@
       viz:'<div data-r="bars" style="display:flex;align-items:flex-end;gap:4px;height:104px;justify-content:center;"></div><div class="explain" style="text-align:center;" data-r="sumnote"></div>',
       fgen:"PV \\;=\\; \\dfrac{C}{r-g}\\left(1-\\left(\\dfrac{1+g}{1+r}\\right)^{n}\\right)",
       explain:'Each payment is bigger than the last but still discounted back to today. Growth lifts the value, and the closer growth gets to your rate, the more it climbs.',
-      update:function(v,root){var r=0.05,g=v.g/100,c0=1000, gaf=(1/(r-g))*(1-Math.pow((1+g)/(1+r),v.n)), pv=c0*gaf;
+      update:function(v,root){var r=0.05,g=v.g/100,c0=1000,pv=Finance.growingAnnuityPV(c0,r,g,v.n);
         q(root,'ans').textContent=money(pv); var c=q(root,'chip'); c.className='chip info'; c.textContent='grows '+v.g+'% a year';
         q(root,'note').textContent='a $1,000 payment growing '+v.g+'% a year for '+v.n+' years is worth '+money(pv)+' today';
         var shown=Math.min(v.n,16), bars='';
@@ -937,7 +940,7 @@
   function renderHome(){
     var ready=0,total=0;
     CHAPTERS.forEach(function(c){c.cards.forEach(function(k){total++; if(k.r)ready++;});});
-    var h='<div class="top"><span class="bname">OpenQuant</span><span class="pill">'+ready+' of '+total+' cards live</span></div>'
+    var h='<div class="top"><h1 class="bname" style="margin:0;">OpenQuant</h1><span class="pill">'+ready+' of '+total+' cards live</span></div>'
       +'<p class="lede">Finance, one card at a time. The EPFL <i>Principles of Finance</i> course as a deck of cards. Each one has one idea, one picture, and one formula, on numbers you can move. Tap any concept.</p>';
     CHAPTERS.forEach(function(c){
       h+='<div class="chap"><h2>'+c.id+' · '+c.title+'</h2><div class="cs">'+c.sub+'</div><div class="grid">';
@@ -952,11 +955,11 @@
 
   function renderCard(id){
     var c=CARDS[id]; if(!c){location.hash='#/';return;}
-    var inp=c.inputs.map(function(i){return '<div class="ctrl"><div class="row"><span>'+i.label+'</span><b data-rk="'+i.k+'"></b></div><input type="range" data-key="'+i.k+'" min="'+i.min+'" max="'+i.max+'" step="'+i.step+'" value="'+i.val+'">'+((i.lo||i.hi)?'<div class="sanchor"><span>'+(i.lo||'')+'</span><span>'+(i.hi||'')+'</span></div>':'')+'</div>';}).join('');
-    app.innerHTML='<div class="crumb"><span class="back" onclick="location.hash=\'#/\'">← all concepts</span><span class="ch">'+c.ch+'</span></div>'
+    var inp=c.inputs.map(function(i){var inputId='card-'+id+'-'+i.k;return '<div class="ctrl"><div class="row"><label for="'+inputId+'">'+i.label+'</label><b data-rk="'+i.k+'"></b></div><input id="'+inputId+'" type="range" data-key="'+i.k+'" min="'+i.min+'" max="'+i.max+'" step="'+i.step+'" value="'+i.val+'">'+((i.lo||i.hi)?'<div class="sanchor"><span>'+(i.lo||'')+'</span><span>'+(i.hi||'')+'</span></div>':'')+'</div>';}).join('');
+    app.innerHTML='<div class="crumb"><a class="back" href="#/">← all concepts</a><span class="ch">'+c.ch+'</span></div>'
       +'<div class="card"><div class="eyebrow">'+c.eyebrow+'</div><h1>'+c.idea+'</h1>'
       +'<div class="usecase">'+c.usecase+'</div>'
-      +'<div class="hero"><span class="big" data-r="ans"></span><span data-r="chip"></span></div><p class="heronote" data-r="note"></p>'
+      +'<div class="hero"><span class="big" data-r="ans" aria-live="polite" aria-atomic="true"></span><span data-r="chip"></span></div><p class="heronote" data-r="note"></p>'
       +'<div class="viz">'+c.viz+'</div>'
       +'<div class="ctrls">'+inp+'</div>'
       +(c.fixed?'<div class="fixed">'+c.fixed+'</div>':'')

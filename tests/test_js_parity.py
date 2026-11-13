@@ -32,9 +32,8 @@ pytestmark = pytest.mark.skipif(
 def _run_js(calls: dict) -> dict:
     """calls: name -> [jsFunctionName, [args...]]. Returns name -> numeric result.
 
-    finance.js lives under frontend/ whose package.json is "type": module, so
-    Node would load it as ESM. Copy it to a .cjs file (always CommonJS) so its
-    module.exports works and we can require it.
+    Copy finance.js to a .cjs file so Node always loads its CommonJS export,
+    independently of package-level module settings on the developer machine.
     """
     with open(FINANCE_JS) as f:
         src = f.read()
@@ -92,6 +91,7 @@ def test_js_matches_core_python():
 
     js = _run_js({
         "pv":               ["pv",                [1000, 0.08, 6]],
+        "fv":               ["fv",                [1000, 0.08, 6]],
         "annuityPV":        ["annuityPV",         [1000, 0.05, 10]],
         "perpetuity":       ["perpetuity",        [1000, 0.05]],
         "growingAnnuityPV": ["growingAnnuityPV",  [400, 0.075, 0.04, 18]],
@@ -101,11 +101,15 @@ def test_js_matches_core_python():
         "capm":             ["capm",              [0.08, 1.5, 0.08]],
         "ddm":              ["ddm",               [2, 0.08, 0.02]],
         "bondPrice":        ["bondPrice",         [5, 100, 0.04, 10]],
+        "ytm":              ["ytm",               [95, 5, 100, 10]],
         "ear":              ["ear",               [0.18, 12]],
+        "loanPayment":      ["loanPayment",        [20_000, 0.06 / 12, 60]],
+        "effectiveBets":    ["effectiveBets",      [8, 0.7]],
     })
 
     # Each JS formula pinned to a core/ (Python) computation of the same thing.
     assert math.isclose(js["pv"],                eng.npv([0] * 6 + [1000], 0.08),        rel_tol=1e-9)
+    assert math.isclose(js["fv"],                1000 * (1.08**6),                       rel_tol=1e-12)
     assert math.isclose(js["annuityPV"],         eng.growing_annuity_pv(1000, 0.05, 0.0, 10), rel_tol=1e-9)
     assert math.isclose(js["perpetuity"],        eng.growing_perpetuity_pv(1000, 0.05, 0.0), rel_tol=1e-9)
     assert math.isclose(js["growingAnnuityPV"],  eng.growing_annuity_pv(400, 0.075, 0.04, 18), rel_tol=1e-9)
@@ -117,8 +121,11 @@ def test_js_matches_core_python():
     # A bond is the NPV of its coupon stream plus face at maturity.
     bond_cf = [0] + [5] * 9 + [5 + 100]
     assert math.isclose(js["bondPrice"],         eng.npv(bond_cf, 0.04),                 rel_tol=1e-9)
+    assert math.isclose(eng.npv([0] + [5] * 9 + [105], js["ytm"]), 95,                  rel_tol=1e-9)
     # EAR has no standalone core function; pin to its textbook closed form.
     assert math.isclose(js["ear"],               (1 + 0.18 / 12) ** 12 - 1,              rel_tol=1e-12)
+    assert math.isclose(js["loanPayment"],       20_000 * 0.005 / (1 - 1.005**-60),      rel_tol=1e-12)
+    assert math.isclose(js["effectiveBets"],     8 / (1 + 7 * 0.7),                      rel_tol=1e-12)
 
 
 def test_js_edge_cases_match_python_failure_semantics():

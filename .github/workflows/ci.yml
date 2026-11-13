@@ -5,25 +5,27 @@ on:
     branches: ["**"]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   parity:
     name: Browser math == engine math
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: "3.13"
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: "24"
 
-      - name: Install the engine package and pytest
-        # Pinned to a commit (the engine repo has no tags yet) so the parity
-        # check is reproducible and an upstream change can't break CI silently.
-        run: pip install pytest "openquant-engine @ git+https://github.com/A-bv/openquant-engine@7ab97a8bf6ca3c327bc80743e032f894b6d81522"
+      - name: Install pinned test dependencies
+        run: pip install -r requirements-dev.txt
 
-      - name: Run the parity suite (site/finance.js vs the engine)
+      - name: Run parity and static-site contracts
         run: python -m pytest -q tests/

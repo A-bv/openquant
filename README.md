@@ -31,20 +31,19 @@ here ever claims "this stock is worth $X".
 
 ## How it works
 
-- Every page in [`site/`](site/) is a **self-contained HTML file**. Open it
-  locally or serve it from any static host; it works the same. Fonts and the
-  math are bundled, so the pages render fully offline — the one exception is
-  formula *typesetting* on the two deck pages ([`companion.html`](site/companion.html)
-  and [`card1.html`](site/card1.html)), which pull [KaTeX](https://katex.org)
-  from a CDN; without a connection the formulas fall back to plain text.
-- The math lives in one shared file, [`site/finance.js`](site/finance.js), and
-  is **parity-tested against a real Python finance engine**: the only test in
-  this repo ([`tests/test_js_parity.py`](tests/test_js_parity.py)) runs the
-  browser formulas through Node and checks they give *exactly* the same answers
-  as [**openquant-engine**](https://github.com/A-bv/openquant-engine) — the
-  sister repo where the engine, its 191 exam-pinned tests, the API and the
-  live-ticker labs live. Where Python raises, the browser throws. Neither side
-  can drift silently.
+- Everything under [`site/`](site/) is static HTML, CSS, JavaScript and bundled
+  fonts. It can be opened locally or served by any static host. The two
+  interactive pages use [KaTeX](https://katex.org) from a CDN for typesetting;
+  if it is unavailable, the formulas remain visible as raw text.
+- Reusable browser math lives in [`site/finance.js`](site/finance.js). Both the
+  53-card deck and the guided journey call this module for the core formulas;
+  card-specific visual models stay close to their cards.
+- Every exported shared formula is exercised by
+  [`tests/test_js_parity.py`](tests/test_js_parity.py), which runs the JavaScript
+  through Node and compares the applicable calculations and failure behavior
+  with the pinned [**openquant-engine**](https://github.com/A-bv/openquant-engine)
+  revision. The sister repository contains the Python engine, its exam-pinned
+  suite, the API, live-ticker labs and backtest.
 - Pushing to `main` republishes the site automatically
   ([`deploy-deck.yml`](.github/workflows/deploy-deck.yml)).
 
@@ -60,14 +59,21 @@ docs/        the product plan, course notes, and the archive
 make serve        # http://localhost:5173 — plain static serving, nothing else
 ```
 
-To run the parity suite: `pip install "openquant-engine @ git+https://github.com/A-bv/openquant-engine@7ab97a8" pytest`
-then `make test`. The engine is pinned to a commit (CI uses the same one) so the
-check is reproducible; bump the ref when you want the newer engine.
+To run the parity and site-contract suites, install the pinned development
+dependencies and run the tests:
+
+```bash
+pip install -r requirements-dev.txt
+make test
+```
+
+The engine is pinned to a commit and CI installs the same file. Bump the ref
+deliberately when adopting a newer engine.
 
 ## The numbers behind the "did it hold?" page
 
 They come from the backtest committed in the engine repo
-([`backtest/`](https://github.com/A-bv/openquant-engine/tree/main/backtest)),
+([`backtest/`](https://github.com/A-bv/openquant-engine/tree/7ab97a8bf6ca3c327bc80743e032f894b6d81522/backtest)),
 run on SEC EDGAR filings and market prices. Nothing on the page is illustrative;
 every figure traces to that study.
 

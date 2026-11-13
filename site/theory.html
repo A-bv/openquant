@@ -32,6 +32,7 @@
     font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif; line-height:1.5; -webkit-font-smoothing:antialiased;}
   .wrap{max-width:600px; margin:0 auto;}
   a{color:inherit; text-decoration:none;}
+  a:focus-visible{outline:3px solid var(--accent);outline-offset:3px;}
 
   .eyebrow{font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--accent); margin-bottom:8px;}
   h1{font-size:28px; font-weight:800; letter-spacing:-.02em; line-height:1.15; margin:0 0 12px;}
@@ -59,14 +60,16 @@
 
   .src{font-size:12px; color:var(--faint); margin-top:8px; line-height:1.6;}
   .foot{margin-top:34px; padding-top:18px; border-top:1px solid var(--border); font-size:12px; color:var(--faint);}
+  @media (prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important;}}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <nav style="display:flex;align-items:center;gap:6px;font-size:13px;margin:0 0 24px;flex-wrap:wrap;">
-    <a href="app.html" style="font-weight:700;color:var(--text);text-decoration:none;margin-right:auto;">OpenQuant</a>
+  <nav aria-label="Primary" style="display:flex;align-items:center;gap:6px;font-size:13px;margin:0 0 24px;flex-wrap:wrap;">
+    <a href="companion.html" style="font-weight:700;color:var(--text);text-decoration:none;margin-right:auto;">OpenQuant</a>
     <a href="app.html" style="text-decoration:none;padding:5px 10px;border-radius:8px;color:var(--muted);">Map</a>
     <a href="card1.html" style="text-decoration:none;padding:5px 10px;border-radius:8px;color:var(--muted);">Deal journey</a>
+    <a href="theory.html" aria-current="page" style="text-decoration:none;padding:5px 10px;border-radius:8px;color:var(--accent);font-weight:600;">Reality check</a>
     <a href="companion.html" style="text-decoration:none;padding:5px 10px;border-radius:8px;color:var(--muted);">53 cards</a>
   </nav>
 
@@ -112,7 +115,7 @@
     This is why OpenQuant <b>never</b> says "this stock is worth $X." It shows you the bet, with its honest limits, and lets <b>you</b> decide whether you believe it.</p>
   </div>
 
-  <p class="src">Source: a reverse-DCF run on 50 large S&P 500 names, as of 31 Jan 2014, compared to realized total returns through Jan 2024. 33 had enough filing history to value; the rest the model could not touch. Full results in <code>backtest/</code>.</p>
+  <p class="src">Source: a reverse-DCF run on 50 large S&amp;P 500 names, as of 31 Jan 2014, compared to realized total returns through Jan 2024. 33 had enough filing history to value; the rest the model could not touch. <a href="https://github.com/A-bv/openquant-engine/tree/7ab97a8bf6ca3c327bc80743e032f894b6d81522/backtest" style="color:var(--accent);text-decoration:underline;">Methodology and full results at the tested engine revision</a>.</p>
 
   <div class="foot">OpenQuant · learn → do → <b>check</b> · this is the "check".</div>
 </div>

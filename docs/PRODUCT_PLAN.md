@@ -1,158 +1,99 @@
-# OpenQuant — Product Plan (source of truth)
+# OpenQuant — Product Plan
 
-> This is the single document that defines what OpenQuant is becoming and how we
-> get there. When other docs disagree with this one, this one wins. The older
-> sketches (`phase1_tsla_sketch*.md`, `blog_draft.md`) are historical drafts.
-> Keepers as reference: `openquant_deliverables.md` (the backlog of results) and
-> `course_extract_h2.md` (the H2 course extraction).
+Status: active source of truth · updated 2026-07-16
 
-## The goal
+## Product
 
-OpenQuant proves that the EPFL *Principles of Finance* course is **useful in real
-life**. It does this by applying each course concept to data and returning a
-**concrete result a normal person can act on** — never a formula, never a claim
-of the impossible ("this stock is worth $X").
+OpenQuant is a static educational web application that turns corporate-finance
+theory into interactive cards and short decision journeys. It teaches what a
+model says, lets the reader change its assumptions, and shows where empirical
+evidence did not support the theory.
 
-A finished OpenQuant is: **functional, easy to use, accessible to everyone**, and
-honest about its limits.
+The product must never present a valuation as a prediction or a uniquely true
+price. Every important result carries its assumptions and practical limit.
 
-## The one architecture decision
+## Repository boundary
 
-**One product = a self-contained, card-based web app.**
+This repository is the public static product:
 
-- **Pure-math cards run 100% in the browser** (time value of money, NPV, CAPM,
-  bonds, options pricing). No server. They never fail, they deploy anywhere, they
-  work for everyone. The deck (`companion.html`) already proves this is possible.
-- **The Python engine (`core/`) stays as the proven reference (oracle).** Its 191
-  tests are pinned to EPFL exam answers. The JS in the cards must match `core/`;
-  a parity check guards this.
-- **Live-data cards** (reverse-DCF on a real ticker, portfolio on real tickers,
-  the backtest) ship with a **baked-in example dataset** so they work offline, and
-  call the API only when one is present.
-- **Cards group into short decision journeys** (the card1 stepper:
-  *a dollar later → a stream → worth it? → decide*). Free browse stays too.
-- **Each card carries three linked layers**: *learn* (the idea + formula),
-  *do* (the interactive result on data), *check* (the backtest: "did the theory
-  hold?").
+- `site/companion.html`: the 53-card course deck;
+- `site/card1.html`: the first guided decision journey;
+- `site/theory.html`: the historical reality check;
+- `site/finance.js`: reusable browser-side finance formulas;
+- `tests/`: parity and static-site contracts.
 
-Why this decision: the project's three biggest weaknesses — two disconnected
-products, server fragility, and an invisible backtest — all dissolve in the
-card format, because it is self-contained, it unifies the deck and the labs, and
-it has a natural slot for the "check" layer.
+The Python engine, API, live-data experiments and reproducible backtest live in
+the sister repository, [openquant-engine](https://github.com/A-bv/openquant-engine).
+References from this site should point to the exact engine revision tested by
+CI, not to paths that only existed before the repository split.
 
-## The guiding principle: everything is a link (user, 2026-06-29)
+## Architecture rules
 
-Like the 53-card deck on GitHub Pages, **every feature must be reachable by a
-single link, with nothing for the user to run.** This is the simplicity bar.
+1. The shipped product remains static and usable without an account or server.
+2. Reusable formulas live in `site/finance.js`; cards call them instead of
+   reimplementing them.
+3. The parity suite compares every exported shared formula with the pinned
+   Python engine where an equivalent exists, including failure behavior.
+4. Card-specific visual or pedagogical models may remain local to a card, but
+   their assumptions must be explicit and they need direct tests before they
+   influence a decision headline.
+5. Historical claims link to methodology and results at a pinned engine commit.
+6. Progressive enhancement is mandatory: content and raw formulas remain
+   understandable when optional typesetting is unavailable.
 
-- Pure-math features (most of the course) → 100% in the browser, a static file
-  like the deck. Just a link, no server, ever.
-- Live-data features (Stock reverse-DCF, Portfolio on real tickers) → the page
-  itself is still a static link; the market data comes from the data module
-  deployed **once** in the cloud (see P1b). The user clicks a link and never
-  starts a server.
-- The current React app + local FastAPI (two servers to run) is exactly the
-  "needs things running" model we are retiring.
-- Note: the Money/TVM lab does NOT need market data — it only routes through the
-  backend because the math was put server-side. It belongs client-side like the
-  cards.
+## Product quality bar
 
-## Architecture (decided 2026-06-29): hybrid
+- **Correct:** domains, units, sign conventions and edge cases are explicit.
+- **Honest:** models expose assumptions, limitations and empirical calibration.
+- **Accessible:** semantic HTML, keyboard operation, labelled controls, visible
+  focus and WCAG 2.2 AA contrast.
+- **Responsive:** primary flows work without horizontal overflow from 320 px.
+- **Private:** no account, tracking or transmission of entered values.
+- **Reproducible:** dependencies and engine revisions are pinned; CI is the
+  documented local workflow.
+- **Maintainable:** product copy never describes removed architecture; tests
+  enforce the highest-risk documentation and integration contracts.
 
-Where the calculations live — the decision the whole structure follows from.
+## Current state
 
-**The boundary rule:** does it need live market data or a real dataset?
-- NO  → pure formula on user inputs → runs in the BROWSER (JavaScript), no server.
-- YES → runs on ONE Python service in the cloud.
+- [x] Static GitHub Pages deployment.
+- [x] 53 interactive cards and one four-step journey.
+- [x] Historical reality-check page.
+- [x] Shared browser finance module used by both interactive surfaces.
+- [x] Full export coverage, with Python parity wherever the engine has an equivalent.
+- [x] Basic navigation, slider labelling, keyboard steps and 320 px support.
+- [x] Pinned development dependencies and SHA-pinned GitHub Actions.
+- [ ] KaTeX self-hosted; the current CDN has a raw-text fallback.
+- [ ] Browser end-to-end, automated accessibility and visual-regression suites.
+- [ ] Card catalogue separated from the monolithic HTML renderer.
+- [ ] Historical headline figures generated from a versioned data artifact.
 
-**What that means per piece:**
-- Browser (static, GitHub Pages, reachable by link): the deck, the journeys, and
-  every simple-formula card — H1 (TVM, annuities, NPV/IRR, bonds), and the
-  formula-level parts of H2/H3/H4 (CAPM, Sharpe, WACC, the DCF formula, options,
-  Black-Scholes). The Money lab belongs here too.
-- One cloud service (Python = `api/` + `core/` + `core/data`): the data labs that
-  need real tickers — Stock reverse-DCF (EDGAR + yfinance) and Portfolio
-  (price history → covariance / frontier). This is the ONLY server.
+## Next milestones
 
-**Source of truth and bounded duplication:**
-- `core/` stays the proven oracle (191 tests).
-- Simple formulas are reimplemented in JS for the browser; a PARITY TEST pins
-  `JS == Python` so the two can't drift. Duplication is limited to simple
-  formulas only.
-- Heavy / data-driven logic is never reimplemented in JS — it runs server-side.
+### M1 — Browser quality gate
 
-**Deployment topology:**
-- GitHub Pages: all static frontend.
-- One cloud host (e.g. Render, `render.yaml` already present — needs the user's
-  account): the Python service.
+- Add Playwright smoke tests for home, one card per chapter and the journey.
+- Run axe-core on all four public pages.
+- Test 320, 375, 768 and 1280 px viewports.
+- Add link and assembled-deployment checks.
 
-**Migration (current → target), in order:**
-1. Pin the boundary list: which concepts are browser-JS vs server-Python.
-2. One shared JS math module + parity tests vs `core/` (replaces the per-card
-   copies). [P1]
-3. Deploy the Python service to the cloud so the data labs work by link. [needs host]
-4. Point the data labs at the cloud service (not localhost); ship them static.
-5. One entry point + navigation across everything.
+### M2 — Maintainable static modules
 
-### Refinement (2026-06-29, user): API-less by default
+- Extract the card catalogue into structured JavaScript data.
+- Split routing, rendering and visual helpers into native ES modules.
+- Keep the deployment output static and framework-free.
+- Add direct tests for formulas that remain card-specific.
 
-Push as much as possible client-side; keep the Python API deliberately small —
-**one showcase feature** that doubles as a full-stack Python web-app demo.
+### M3 — Fully offline and verifiable
 
-- The whole product is API-less except that one feature: the deck, the journeys,
-  every formula card, and Portfolio / diversification (the deck already does
-  diversification from manual inputs) all run in the browser.
-- The one API feature: **Stock reverse-DCF on a real ticker**. It is the most
-  impressive piece, and live data genuinely needs a server anyway — a browser
-  cannot fetch SEC EDGAR or Yahoo / yfinance directly (CORS). So the single live
-  feature is exactly where the full-stack Python app belongs: by necessity, not
-  vanity.
-- Net: one product, reachable by link, with a single live-ticker valuation that
-  exists to demonstrate the full-stack Python skill.
+- Self-host the pinned KaTeX runtime and stylesheet.
+- Generate the reality-check page from a committed summary artifact exported by
+  the pinned engine backtest.
+- Add a visible methodology/version link beside every empirical headline.
 
-## Why this format (from the honest evaluation)
+### M4 — Product depth
 
-Measured state today:
-- Engine + tests: **A** (6,984 LOC, 191 tests green in ~3s, pinned to exams).
-- The Money lab: **A−** (clear verdict, felt numbers, honest break-even).
-- The deck (53 cards): **B+** (self-contained, deployed, faithful).
-- Robustness: **C** (labs show "Calculation failed" without the backend).
-- Product coherence: **C−** (deck ≠ app, no link).
-- Coverage: **C−** (only ~3 of 5 blocks have live labs).
-- Backtest: **D+** (1,260 LOC + results, wired nowhere).
-
-Net: a strong engine and one great demo, not yet a coherent product. The work
-ahead is product coherence, robustness, and reach — not engineering rigour.
-
-## A rule we never break
-
-Every number carries its honest limit, in one line. We show the *bet* embedded in
-a price or the *trade-off*, never a false "truth". And the headline result must be
-**felt** (e.g. "a bad year costs you −22%"), not abstract (e.g. "1.4 effective
-bets" — which goes in the footnote).
-
-## The plan (8 steps)
-
-| # | Step | Plain goal | Fixes |
-|---|---|---|---|
-| P0 | Framing & cleanup | one source-of-truth doc; tidy repo; settle card1 | doc sprawl |
-| P1 | Client-side math | pure-math cards work with no server | fragility |
-| P2 | Unify into one card product | deck + labs become one app | two products |
-| P3 | Decision journeys | group cards into journeys that end in a decision | card1 stepper |
-| P4 | "Check" layer | the backtest shows on the relevant cards | orphaned backtest |
-| P5 | Accessibility & finish | mobile, plain language, loading states, glossary | ease of use |
-| P6 | Frictionless deploy | one automated public deploy (no manual copy) | accessible to all |
-| P7 | Full coverage | turn the rest (rates, financing, derivatives) into cards | coverage |
-
-## card1 decision
-
-`frontend/public/card1.html` is essentially the deck's `pv` card (same idea, same
-formula `today = future/(1+r)^n`, same split bar), polished and standalone, plus
-one new thing: the 4-step stepper. The stepper is the seed of P3 (decision
-journeys). Plan: fold card1 into the unified product as the first journey; do not
-keep it as a separate app tab (it would be a duplicate).
-
-## Status
-
-- [x] P0 started — this document.
-- [ ] P1–P7 — see the task list.
+- Add more decision journeys without duplicating standalone cards.
+- Introduce shareable state only when URLs remain readable and stable.
+- Measure success through anonymous, optional user research rather than adding
+  behavioural tracking by default.
