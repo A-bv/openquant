@@ -29,7 +29,7 @@ dependencies = [
 [project.optional-dependencies]
 # The FastAPI layer that serves the engine over HTTP.
 api = [
-    "fastapi==0.136.3",
+    "fastapi==0.162.4",
     "uvicorn==0.47.0",
 ]
 dev = [
