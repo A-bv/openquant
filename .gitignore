@@ -5,10 +5,8 @@
 # Local reference only — EPFL/Berk-DeMarzo course handouts (copyrighted). Never publish.
 infoSource/
 
-# Cache and data — fetched caches only. Blanket *.json/*.csv rules used to live
-# here and silently kept the frontend manifest, its lockfile and the backtest
-# results out of git entirely; ignore by location, never by extension.
-data/cache/
+# Cache and data — fetched caches only. Ignore by location, never by extension.
+engine/data/cache/
 
 # Python
 __pycache__/
@@ -32,10 +30,10 @@ Thumbs.db
 /*.png
 screenshot_*.py
 
-# Frontend build output and local env
-frontend/dist/
-frontend/node_modules/
-frontend/.env.local
+# React labs build output and local env
+engine/app/dist/
+engine/app/node_modules/
+engine/app/.env.local
 
 # IDE and local tooling
 .vscode/

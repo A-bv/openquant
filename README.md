@@ -8,8 +8,8 @@ Corporate finance you can actually act on: the whole theory as **interactive
 cards**, guided **decision journeys**, and one honest question — *did the
 theory hold on ten years of real returns?*
 
-Everything runs in your browser. There is no server, no account, no install:
-every page below is a plain link.
+The course runs entirely in your browser. The live-ticker labs use the Python
+engine and its FastAPI service; there is no account or paid dependency.
 
 ## Try it
 
@@ -18,6 +18,7 @@ every page below is a plain link.
 | **[The 53 cards](https://a-bv.github.io/openquant/)** | The whole theory as a deck of interactive cards: one idea, one picture, one live formula each |
 | **[Should I take this deal?](https://a-bv.github.io/openquant/card1.html)** | A 4-step decision journey: a lump sum now versus payments over time, and the one rate that flips the answer |
 | **[Did the theory hold?](https://a-bv.github.io/openquant/theory.html)** | The valuation theory run on 50 real stocks, 2014 → 2024, against what actually happened |
+| **[Live-ticker labs](https://a-bv.github.io/openquant/labs/)** | Reverse-DCF, diversification, and time-value-of-money tools backed by the API |
 | **[Project map](https://a-bv.github.io/openquant/app.html)** | Everything in one page |
 
 ## The honest result
@@ -41,39 +42,33 @@ here ever claims "this stock is worth $X".
 - Every exported shared formula is exercised by
   [`tests/test_js_parity.py`](tests/test_js_parity.py), which runs the JavaScript
   through Node and compares the applicable calculations and failure behavior
-  with the pinned [**openquant-engine**](https://github.com/A-bv/openquant-engine)
-  revision. The sister repository contains the Python engine, its exam-pinned
-  suite, the API, live-ticker labs and backtest.
+  with the local [`engine/`](engine/) package.
+- [`engine/`](engine/) contains the Python engine, its exam-pinned suite, the
+  FastAPI service, React labs, and the historical backtest. Its original Git
+  history was retained when the repositories were consolidated.
 - Pushing to `main` republishes the site automatically
   ([`deploy-deck.yml`](.github/workflows/deploy-deck.yml)).
 
 ```
-site/        the product: 53-card deck, journeys, the honest check, shared math
-tests/       one suite: browser math == engine math
-docs/        the product plan, course notes, and the archive
+site/        53-card course, journeys, honest check, and shared browser math
+tests/       static-site contracts and JavaScript ↔ Python parity
+engine/      Python engine, API, React labs, backtest, and exam-pinned tests
+docs/        product plan, course notes, and archive
 ```
 
 ## Run it locally
 
 ```bash
-make serve        # http://localhost:5173 — plain static serving, nothing else
+make install      # engine, Python test tools, and React dependencies
+make serve        # static course on http://localhost:5173
+make engine-dev   # API on :8000 and React labs on :5173
+make test         # all offline engine, API, site, and parity tests
+make engine-lint  # ruff, mypy, and ESLint
 ```
-
-To run the parity and site-contract suites, install the pinned development
-dependencies and run the tests:
-
-```bash
-pip install -r requirements-dev.txt
-make test
-```
-
-The engine is pinned to a commit and CI installs the same file. Bump the ref
-deliberately when adopting a newer engine.
 
 ## The numbers behind the "did it hold?" page
 
-They come from the backtest committed in the engine repo
-([`backtest/`](https://github.com/A-bv/openquant-engine/tree/7ab97a8bf6ca3c327bc80743e032f894b6d81522/backtest)),
+They come from the committed [`engine/backtest/`](engine/backtest/),
 run on SEC EDGAR filings and market prices. Nothing on the page is illustrative;
 every figure traces to that study.
 

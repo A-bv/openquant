@@ -3,7 +3,6 @@ OpenQuant — FastAPI backend.
 
 Thin app: CORS, health, and the per-lab routers. All computation lives in
 openquant/; every endpoint lives in api/routers/ (money · portfolio · stock).
-The repo-root sys.path bootstrap lives in api/__init__.py.
 """
 from __future__ import annotations
 

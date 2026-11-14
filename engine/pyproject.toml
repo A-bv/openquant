@@ -41,7 +41,7 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/A-bv/openquant-engine"
+Homepage = "https://github.com/A-bv/openquant/tree/main/engine"
 "Live product" = "https://a-bv.github.io/openquant/"
 
 [tool.setuptools.packages.find]

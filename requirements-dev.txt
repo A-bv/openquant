@@ -1,2 +1,2 @@
 pytest==9.0.3
-openquant-engine @ git+https://github.com/A-bv/openquant-engine@7ab97a8bf6ca3c327bc80743e032f894b6d81522
+-e ./engine

@@ -1,6 +1,6 @@
 # openquant-engine
 
-[![CI](https://github.com/A-bv/openquant-engine/actions/workflows/ci.yml/badge.svg)](https://github.com/A-bv/openquant-engine/actions/workflows/ci.yml)
+[![CI](https://github.com/A-bv/openquant/actions/workflows/ci.yml/badge.svg)](https://github.com/A-bv/openquant/actions/workflows/ci.yml)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)](pyproject.toml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
@@ -21,7 +21,7 @@ capm_cost_of_equity(risk_free_rate=0.08, beta=1.50, market_risk_premium=0.08)
 
 | Piece | Where |
 |---|---|
-| **The live labs** | [a-bv.github.io/openquant-engine](https://a-bv.github.io/openquant-engine/) — the React app, deployed from `app/` |
+| **The live labs** | [a-bv.github.io/openquant/labs](https://a-bv.github.io/openquant/labs/) — the React app, deployed from `app/` |
 | **The API behind them** | [a-bv-openquant-api.hf.space](https://a-bv-openquant-api.hf.space/docs) — running free on Hugging Face Spaces (built from `deploy/hf/`) |
 
 Type any US ticker and the labs value it live from its SEC filings and market
@@ -51,7 +51,7 @@ Most finance libraries ask you to trust them. This one shows its receipts:
 ## Quickstart
 
 ```bash
-pip install "openquant-engine[api] @ git+https://github.com/A-bv/openquant-engine"
+pip install "openquant-engine[api] @ git+https://github.com/A-bv/openquant.git#subdirectory=engine"
 ```
 
 ```python
@@ -106,16 +106,14 @@ make dev        # API on :8000 and React app on :5173 together
   plausible-looking wrong number.
 - **Offline first.** Everything except live fetches runs with zero network:
   the sample fixtures mirror the exact shape EDGAR returns.
-- **Pinned everything.** Dependency versions, exam answers, and (in the sister
-  repo) a JS↔Python parity suite — nothing drifts silently.
+- **Pinned everything.** Dependency versions, exam answers, and the root
+  JS↔Python parity suite — nothing drifts silently.
 
-## The sister repo
+## The monorepo
 
-The public product built on these ideas — the interactive finance course as
-53 cards, decision journeys, and the "did the theory hold?" page — lives at
-[**A-bv/openquant**](https://github.com/A-bv/openquant) and runs entirely in
-the browser: [a-bv.github.io/openquant](https://a-bv.github.io/openquant/).
-This engine was extracted from it in July 2026 so that each repo tells one
-story.
+The interactive course, browser parity tests, engine, API, labs, and backtest
+live together in [**A-bv/openquant**](https://github.com/A-bv/openquant).
+The engine still has its own package boundary and release metadata under this
+directory, while CI verifies the complete system from the repository root.
 
 MIT licensed. The finance follows Berk & DeMarzo, *Corporate Finance*.

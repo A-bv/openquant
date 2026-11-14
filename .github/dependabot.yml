@@ -5,6 +5,10 @@ updates:
     schedule:
       interval: weekly
   - package-ecosystem: pip
-    directory: /
+    directory: /engine
+    schedule:
+      interval: weekly
+  - package-ecosystem: npm
+    directory: /engine/app
     schedule:
       interval: weekly

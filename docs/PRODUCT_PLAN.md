@@ -23,7 +23,7 @@ This repository is the public static product:
 - `tests/`: parity and static-site contracts.
 
 The Python engine, API, live-data experiments and reproducible backtest live in
-the sister repository, [openquant-engine](https://github.com/A-bv/openquant-engine).
+the local [`engine/`](../engine/) package in this monorepo.
 References from this site should point to the exact engine revision tested by
 CI, not to paths that only existed before the repository split.
 

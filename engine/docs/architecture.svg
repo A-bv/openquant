@@ -47,7 +47,7 @@
   <text class="s" x="288" y="291">2014 → 2024, vs reality</text>
 
   <rect class="green" x="520" y="228" width="220" height="76" rx="10"/>
-  <text class="t" x="538" y="256">tests/ — 191 offline</text>
+  <text class="t" x="538" y="256">tests/ — ~190 offline</text>
   <text class="s" x="538" y="275">pinned to worked answers</text>
   <text class="s" x="538" y="291">from real finance exams</text>
 
@@ -62,5 +62,5 @@
   <path class="arrow" d="M630 168 L630 226"/>
   <path class="arrow" d="M130 304 L130 340"/>
 
-  <text class="lbl" x="270" y="392">the sister repo — a-bv.github.io/openquant — needs none of this: its card pages run entirely in the browser</text>
+  <text class="lbl" x="270" y="392">the root site/ course runs independently in the browser; tests/ checks parity with this engine</text>
 </svg>

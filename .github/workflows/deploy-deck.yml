@@ -1,10 +1,12 @@
-name: Deploy the site to GitHub Pages
+name: Deploy OpenQuant to GitHub Pages
 
 on:
   push:
     branches: [main]
     paths:
       - "site/**"
+      - "engine/app/**"
+      - ".github/workflows/deploy-deck.yml"
   workflow_dispatch:
 
 permissions:
@@ -21,12 +23,27 @@ jobs:
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
-      - name: Assemble the site (root stays the 53-card deck)
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: engine/app/package-lock.json
+
+      - name: Build the live-ticker labs
+        working-directory: engine/app
+        env:
+          VITE_API_URL: https://a-bv-openquant-api.hf.space
         run: |
-          mkdir -p out
+          npm ci
+          npm run build -- --base=/openquant/labs/
+
+      - name: Assemble the course and labs
+        run: |
+          mkdir -p out/labs
           cp site/*.html site/*.js site/*.svg out/
           cp -r site/fonts out/fonts
           cp site/companion.html out/index.html
+          cp -r engine/app/dist/. out/labs/
 
       - name: Publish to the gh-pages branch
         uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453 # v4
