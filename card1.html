@@ -67,6 +67,7 @@
   .ctrl .row{display:flex; justify-content:space-between; font-size:13px; color:var(--muted); margin-bottom:6px;}
   .ctrl .row b{color:var(--text); font-weight:600;}
   input[type=range]{width:100%; accent-color:var(--accent); height:4px;}
+  a:focus-visible, button:focus-visible, input:focus-visible{outline:3px solid var(--accent);outline-offset:3px;}
 
   .formula{background:var(--bg); border:1px solid var(--border); border-radius:14px; padding:14px; margin-top:20px; text-align:center; overflow-x:auto;}
   .formula .gen{opacity:.72;}
@@ -80,25 +81,30 @@
     background:var(--surface); color:var(--text); cursor:pointer;}
   button.primary{background:var(--accent); color:#fff; border-color:var(--accent);}
   button:disabled{opacity:.4; cursor:default;}
+  button.step{font:inherit;background:none;border:0;padding:0;color:inherit;}
   .foot{text-align:center; font-size:11px; color:var(--faint); margin-top:18px;}
+  @media (max-width:380px){.step .lbl{display:none}.stepper{padding:0 8px}.seg{margin:0 5px}}
+  @media (prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important;}}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <nav style="display:flex;align-items:center;gap:6px;font-size:13px;margin:0 0 20px;flex-wrap:wrap;">
-    <a href="app.html" style="font-weight:700;color:var(--text);text-decoration:none;margin-right:auto;">OpenQuant</a>
+  <nav aria-label="Primary" style="display:flex;align-items:center;gap:6px;font-size:13px;margin:0 0 20px;flex-wrap:wrap;">
+    <a href="companion.html" style="font-weight:700;color:var(--text);text-decoration:none;margin-right:auto;">OpenQuant</a>
     <a href="app.html" style="text-decoration:none;padding:5px 10px;border-radius:8px;color:var(--muted);">Map</a>
-    <a href="card1.html" style="text-decoration:none;padding:5px 10px;border-radius:8px;color:var(--accent);font-weight:600;">Deal journey</a>
+    <a href="card1.html" aria-current="page" style="text-decoration:none;padding:5px 10px;border-radius:8px;color:var(--accent);font-weight:600;">Deal journey</a>
+    <a href="theory.html" style="text-decoration:none;padding:5px 10px;border-radius:8px;color:var(--muted);">Reality check</a>
     <a href="companion.html" style="text-decoration:none;padding:5px 10px;border-radius:8px;color:var(--muted);">53 cards</a>
   </nav>
-  <div class="stepper" id="stepper">
-    <div class="step" data-go="0"><span class="dot">1</span><span class="lbl">a dollar, later</span></div>
+  <main>
+  <div class="stepper" id="stepper" aria-label="Journey progress">
+    <button type="button" class="step" data-go="0" aria-label="Step 1: a dollar, later"><span class="dot">1</span><span class="lbl">a dollar, later</span></button>
     <span class="seg"></span>
-    <div class="step" data-go="1"><span class="dot">2</span><span class="lbl">a stream</span></div>
+    <button type="button" class="step" data-go="1" aria-label="Step 2: a stream"><span class="dot">2</span><span class="lbl">a stream</span></button>
     <span class="seg"></span>
-    <div class="step" data-go="2"><span class="dot">3</span><span class="lbl">worth it?</span></div>
+    <button type="button" class="step" data-go="2" aria-label="Step 3: worth it?"><span class="dot">3</span><span class="lbl">worth it?</span></button>
     <span class="seg"></span>
-    <div class="step" data-go="3"><span class="dot">4</span><span class="lbl">decide</span></div>
+    <button type="button" class="step" data-go="3" aria-label="Step 4: decide"><span class="dot">4</span><span class="lbl">decide</span></button>
   </div>
 
   <!-- STEP 1 -->
@@ -106,11 +112,11 @@
     <div class="eyebrow">the principle</div>
     <h1>Money later is worth less than money now.</h1>
     <p class="lede">A deal pays you in the future. Start simple: what is a single <b>$100</b> promised later worth to you today?</p>
-    <div class="hero"><span class="big" id="s1ans">$0</span><span class="chip lost" id="s1chip"></span></div>
+    <div class="hero"><span class="big" id="s1ans" aria-live="polite" aria-atomic="true">$0</span><span class="chip lost" id="s1chip"></span></div>
     <p class="heronote" id="s1note"></p>
     <div class="ctrls">
-      <div class="ctrl"><div class="row"><span>how far in the future</span><b id="s1yOut"></b></div><input type="range" data-bind="yrs" min="1" max="30" step="1"></div>
-      <div class="ctrl"><div class="row"><span>your rate (what a dollar now is worth to you)</span><b id="s1rOut"></b></div><input type="range" data-bind="rate" min="1" max="15" step="0.5"></div>
+      <div class="ctrl"><div class="row"><label for="s1yrs">how far in the future</label><b id="s1yOut"></b></div><input id="s1yrs" type="range" data-bind="yrs" min="1" max="30" step="1"></div>
+      <div class="ctrl"><div class="row"><label for="s1rate">your rate (what a dollar now is worth to you)</label><b id="s1rOut"></b></div><input id="s1rate" type="range" data-bind="rate" min="1" max="15" step="0.5"></div>
     </div>
     <div class="formula"><div class="gen" id="s1fgen"></div><div class="num" id="s1fnum"></div></div>
     <p class="note">Each year of waiting divides the value by <b>(1 + your rate)</b>. Wait longer, or use a higher rate, and today's value shrinks.</p>
@@ -122,16 +128,16 @@
     <div class="eyebrow">your deal</div>
     <h1>Most deals pay a stream, not one lump.</h1>
     <p class="lede">This deal pays you the same amount <b>every year</b> for a set number of years. On paper it looks big — but in today's money it is worth less.</p>
-    <div class="hero"><span class="big" id="s2ans">$0</span><span class="chip info" id="s2chip"></span></div>
+    <div class="hero"><span class="big" id="s2ans" aria-live="polite" aria-atomic="true">$0</span><span class="chip info" id="s2chip"></span></div>
     <p class="heronote" id="s2note"></p>
     <div class="bars">
       <div class="bar"><div class="blab"><span>on paper (just added up)</span><b id="s2paperv"></b></div><div class="track"><div class="fill" id="s2paperbar" style="background:var(--track);border:1px dashed var(--faint);"></div></div></div>
       <div class="bar"><div class="blab"><span>in today's money (what it's really worth)</span><b id="s2todayv"></b></div><div class="track"><div class="fill" id="s2todaybar" style="background:var(--accent);"></div></div></div>
     </div>
     <div class="ctrls">
-      <div class="ctrl"><div class="row"><span>cash it pays you each year</span><b id="s2pOut"></b></div><input type="range" data-bind="pay" min="1000" max="8000" step="250"></div>
-      <div class="ctrl"><div class="row"><span>for how many years</span><b id="s2yOut"></b></div><input type="range" data-bind="yrs" min="1" max="30" step="1"></div>
-      <div class="ctrl"><div class="row"><span>your rate</span><b id="s2rOut"></b></div><input type="range" data-bind="rate" min="1" max="15" step="0.5"></div>
+      <div class="ctrl"><div class="row"><label for="s2pay">cash it pays you each year</label><b id="s2pOut"></b></div><input id="s2pay" type="range" data-bind="pay" min="1000" max="8000" step="250"></div>
+      <div class="ctrl"><div class="row"><label for="s2yrs">for how many years</label><b id="s2yOut"></b></div><input id="s2yrs" type="range" data-bind="yrs" min="1" max="30" step="1"></div>
+      <div class="ctrl"><div class="row"><label for="s2rate">your rate</label><b id="s2rOut"></b></div><input id="s2rate" type="range" data-bind="rate" min="1" max="15" step="0.5"></div>
     </div>
     <div class="formula"><div class="gen" id="s2fgen"></div><div class="num" id="s2fnum"></div></div>
     <p class="note">Each yearly payment is brought back to today (smaller the further out it is), then all summed. That total is what the stream is worth now.</p>
@@ -143,15 +149,15 @@
     <div class="eyebrow">the test</div>
     <h1>Is the stream worth its upfront cost?</h1>
     <p class="lede">The deal costs you money <b>today</b>. The net value is what the stream is worth today, minus that cost. Positive means it adds value.</p>
-    <div class="hero"><span class="big" id="s3ans">$0</span><span class="chip" id="s3chip"></span></div>
+    <div class="hero"><span class="big" id="s3ans" aria-live="polite" aria-atomic="true">$0</span><span class="chip" id="s3chip"></span></div>
     <p class="heronote" id="s3note"></p>
     <div class="bars">
       <div class="bar"><div class="blab"><span>what it costs you today</span><b id="s3costv"></b></div><div class="track"><div class="fill" id="s3costbar" style="background:var(--lost);"></div></div></div>
       <div class="bar"><div class="blab"><span>what the stream is worth today</span><b id="s3benv"></b></div><div class="track"><div class="fill" id="s3benbar" style="background:var(--good);"></div></div></div>
     </div>
     <div class="ctrls">
-      <div class="ctrl"><div class="row"><span>upfront cost of the deal</span><b id="s3cOut"></b></div><input type="range" data-bind="cost" min="5000" max="60000" step="1000"></div>
-      <div class="ctrl"><div class="row"><span>your rate</span><b id="s3rOut"></b></div><input type="range" data-bind="rate" min="1" max="15" step="0.5"></div>
+      <div class="ctrl"><div class="row"><label for="s3cost">upfront cost of the deal</label><b id="s3cOut"></b></div><input id="s3cost" type="range" data-bind="cost" min="5000" max="60000" step="1000"></div>
+      <div class="ctrl"><div class="row"><label for="s3rate">your rate</label><b id="s3rOut"></b></div><input id="s3rate" type="range" data-bind="rate" min="1" max="15" step="0.5"></div>
     </div>
     <div class="formula"><div class="gen" id="s3fgen"></div><div class="num" id="s3fnum"></div></div>
     <p class="note">Bring every future payment back to today, add them up, subtract the cost. <b>Positive creates value; negative destroys it.</b></p>
@@ -163,15 +169,16 @@
     <div class="eyebrow">the decision</div>
     <h1 id="s4title">—</h1>
     <p class="lede" id="s4lede"></p>
-    <div class="hero"><span class="big" id="s4ans">$0</span><span class="chip" id="s4chip"></span></div>
+    <div class="hero"><span class="big" id="s4ans" aria-live="polite" aria-atomic="true">$0</span><span class="chip" id="s4chip"></span></div>
     <p class="heronote" id="s4note"></p>
     <div class="ctrls">
-      <div class="ctrl"><div class="row"><span>the one number that decides it — your rate</span><b id="s4rOut"></b></div><input type="range" data-bind="rate" min="1" max="15" step="0.5"></div>
+      <div class="ctrl"><div class="row"><label for="s4rate">the one number that decides it — your rate</label><b id="s4rOut"></b></div><input id="s4rate" type="range" data-bind="rate" min="1" max="15" step="0.5"></div>
     </div>
     <div class="formula"><div class="gen">the verdict hinges on your rate</div><div class="num" id="s4fnum"></div></div>
     <p class="note" id="s4limit"></p>
     <div class="nav"><button data-back>← back</button><button data-restart>start over ↺</button></div>
   </section>
+  </main>
 
   <div class="foot">OpenQuant · one decision at a time · the time value of money</div>
 </div>
@@ -188,7 +195,7 @@
   var $ = function(id){ return document.getElementById(id); };
   function money(v){ return '$' + Math.round(v).toLocaleString('en-US'); }
   function money2(v){ return '$' + v.toLocaleString('en-US',{maximumFractionDigits:2}); }
-  function K(el, tex){ if(window.katex && el) katex.render(tex, el, {throwOnError:false}); }
+  function K(el, tex){ if(!el)return; if(window.katex)katex.render(tex,el,{throwOnError:false}); else el.textContent=tex; }
   // delegate to the shared, parity-tested finance module (finance.js)
   function pv(fv, r, n){ return Finance.pv(fv, r, n); }
   function annuityPV(c, r, n){ return Finance.annuityPV(c, r, n); }
@@ -275,6 +282,7 @@
     });
     document.querySelectorAll('.step').forEach(function(s,i){
       s.classList.toggle('on', i===cur); s.classList.toggle('done', i<cur);
+      if(i===cur)s.setAttribute('aria-current','step');else s.removeAttribute('aria-current');
     });
     syncInputs();
     RENDER[cur]();

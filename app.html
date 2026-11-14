@@ -32,6 +32,7 @@
     font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif; line-height:1.5; -webkit-font-smoothing:antialiased;}
   .wrap{max-width:620px; margin:0 auto;}
   a{color:inherit; text-decoration:none;}
+  a:focus-visible{outline:3px solid var(--accent);outline-offset:3px;}
   code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:.86em; background:var(--track); padding:1px 6px; border-radius:5px;}
 
   .brand{display:flex; align-items:center; gap:9px; margin-bottom:26px;}
@@ -70,6 +71,7 @@
 
   .grid2{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
   @media (max-width:480px){ .grid2{grid-template-columns:1fr;} }
+  @media (prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important;}}
 
   .foot{margin-top:40px; padding-top:18px; border-top:1px solid var(--border); font-size:12px; color:var(--faint); line-height:1.6;}
   .foot b{color:var(--muted);}
@@ -77,16 +79,17 @@
 </head>
 <body>
 <div class="wrap">
-  <nav style="display:flex;align-items:center;gap:6px;font-size:13px;margin:0 0 24px;flex-wrap:wrap;">
-    <a href="app.html" style="font-weight:700;color:var(--text);text-decoration:none;margin-right:auto;">OpenQuant</a>
-    <a href="app.html" style="text-decoration:none;padding:5px 10px;border-radius:8px;color:var(--accent);font-weight:600;">Map</a>
+  <nav aria-label="Primary" style="display:flex;align-items:center;gap:6px;font-size:13px;margin:0 0 24px;flex-wrap:wrap;">
+    <a href="companion.html" style="font-weight:700;color:var(--text);text-decoration:none;margin-right:auto;">OpenQuant</a>
+    <a href="app.html" aria-current="page" style="text-decoration:none;padding:5px 10px;border-radius:8px;color:var(--accent);font-weight:600;">Map</a>
     <a href="card1.html" style="text-decoration:none;padding:5px 10px;border-radius:8px;color:var(--muted);">Deal journey</a>
+    <a href="theory.html" style="text-decoration:none;padding:5px 10px;border-radius:8px;color:var(--muted);">Reality check</a>
     <a href="companion.html" style="text-decoration:none;padding:5px 10px;border-radius:8px;color:var(--muted);">53 cards</a>
   </nav>
 
   <header class="hero">
-    <h1>Everything built so far.</h1>
-    <p>A map of what is coded. The card pages open from a link with no server. The React app needs the two local servers. The engine sits underneath.</p>
+    <h1>One static site, three ways to learn.</h1>
+    <p>Browse the full course, follow a decision journey, or confront valuation theory with historical evidence. Every page works directly in the browser.</p>
     <p class="sub">honest by design · every number carries its limit</p>
   </header>
 
@@ -112,57 +115,29 @@
   </section>
 
   <section class="sec">
-    <div class="h"><h2>The React data app</h2><span>needs both local servers running</span></div>
-    <div class="tile">
-      <div class="top"><span class="ttl">OpenQuant data app</span><span class="pill server">needs servers</span></div>
-      <p class="desc">A React single-page app for the data-driven labs. Run the frontend and the backend, then open the page below. It has three tabs.</p>
-      <div class="meta">page: <code>localhost:5173/</code> · React (<code>frontend/src</code>) + FastAPI (<code>api/</code>, <code>localhost:8000</code>)</div>
-      <div class="subrows">
-        <div class="subrow">
-          <span class="l"><b>Money</b> <span class="d">· lump sum now vs payments over time</span></span>
-          <span class="pill server">no live data</span>
-        </div>
-        <div class="subrow">
-          <span class="l"><b>Stock</b> <span class="d">· reverse-DCF on a real ticker</span></span>
-          <span class="pill live">live · yfinance + EDGAR</span>
-        </div>
-        <div class="subrow">
-          <span class="l"><b>Portfolio</b> <span class="d">· diversification on real tickers</span></span>
-          <span class="pill live">live · yfinance</span>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="sec">
-    <div class="h"><h2>Under the hood</h2><span>the engine · code, not a page</span></div>
+    <div class="h"><h2>Under the hood</h2><span>small static surface, tested finance core</span></div>
     <div class="tiles grid2">
       <div class="tile muted">
-        <div class="top"><span class="ttl">The finance engine</span></div>
-        <p class="desc">Python. 191 tests pinned to the EPFL sample exams. The proven source of truth every screen draws from.</p>
-        <div class="meta"><code>core/</code> · pytest</div>
+        <div class="top"><span class="ttl">Browser finance</span></div>
+        <p class="desc">Shared JavaScript formulas keep the interactive cards fast, private, and available without a server.</p>
+        <div class="meta"><code>site/finance.js</code> · no network calls</div>
       </div>
       <div class="tile muted">
-        <div class="top"><span class="ttl">The data layer</span></div>
-        <p class="desc">Fetches live prices and filings. yfinance for prices, SEC EDGAR for fundamentals. The module we extract next.</p>
-        <div class="meta"><code>core/data/</code> · the live-data source</div>
+        <div class="top"><span class="ttl">Parity oracle</span></div>
+        <p class="desc">CI compares the shared browser formulas with the separately maintained Python engine and its exam-pinned reference suite.</p>
+        <div class="meta"><code>tests/test_js_parity.py</code> · openquant-engine</div>
       </div>
       <div class="tile muted">
-        <div class="top"><span class="ttl">The API</span></div>
-        <p class="desc">FastAPI that serves the engine and the data to the React app. Replaced later by a single cloud endpoint.</p>
-        <div class="meta"><code>api/</code> · <code>localhost:8000</code></div>
-      </div>
-      <div class="tile muted">
-        <div class="top"><span class="ttl">The backtest</span></div>
-        <p class="desc">"Did the theory hold?" run on 2014 to 2024 data. Computed, not yet wired into any screen.</p>
-        <div class="meta"><code>backtest/</code></div>
+        <div class="top"><span class="ttl">Historical evidence</span></div>
+        <p class="desc">The reality-check page publishes the headline results of the reproducible backtest maintained in the engine repository.</p>
+        <div class="meta"><code>theory.html</code> · methodology linked in the README</div>
       </div>
     </div>
   </section>
 
   <div class="foot">
     <b>OpenQuant</b> · proving the finance course is useful in real life.<br>
-    Temporary map: it surfaces everything coded so far so nothing is hidden. Next step: extract the data layer into its own importable, testable module.
+    A static educational product: no account, no personal data, and no prediction presented as truth.
   </div>
 </div>
 </body>
