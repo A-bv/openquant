@@ -20,7 +20,7 @@ classifiers = [
 # The engine itself. Every version is the one the test suite passes against.
 dependencies = [
     "numpy==2.3.4",
-    "pandas==2.3.3",
+    "pandas==3.1.1",
     "requests==2.32.3",
     "scipy==1.16.3",
     "yfinance==1.3.0",
